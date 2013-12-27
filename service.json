@@ -1,0 +1,9 @@
+{
+	"port": 8001,
+	"name": "Media Manager",
+	"commands": {
+		"main": "java -cp .:bin:../../lib/java/* Manager",
+		"Rebuild": "./build.sh"
+	},
+	"subdomain": "ceol"
+}
