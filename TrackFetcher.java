@@ -22,8 +22,9 @@ final class TrackFetcher implements Runnable
 			e.printStackTrace(System.err);
 		}
 	}
-	private void fetchTrack() throws Exception {		
-		getXML(Manager.getSetting("playlist"));
+	private void fetchTrack() throws Exception {
+		String playlisturl = "http://"+Manager.getHost("mediaselector")+"/playlist";	
+		getXML(playlisturl);
 	}
 	private BufferedReader getHTTP(String host, String path, String auth) throws Exception {
 		Socket socket = new Socket(host, 80);
