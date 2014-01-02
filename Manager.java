@@ -11,7 +11,12 @@ public final class Manager {
 	private static Hosts hosts;
 	public static void main(String argv[]) throws Exception {
 		
-		settings.load(Manager.class.getClassLoader().getResourceAsStream("config.properties"));
+		try {
+			settings.load(Manager.class.getClassLoader().getResourceAsStream("config.properties"));
+		} catch (NullPointerException e) {
+			System.err.println("No config file found");
+			System.exit(4);
+		}
 
 		if (argv.length < 1) {
 			System.err.println("No port specified (must be 1st argument)");
