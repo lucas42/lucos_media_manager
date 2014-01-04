@@ -334,6 +334,9 @@ final class HttpRequest implements Runnable {
 		if(fileName.endsWith(".mp3")) {
 			return "audio/mpeg";
 		}
+		if(fileName.endsWith(".txt")) {
+			return "text/plain";
+		}
 		if(fileName.endsWith("manifest")) {
 			return "text/cache-manifest";
 		}
