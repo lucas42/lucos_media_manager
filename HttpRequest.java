@@ -186,12 +186,12 @@ final class HttpRequest implements Runnable {
 			Manager.next();
 			
 			// Use full url for lynx optimisation
-			redirect("http://".concat(header.get("Host").trim().concat("/")));
+			redirect("https://".concat(header.get("Host").trim().concat("/")));
 		} else if (path.equals("/basic/playpause") && post) {
 			Manager.TogglePlayPause();
 			
 			// Use full url for lynx optimisation
-			redirect("http://".concat(header.get("Host").trim().concat("/")));
+			redirect("https://".concat(header.get("Host").trim().concat("/")));
 		} else if (path.equals("/volume") && post) {
 			float volume = getFloat("volume", head);
 			if (volume != -1) {
