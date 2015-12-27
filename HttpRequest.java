@@ -236,12 +236,12 @@ final class HttpRequest implements Runnable {
 			String fileName;
 			
 			// TODO: remove hardcoded absolute paths
-			if (path.equals("/player")) fileName = "/web/lucos/media/player/";
-			else if (path.equals("/")) fileName = "/web/lucos/media/controller/index.xhtml";
-			else if (path.equals("/controller")) fileName = "/web/lucos/media/controller/";
-			else if (path.equals("/mobile")) fileName = "/web/lucos/media/controller/mobile.html";
-			else if (path.equals("/controller-icon")) fileName = "/web/lucos/media/controller/icon.png";
-			else if (path.equals("/player-icon")) fileName = "/web/lucos/media/player/icon.png";
+			if (path.equals("/player")) fileName = "/web/lucos/lucos_media_player/";
+			else if (path.equals("/")) fileName = "/web/lucos/lucos_media_controller/index.xhtml";
+			else if (path.equals("/controller")) fileName = "/web/lucos/lucos_media_controller/";
+			else if (path.equals("/mobile")) fileName = "/web/lucos/lucos_media_controller/mobile.html";
+			else if (path.equals("/controller-icon")) fileName = "/web/lucos/lucos_media_controller/icon.png";
+			else if (path.equals("/player-icon")) fileName = "/web/lucos/lucos_media_player/icon.png";
 			else fileName = "./data" + path;
 			fileName.replaceAll("/\\.\\./","");
 			if (fileName.charAt(fileName.length()-1) == '/') fileName += "index.html";
