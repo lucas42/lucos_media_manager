@@ -1,0 +1,12 @@
+[Service]
+ExecStart=/usr/bin/java -cp .:bin:../lib/java/* Manager 8001
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=lucos_media_manager
+User=lucos
+Group=lucos
+WorkingDirectory=/web/lucos/lucos_media_manager
+
+[Install]
+WantedBy=multi-user.target
