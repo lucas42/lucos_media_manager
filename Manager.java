@@ -8,7 +8,6 @@ public final class Manager {
 	private final static String[] noupdates = { "now", "next", "isPlaying" };
 	private static Thread currentFetcherThread = null;
 	private static Properties settings = new Properties();
-	private static Hosts hosts;
 	public static void main(String argv[]) throws Exception {
 		
 		try {
@@ -32,12 +31,6 @@ public final class Manager {
 			System.exit(2);
 			return;
 		}
-		if (argv.length < 2) {
-			System.err.println("No domain specified for lucos_services instance (must be 2nd argument)");
-			System.exit(3);
-		}
-
-		hosts = new Hosts(argv[1]);
 		
 		status.put("isPlaying", true);
 		status.put("volume", 0.5);
@@ -75,9 +68,6 @@ public final class Manager {
 	}
 	public static String getSetting(String key, String defaultValue) {
 		return settings.getProperty(key, defaultValue);
-	}
-	public static String getHost(String key) {
-		return hosts.get(key);
 	}
 	public static boolean TogglePlayPause() {
 		setPlaying(!getPlaying());

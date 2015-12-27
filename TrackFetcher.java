@@ -23,8 +23,7 @@ final class TrackFetcher implements Runnable
 		}
 	}
 	private void fetchTrack() throws Exception {
-		String playlisturl = "http://"+Manager.getHost("mediaselector")+"/playlist";	
-		getXML(playlisturl);
+		getXML(Manager.getSetting("playlist"));
 	}
 	private BufferedReader getHTTP(String host, String path, String auth) throws Exception {
 		Socket socket = new Socket(host, 80);
