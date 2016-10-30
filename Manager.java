@@ -181,18 +181,6 @@ public final class Manager {
 		}
 	}
 
-	/**
-	 * Skips the current "next" track
-	 * Whilst leaving the now track as is
-	 */
-	private static void skipNext() {
-		playlist.removeFirst();
-		if (playlist.size() > 0) {
-			status.put("next", playlist.getFirst());
-		} else {
-			status.put("next", new NullTrack());
-		}
-	}
 	private static void fetchTracks() {
 		if (currentFetcherThread != null && currentFetcherThread.isAlive()) return;
 		TrackFetcher fetcher = new TrackFetcher();
@@ -238,11 +226,11 @@ public final class Manager {
 
 			// TODO: save the time finished and status.
 			next();
-		} else if (oldtrack.equals(status.get("next"))) {
-			skipNext();
-		} else {
-			System.err.println("Bad Finish Request: "+oldtrack.getUrl()+", "+((Track)status.get("now")).getUrl());
 		}
+
+		playlist.remove(oldtrack);
+		updateNowNext();
+		if (playlist.size() < 10) fetchTracks();
 	}
 	public static boolean update(Track curtrack, float currentTime, BigInteger currentTimeSet) {
 		if (curtrack.equals(status.get("now"))) {
