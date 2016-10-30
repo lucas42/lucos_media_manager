@@ -158,6 +158,29 @@ final class HttpRequest implements Runnable {
 				
 				Thread.sleep(1);
 			}
+		// Includes all tracks, including current playing and queued in playlist
+		} else if (path.equals("/poll/summary")) {
+			long startTime = System.nanoTime();
+			int hashcode;
+			try {
+				hashcode = Integer.parseInt(get.get("hashcode"));
+			} catch (NumberFormatException e) {
+				hashcode = 0;
+			}
+			while (true) {
+				if (Manager.fullSummaryHasChanged(hashcode)) {
+					sendHeaders(200, "Long Poll", "application/json");
+					if (!head) osw.write(gson.toJson(Manager.getFullSummary()));   
+					break;
+				}
+				if ((System.nanoTime() - startTime) > (1000000000L * 30)) {
+					sendHeaders(200, "Long Poll", "application/json");
+					if (!head) osw.write("{ }");
+					break;
+				}
+				
+				Thread.sleep(1);
+			}
 		} else if (path.equals("/control") && post) {
 			Manager.update(get);
 			sendHeaders(204, "Changed", "application/json");

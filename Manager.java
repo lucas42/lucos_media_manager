@@ -97,6 +97,9 @@ public final class Manager {
 	public static boolean playlistHasChanged(int oldhashcode) {
 		return (playlist.hashCode() != oldhashcode);
 	}
+	public static boolean fullSummaryHasChanged(int oldhashcode) {
+		return (createFullSummary().hashCode() != oldhashcode);
+	}
 	public static Map<String, Object> getStatus() {
 		Map<String, Object> output = new HashMap<String, Object>(status);
 		output.put("hashcode", status.hashCode());
@@ -106,6 +109,12 @@ public final class Manager {
 		Map<String, Object> output = new HashMap<String, Object>();
 		output.put("playlist", playlist);
 		output.put("hashcode", playlist.hashCode());
+		return output;
+	}
+	public static Map<String, Object> getFullSummary() {
+		Map<String, Object> summary = createFullSummary();
+		Map<String, Object> output = new HashMap<String, Object>(summary);
+		output.put("hashcode", summary.hashCode());
 		return output;
 	}
 	public static void update(Map<String, String> changes) {
@@ -142,6 +151,23 @@ public final class Manager {
 		status.put("currentTime", 0);
 		updateNowNext();
 		if (playlist.size() < 10) fetchTracks();
+	}
+	
+	// Return info on all tracks, including current playing and queued in playlist
+	private static Map<String, Object> createFullSummary() {
+		Map<String, Object> summary = new HashMap<String, Object>();
+		LinkedList<Track> tracks = new LinkedList<Track>();
+		if (!status.get("now").equals(new NullTrack())) {
+			tracks.add((Track)status.get("now"));
+		}
+		Iterator iter = playlist.iterator();
+		while(iter.hasNext()) {
+			tracks.add((Track)iter.next());
+		}
+		summary.put("tracks", tracks);
+		summary.put("volume", status.get("volume"));
+		summary.put("isPlaying", status.get("isPlaying"));
+		return summary;
 	}
 	private static void updateNowNext() {
 		if (status.get("now").equals(new NullTrack()) && playlist.size() > 0) {
