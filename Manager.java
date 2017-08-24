@@ -150,7 +150,7 @@ public final class Manager {
 		status.put("now", new NullTrack());
 		status.put("currentTime", 0);
 		updateNowNext();
-		if (playlist.size() < 10) fetchTracks();
+		if (getPlaylistLength() < 10) fetchTracks();
 	}
 	
 	// Return info on all tracks, including current playing and queued in playlist
@@ -170,11 +170,11 @@ public final class Manager {
 		return summary;
 	}
 	private static void updateNowNext() {
-		if (status.get("now").equals(new NullTrack()) && playlist.size() > 0) {
+		if (status.get("now").equals(new NullTrack()) && getPlaylistLength() > 0) {
 			status.put("now", playlist.removeFirst());
 			((Track)status.get("now")).timeSetNow();
 		}
-		if (playlist.size() > 0) {
+		if (getPlaylistLength() > 0) {
 			status.put("next", playlist.getFirst());
 		} else {
 			status.put("next", new NullTrack());
@@ -230,7 +230,7 @@ public final class Manager {
 
 		playlist.remove(oldtrack);
 		updateNowNext();
-		if (playlist.size() < 10) fetchTracks();
+		if (getPlaylistLength() < 10) fetchTracks();
 	}
 	public static boolean update(Track curtrack, float currentTime, BigInteger currentTimeSet) {
 		if (curtrack.equals(status.get("now"))) {
@@ -248,5 +248,8 @@ public final class Manager {
 	}
 	public static boolean isCurrentURL(String url) {
 		return (((Track)status.get("now")).getUrl().equals(url));
+	}
+	public static int getPlaylistLength() {
+		return playlist.size();
 	}
 }

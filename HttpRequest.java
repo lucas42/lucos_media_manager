@@ -158,6 +158,11 @@ final class HttpRequest implements Runnable {
 				
 				Thread.sleep(1);
 			}
+		// Returns the number of tracks currently in the playlist (can be used for monitoring etc)
+		} else if (path.equals("/poll/playlist/length")) {
+			sendHeaders(200, "OK", "text/plain");
+			if (!head) osw.write(gson.toJson(Manager.getPlaylistLength()));
+
 		// Includes all tracks, including current playing and queued in playlist
 		} else if (path.equals("/poll/summary")) {
 			long startTime = System.nanoTime();
