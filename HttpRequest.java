@@ -44,6 +44,11 @@ final class HttpRequest implements Runnable {
 
 		String requestLine = br.readLine();
 
+		if (requestLine == null) {
+			System.err.println("Request Interrupted, ignoring.");
+			return;
+		}
+
 		// Get the header lines.
 		String headerLine = null;
 		while (br.ready()) {
