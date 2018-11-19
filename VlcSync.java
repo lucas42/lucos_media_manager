@@ -18,11 +18,11 @@ final class VlcSync implements Runnable {
 				} catch (IOException e) {
 					Thread.sleep(30000);
 				} catch (Exception e) {
-					System.err.println("VlcSync Error:");
+					System.err.println("ERROR: VlcSync Error:");
 					e.printStackTrace(System.err);
 				}
 			} catch (InterruptedException e) {
-				System.err.println("Thread sleep Error:");
+				System.err.println("ERROR: Thread sleep Error:");
 				e.printStackTrace(System.err);
 			}
 		}

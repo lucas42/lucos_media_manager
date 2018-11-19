@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.net.SocketException;
 final class HttpRequest implements Runnable {
 	final static String CRLF = "\r\n";
 	Socket socket;
@@ -28,8 +29,11 @@ final class HttpRequest implements Runnable {
 	public void run() {
 		try {
 		processRequest();
+
+	} catch (java.net.SocketException e) {
+		System.out.println("WARNING: Problem with socket on incoming HTTP Request. "+e.getMessage());
 	} catch (Exception e) {
-		System.err.println("Server Error (HttpRequest, host:"+fullHostname+"):");
+		System.err.println("ERROR: Uknown Error (HttpRequest, host:"+fullHostname+"):");
 		e.printStackTrace();
 	}
 
@@ -45,7 +49,7 @@ final class HttpRequest implements Runnable {
 		String requestLine = br.readLine();
 
 		if (requestLine == null) {
-			System.err.println("Request Interrupted, ignoring.");
+			System.err.println("WARNING: Incoming HTTP Request interrupted before receiving headers.  Aborting response.");
 			return;
 		}
 
@@ -81,7 +85,7 @@ final class HttpRequest implements Runnable {
 				br.read(cbuf, 0, length);
 				data = new String(cbuf);
 			} catch (Exception e) {
-				System.err.println("Error getting HTTP data:");
+				System.err.println("WARNING: Can't get HTTP data from request:");
 				e.printStackTrace(System.err);
 			}
 		}
@@ -115,7 +119,7 @@ final class HttpRequest implements Runnable {
 				BigInteger update_currentTimeSet = new BigInteger(update_timeset);
 				update_success = Manager.update(update_curtrack, update_currentTime, update_currentTimeSet);
 			} catch (Exception e) {
-				System.err.println("update error");
+				System.err.println("ERROR: Unexpected error updating manager");
 				e.printStackTrace();
 			}
 		}
@@ -208,7 +212,7 @@ final class HttpRequest implements Runnable {
 			Manager.setPlaying(false);
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/playpause")) {
-			System.err.println("Using deprected /playpause");
+			System.err.println("WARNING: Using deprected /playpause");
 			
 			// Try to use /play and /pause instead.
 			Manager.TogglePlayPause();
@@ -287,7 +291,7 @@ final class HttpRequest implements Runnable {
 				fis = new FileInputStream(fileName);
 				 statusLine = "HTTP/1.1 200 OK";
 			} catch (FileNotFoundException e) {
-				System.err.println("File Not found: ".concat(fileName));
+				System.err.println("WARNING: File Not found: ".concat(fileName));
 				fileName = "./data/404.html";
 				statusLine = "HTTP/1.1 404 File Not Found";
 				try {

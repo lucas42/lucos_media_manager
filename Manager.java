@@ -13,12 +13,12 @@ public final class Manager {
 		try {
 			settings.load(Manager.class.getClassLoader().getResourceAsStream("config.properties"));
 		} catch (NullPointerException e) {
-			System.err.println("No config file found");
+			System.err.println("FATAL: No config file found");
 			System.exit(4);
 		}
 
 		if (argv.length < 1) {
-			System.err.println("No port specified (must be 1st argument)");
+			System.err.println("FATAL: No port specified (must be 1st argument)");
 			System.exit(1);
 		}
 		
@@ -27,7 +27,7 @@ public final class Manager {
 		try{
 			port = Integer.parseInt(argv[0]);
 		} catch (NumberFormatException e) {
-			System.err.println("Port must be a number");
+			System.err.println("FATAL: Port must be a number");
 			System.exit(2);
 			return;
 		}
@@ -45,7 +45,7 @@ public final class Manager {
 		
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);
-		System.out.println("outgoing data server ready");
+		System.out.println("INFO: outgoing data server ready");
     
 		// Process HTTP service requests in an infinite loop.
 		while (true) {
@@ -199,7 +199,7 @@ public final class Manager {
 		try {
 			Thread.sleep(5000);
 		} catch (InterruptedException e) {
-			System.err.println("Thread Error:");
+			System.err.println("ERROR: Thread Sleep interrupted:");
 			e.printStackTrace(System.err);
 		}
 		if (status.get("open").hashCode() == openUrl.hashCode()) status.put("open", null);

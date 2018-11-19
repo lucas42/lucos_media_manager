@@ -13,11 +13,11 @@ final class TrackFetcher implements Runnable
 	// Implement the run() method of the Runnable interface.
 	@Override
 	public void run() {
+		System.err.println("DEBUG: Fetching more tracks to add to playlist");
 		try {
 			fetchTrack();
 		} catch (Exception e) {
-			System.err.println("Runtime error:");
-			e.printStackTrace(System.err);
+			System.err.println("ERROR: Can't fetch new tracks. "+e.getMessage());
 		}
 	}
 	private void fetchTrack() throws Exception {
@@ -31,6 +31,7 @@ final class TrackFetcher implements Runnable
 			Track track = new Track(source.url, source.tags);
 			Manager.queue(track);
 		}
+		System.err.println("DEBUG: New tracks added to playlist");
 	}
 
 	class SourceTrack {
