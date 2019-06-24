@@ -267,8 +267,29 @@ final class HttpRequest implements Runnable {
 		} else if (path.equals("/openediturl") && post) {
 			if (Manager.openEditUrl()) sendHeaders(204, "Changed", "application/json");
 			else sendHeaders(400, "Can't find edit url", "application/json");
-		}  else if (path.equals("/time")) {
+		} else if (path.equals("/time")) {
 			redirect("am.l42.eu");
+		} else if(path.equals("/_info")) {
+			Map<String, Object> output = new HashMap<String, Object>();
+			Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();
+			Map<String, Map<String, Object>> metrics = new HashMap<String, Map<String, Object>>();
+			Map<String, Object> queueCheck = new HashMap<String, Object>();
+			queueCheck.put("techDetail", "Queue has at least 5 tracks");
+			queueCheck.put("ok", Manager.getPlaylistLength() >= 5);
+			checks.put("queue", queueCheck);
+			Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
+			emptyQueueCheck.put("techDetail", "Queue has any tracks");
+			emptyQueueCheck.put("ok", Manager.getPlaylistLength() > 0);
+			checks.put("emptyQueue", emptyQueueCheck);
+			Map<String, Object> queueMetric = new HashMap<String, Object>();
+			queueMetric.put("techDetail", "Number of tracks in queue");
+			queueMetric.put("value", Manager.getPlaylistLength());
+			metrics.put("queueLength", queueMetric);
+			output.put("system", "lucos_media_manager");
+			output.put("checks", checks);
+			output.put("metrics", metrics);
+			sendHeaders(200, "OK", "application/json");
+			osw.write(gson.toJson(output));
 		} else {
 			String fileName;
 			
