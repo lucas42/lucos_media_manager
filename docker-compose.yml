@@ -1,0 +1,8 @@
+version: '3'
+services:
+    media_manager:
+      build: .
+      container_name: media_manager
+      ports: 
+        - "8001:8080"
+      image: lucas42/lucos_media_manager
