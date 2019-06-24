@@ -17,15 +17,15 @@ public final class Manager {
 			System.exit(4);
 		}
 
-		if (argv.length < 1) {
-			System.err.println("FATAL: No port specified (must be 1st argument)");
+		if (System.getenv("PORT") == null) {
+			System.err.println("FATAL: No PORT environment variable specified");
 			System.exit(1);
 		}
 		
 		// Set the port number.
 		int port;
 		try{
-			port = Integer.parseInt(argv[0]);
+			port = Integer.parseInt(System.getenv("PORT"));
 		} catch (NumberFormatException e) {
 			System.err.println("FATAL: Port must be a number");
 			System.exit(2);
