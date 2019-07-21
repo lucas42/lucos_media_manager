@@ -280,11 +280,11 @@ final class HttpRequest implements Runnable {
 			Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
 			emptyQueueCheck.put("techDetail", "Queue has any tracks");
 			emptyQueueCheck.put("ok", Manager.getPlaylistLength() > 0);
-			checks.put("emptyQueue", emptyQueueCheck);
+			checks.put("empty-queue", emptyQueueCheck);
 			Map<String, Object> queueMetric = new HashMap<String, Object>();
 			queueMetric.put("techDetail", "Number of tracks in queue");
 			queueMetric.put("value", Manager.getPlaylistLength());
-			metrics.put("queueLength", queueMetric);
+			metrics.put("queue-length", queueMetric);
 			Map<String, String> ci = new HashMap<String, String>();
 			ci.put("circle", "gh/lucas42/lucos_media_manager");
 			output.put("system", "lucos_media_manager");
