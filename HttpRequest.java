@@ -285,9 +285,12 @@ final class HttpRequest implements Runnable {
 			queueMetric.put("techDetail", "Number of tracks in queue");
 			queueMetric.put("value", Manager.getPlaylistLength());
 			metrics.put("queueLength", queueMetric);
+			Map<String, String> ci = new HashMap<String, String>();
+			ci.put("circle", "gh/lucas42/lucos_media_manager");
 			output.put("system", "lucos_media_manager");
 			output.put("checks", checks);
 			output.put("metrics", metrics);
+			output.put("ci", ci);
 			sendHeaders(200, "OK", "application/json");
 			osw.write(gson.toJson(output));
 		} else {
