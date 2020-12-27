@@ -13,11 +13,11 @@ class Track {
 	public Track(String url, Map<String, String> metadata) {
 		this.url = url;
 		if (metadata.get("img") == null) {
-			if (metadata.get("mbid_artist") != null) metadata.put("img", "https://www.bbc.co.uk/music/images/artists/542x305/"+metadata.get("mbid_artist")+".jpg");
+			if (metadata.get("mbid_artist") != null) metadata.put("img", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
 			else metadata.put("img", Manager.getSetting("default_img"));
 		}
 		if (metadata.get("thumb") == null) {
-			if (metadata.get("mbid_artist") != null) metadata.put("thumb", "https://www.bbc.co.uk/music/images/artists/234x132/"+metadata.get("mbid_artist")+".jpg");
+			if (metadata.get("mbid_artist") != null) metadata.put("thumb", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
 			else metadata.put("thumb", Manager.getSetting("default_thumb"));
 		}
 		if (metadata.get("title") == null) {
@@ -32,7 +32,7 @@ class Track {
 		}
 		if (metadata.get("exturl") == null) {
 			if (metadata.get("pid") != null) metadata.put("exturl", "https://www.bbc.co.uk/programmes/"+metadata.get("pid"));
-			else if(metadata.get("mbid_artist") != null) metadata.put("exturl", "https://www.bbc.co.uk/music/artists/"+metadata.get("mbid_artist"));
+			else if(metadata.get("mbid_artist") != null) metadata.put("exturl", "https://musicbrainz.org/artist/"+metadata.get("mbid_artist"));
 		}
 		if (metadata.get("editurl") == null) {
 			if (metadata.get("track_id") != null) metadata.put("editurl", Manager.getSetting("edit_url")+"?id="+metadata.get("track_id"));
