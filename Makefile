@@ -7,7 +7,7 @@ build-tests: build libs/junit-platform-console-standalone-1.7.0.jar
 
 test: build-tests libs/junit-platform-console-standalone-1.7.0.jar libs/jacoco/lib/jacocoagent.jar
 	java -javaagent:libs/jacoco/lib/jacocoagent.jar -jar libs/junit-platform-console-standalone-1.7.0.jar --scan-classpath --class-path bin
-	java -jar libs/jacoco/lib/jacococli.jar report jacoco.exec --html ./reports --classfiles bin
+	java -jar libs/jacoco/lib/jacococli.jar report jacoco.exec --html ./reports --classfiles bin --sourcefiles .
 
 libs/gson-2.8.1.jar:
 	mkdir -p libs
