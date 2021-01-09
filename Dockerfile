@@ -7,15 +7,12 @@ RUN apk add git
 RUN git clone https://github.com/lucas42/lucos_media_player.git /web/lucos/lucos_media_player
 RUN git clone https://github.com/lucas42/lucos_media_controller.git /web/lucos/lucos_media_controller
 
-RUN mkdir -p /web/lucos/lib/java/
-
-RUN wget "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.8.1/gson-2.8.1.jar" -O /web/lucos/lib/java/gson-2.8.1.jar
+RUN apk add make
 
 COPY . .
-
-RUN ./build.sh
+RUN make
 
 ENV PORT 8080
 EXPOSE $PORT
 
-CMD [ "java", "-cp", ".:bin:../lib/java/*", "Manager" ]
+CMD [ "java", "-cp", ".:bin:libs/*", "Manager" ]

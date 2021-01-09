@@ -7,9 +7,16 @@ A java service for keeping track of which music is currently playing.
 
 ## Build-time Dependencies
 * Java
+* Make
+* wget
 * [Google gson](https://code.google.com/p/google-gson/)
 * [lucos media player](https://github.com/lucas42/lucos_media_player) (path of media player is currently hardcoded)
 * [lucos media controller](https://github.com/lucas42/lucos_media_controller) (path of media controller is currently hardcoded)
+
+## Test Dependencies
+* [Junit5](https://junit.org/junit5/docs/current/user-guide/)
+* [JaCoCo](https://www.jacoco.org/jacoco/trunk/index.html)
+* Unzip (used for setting up jacoco)
 
 ## Setup (handled by Dockerfile)
 There is a service file included to allow systemd to run it.
