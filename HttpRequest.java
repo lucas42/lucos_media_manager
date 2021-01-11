@@ -269,6 +269,7 @@ final class HttpRequest implements Runnable {
 			if (Manager.openEditUrl()) sendHeaders(204, "Changed", "application/json");
 			else sendHeaders(400, "Can't find edit url", "application/json");
 		} else if (path.equals("/time")) {
+			System.err.println("WARNING: Using deprected /time");
 			redirect("am.l42.eu");
 		} else if(path.equals("/_info")) {
 			Map<String, Object> output = new HashMap<String, Object>();
