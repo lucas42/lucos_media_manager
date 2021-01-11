@@ -1,3 +1,6 @@
+run: build
+	java -cp .:bin:libs/* Manager
+
 build: libs/gson-2.8.1.jar
 	mkdir -p bin
 	javac -cp .:libs/* -d bin *.java -Xlint:unchecked

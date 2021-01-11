@@ -10,7 +10,7 @@ RUN git clone https://github.com/lucas42/lucos_media_controller.git /web/lucos/l
 RUN apk add make
 
 COPY . .
-RUN make
+RUN make build
 
 ENV PORT 8080
 EXPOSE $PORT
