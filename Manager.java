@@ -158,7 +158,7 @@ public final class Manager {
 	private static Map<String, Object> createFullSummary() {
 		Map<String, Object> summary = new HashMap<String, Object>();
 		LinkedList<Track> tracks = new LinkedList<Track>();
-		if (!status.get("now").equals(new NullTrack())) {
+		if (status.get("now") != null && !status.get("now").equals(new NullTrack())) {
 			tracks.add((Track)status.get("now"));
 		}
 		Iterator iter = playlist.iterator();

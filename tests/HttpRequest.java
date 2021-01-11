@@ -52,6 +52,14 @@ class HttpRequestTest {
 		compareRequestResponse("POST /playpause HTTP/1.0\n", "204");
 		assertTrue(Manager.getPlaying());
 	}
+	@Test
+	void control() {
+		Manager.setPlaying(true);
+		compareRequestResponse("POST /control?isPlaying=false&volume=0.7 HTTP/1.1", "204");
 
+		// This actually sets the volume as a string, which I don't think it should do...
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "volume\":\"0.7\"");
+		assertTrue(Manager.getPlaying());
+	}
 
 }

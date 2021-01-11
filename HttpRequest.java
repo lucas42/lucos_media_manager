@@ -196,6 +196,7 @@ final class HttpRequest implements Runnable {
 				Thread.sleep(1);
 			}
 		} else if (path.equals("/control") && post) {
+			System.err.println("WARNING: Using deprected /control");
 			Manager.update(get);
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/next") && post) {
