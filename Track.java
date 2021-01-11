@@ -35,7 +35,7 @@ class Track {
 			else if(metadata.get("mbid_artist") != null) metadata.put("exturl", "https://musicbrainz.org/artist/"+metadata.get("mbid_artist"));
 		}
 		if (metadata.get("editurl") == null) {
-			if (metadata.get("track_id") != null) metadata.put("editurl", Manager.getSetting("edit_url")+"?id="+metadata.get("track_id"));
+			if (metadata.get("track_id") != null) metadata.put("editurl", "null?id="+metadata.get("track_id"));
 		}
 		this.metadata = metadata;
 	}

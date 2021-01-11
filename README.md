@@ -25,7 +25,6 @@ Alternatively, run `java -cp .:bin:../lib/java/* Manager $port` (assumes ../../l
 The server requires a file named "config.properties" in the root of the project.  This should consist of newline separated key/value pairs (the key and value should be deliminated by an equal sign).  The following keys are used by the server:
 * default_img
 * default_thumb
-* edit_url
 * playlist
 
 ## Running
