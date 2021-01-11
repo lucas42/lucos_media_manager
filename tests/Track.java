@@ -22,5 +22,14 @@ class TrackTest {
 		final Track musicbrainzArtistTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("mbid_artist", "db92a151-1ac2-438b-bc43-b82e149ddd50")));
 		assertEquals("https://musicbrainz.org/artist/db92a151-1ac2-438b-bc43-b82e149ddd50", musicbrainzArtistTrack.getExtUrl());
 	}
+	@Test
+	void editUrl() {
+		final Track noMetadataTrack = new Track("https://example.com/track");
+		assertEquals(null, noMetadataTrack.getEditUrl());
+		final Track trackWithCustomEditUrl = new Track("https://example.com/track", new HashMap<String, String>(Map.of("editurl", "https://example.com/edit")));
+		assertEquals("https://example.com/edit", trackWithCustomEditUrl.getEditUrl());
+		final Track standardTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("track_id", "42")));
+		assertEquals("null?id=42", standardTrack.getEditUrl());
+	}
 
 }
