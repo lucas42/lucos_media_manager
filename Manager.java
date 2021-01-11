@@ -170,7 +170,7 @@ public final class Manager {
 		return summary;
 	}
 	private static void updateNowNext() {
-		if (status.get("now").equals(new NullTrack()) && getPlaylistLength() > 0) {
+		if (status.getOrDefault("now", (new NullTrack())).equals(new NullTrack()) && getPlaylistLength() > 0) {
 			status.put("now", playlist.removeFirst());
 			((Track)status.get("now")).timeSetNow();
 		}
@@ -183,7 +183,7 @@ public final class Manager {
 
 	private static void fetchTracks() {
 		if (currentFetcherThread != null && currentFetcherThread.isAlive()) return;
-		TrackFetcher fetcher = new TrackFetcher();
+		TrackFetcher fetcher = new TrackFetcher(getSetting("playlist"));
 		
 		// Create a new thread to process the request.
 		currentFetcherThread = new Thread(fetcher);

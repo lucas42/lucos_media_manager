@@ -6,8 +6,10 @@ import com.google.gson.*;
 final class TrackFetcher implements Runnable
 {
 	final static String CRLF = "\r\n";
+	String listurl;
 	// Constructor
-	public TrackFetcher() { 
+	public TrackFetcher(String setlisturl) {
+		listurl = setlisturl;
 	}
 	
 	// Implement the run() method of the Runnable interface.
@@ -15,15 +17,13 @@ final class TrackFetcher implements Runnable
 	public void run() {
 		System.err.println("DEBUG: Fetching more tracks to add to playlist");
 		try {
-			fetchTrack();
+			fetchList();
 		} catch (Exception e) {
-			System.err.println("ERROR: Can't fetch new tracks. "+e.getMessage());
+			System.err.println("ERROR: Can't fetch new tracks.");
+			e.printStackTrace(System.err);
 		}
 	}
-	private void fetchTrack() throws Exception {
-		getJSON(Manager.getSetting("playlist"));
-	}
-	private void getJSON(String listurl) throws MalformedURLException, IOException{
+	private void fetchList() throws MalformedURLException, IOException{
         URL url = new URL(listurl);
         InputStreamReader reader = new InputStreamReader(url.openStream());
         SourceTrack[] tracks = new Gson().fromJson(reader, SourceTrack[].class);
