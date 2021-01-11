@@ -2,3 +2,4 @@ bin
 libs
 jacoco.exec
 reports
+.DS_Store
