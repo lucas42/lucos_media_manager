@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -30,6 +31,21 @@ class TrackTest {
 		assertEquals("https://example.com/edit", trackWithCustomEditUrl.getEditUrl());
 		final Track standardTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("track_id", "42")));
 		assertEquals("null?id=42", standardTrack.getEditUrl());
+	}
+	@Test
+	void equality() {
+		final Track trackA = new Track("https://example.com/track1");
+		final Track trackB = new Track("https://example.com/track1");
+		final Track trackC = new Track("https://example.com/track2");
+		final Track trackWithoutUrlA = new Track(null);
+		final Track trackWithoutUrlB = new Track(null);
+		assertNotEquals(trackA, null);
+		assertEquals(trackA, trackB);
+		assertEquals(trackA, trackA);
+		assertNotEquals(trackA, trackC);
+		assertNotEquals(trackA, new HashMap<String, String>());
+		assertNotEquals(trackWithoutUrlA, trackA);
+		assertEquals(trackWithoutUrlA, trackWithoutUrlB);
 	}
 
 }
