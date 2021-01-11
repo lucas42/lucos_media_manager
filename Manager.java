@@ -80,11 +80,12 @@ public final class Manager {
 		
 		// If unpausing, then update timeset in the current track, so nothing is missed
 		if (isPlaying && !wasPlaying) {
-			((Track)status.get("now")).timeSetNow();
+			Track now = (Track)status.get("now");
+			if (now != null) now.timeSetNow();
 		}
 	}
 	public static boolean getPlaying() {
-		return (Boolean)status.get("isPlaying");
+		return (Boolean)status.getOrDefault("isPlaying", true);
 	}
 	public static void setVolume(float volume) {
 		if (volume > 1) volume = 1;

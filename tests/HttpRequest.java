@@ -36,6 +36,22 @@ class HttpRequestTest {
 	void robots() {
 		compareRequestResponse("Get /robots.txt HTTP/1.1\n", "Disallow:");
 	}
+	@Test
+	void playPause() {
+		Manager.setPlaying(true);
+		compareRequestResponse("POST /pause HTTP/1.0\n", "204");
+		assertFalse(Manager.getPlaying());
+		compareRequestResponse("POST /pause HTTP/1.0\n", "204");
+		assertFalse(Manager.getPlaying());
+		compareRequestResponse("POST /play HTTP/1.0\n", "204");
+		assertTrue(Manager.getPlaying());
+		compareRequestResponse("POST /play HTTP/1.0\n", "204");
+		assertTrue(Manager.getPlaying());
+		compareRequestResponse("POST /playpause HTTP/1.0\n", "204");
+		assertFalse(Manager.getPlaying());
+		compareRequestResponse("POST /playpause HTTP/1.0\n", "204");
+		assertTrue(Manager.getPlaying());
+	}
 
 
 }
