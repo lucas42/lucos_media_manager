@@ -27,7 +27,6 @@ The server requires a file named "config.properties" in the root of the project.
 * default_thumb
 * edit_url
 * playlist
-* vlcweb 
 
 ## Running
 `nice -19 docker-compose up -d --no-build`

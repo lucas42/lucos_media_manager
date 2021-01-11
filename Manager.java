@@ -37,12 +37,6 @@ public final class Manager {
 		status.put("openurl", null);
 		next();
 		
-		// Start a thread to sync with Vlc
-		VlcSync vlcsync = new VlcSync();
-		Thread vlcsyncThread = new Thread(vlcsync);
-		vlcsyncThread.start();
-		
-		
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);
 		System.out.println("INFO: outgoing data server ready");
@@ -75,7 +69,6 @@ public final class Manager {
 	}
 	public static void setPlaying(boolean isPlaying) {
 		boolean wasPlaying = getPlaying();
-		VlcSync.pausedForVlc = false;
 		status.put("isPlaying", isPlaying);
 		
 		// If unpausing, then update timeset in the current track, so nothing is missed
