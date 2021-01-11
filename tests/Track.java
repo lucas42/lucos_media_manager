@@ -1,14 +1,26 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.HashMap;
 
 class TrackTest {
 
-    private final Track track = new Track("https://example.com/track");
-
-    @Test
-    void keepsUrl() {
-        assertEquals("https://example.com/track", track.getUrl());
-    }
+	@Test
+	void keepsUrl() {
+		final Track track = new Track("https://example.com/track");
+		assertEquals("https://example.com/track", track.getUrl());
+	}
+	@Test
+	void extUrl() {
+		final Track noMetadataTrack = new Track("https://example.com/track");
+		assertEquals(null, noMetadataTrack.getExtUrl());
+		final Track trackWithCustomExtUrl = new Track("https://example.com/track", new HashMap<String, String>(Map.of("exturl", "https://example.com/viewdetails")));
+		assertEquals("https://example.com/viewdetails", trackWithCustomExtUrl.getExtUrl());
+		final Track bbcProgrammeTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("pid", "b006q2x0")));
+		assertEquals("https://www.bbc.co.uk/programmes/b006q2x0", bbcProgrammeTrack.getExtUrl());
+		final Track musicbrainzArtistTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("mbid_artist", "db92a151-1ac2-438b-bc43-b82e149ddd50")));
+		assertEquals("https://musicbrainz.org/artist/db92a151-1ac2-438b-bc43-b82e149ddd50", musicbrainzArtistTrack.getExtUrl());
+	}
 
 }
