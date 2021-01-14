@@ -8,6 +8,7 @@ public final class Manager {
 	private final static String[] noupdates = { "now", "next", "isPlaying" };
 	private static Thread currentFetcherThread = null;
 	private static Properties settings = new Properties();
+	private static Loganne loganne;
 	public static void main(String argv[]) throws Exception {
 		
 		try {
@@ -31,6 +32,8 @@ public final class Manager {
 			System.exit(2);
 			return;
 		}
+
+		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
 		
 		status.put("isPlaying", true);
 		status.put("volume", 0.5);
@@ -177,6 +180,7 @@ public final class Manager {
 
 	private static void fetchTracks() {
 		if (currentFetcherThread != null && currentFetcherThread.isAlive()) return;
+		if (loganne != null) loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
 		TrackFetcher fetcher = new TrackFetcher(getSetting("playlist"));
 		
 		// Create a new thread to process the request.
