@@ -5,6 +5,7 @@ class Device {
 	private static Map<String, Device> all = new HashMap<String, Device>();
 	private String uuid;
 	private String name;
+	private boolean isCurrent = false;
 	private Device(String uuid) {
 		this.uuid = uuid;
 		all.put(uuid, this);
@@ -13,6 +14,9 @@ class Device {
 	public String getName() {
 		return name;
 	}
+	public boolean isCurrent() {
+		return isCurrent;
+	}
 	public static Device getInstance(String uuid) {
 		Device instance = all.get(uuid);
 		if (instance != null) return instance;
@@ -20,5 +24,11 @@ class Device {
 	}
 	public static Device[] getAll() {
 		return all.values().toArray(new Device[0]);
+	}
+	public static void setCurrent(String uuid) {
+		for (Device device : all.values()) {
+			device.isCurrent = false;
+		}
+		getInstance(uuid).isCurrent = true;
 	}
 }
