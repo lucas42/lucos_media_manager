@@ -38,24 +38,35 @@ class DeviceTest {
 	@Test
 	@Order(3) // Use the devices set up in the names tests
 	void trackCurrentDevice() {
+
+		// Should default to the first device being current
 		Device[] devices = Device.getAll();
 		assertEquals(3, devices.length);
-		assertEquals(false, devices[0].isCurrent());
+		assertEquals(true, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
 
 		Device.setCurrent("uuid-C");
 		devices = Device.getAll();
 		assertEquals(3, devices.length);
+		// Only one device at a time should be current, so uuid-A is no longer current
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(true, devices[2].isCurrent());
 
-		Device.setCurrent("uuid-A");
+		Device.setCurrent("uuid-B");
 		devices = Device.getAll();
 		assertEquals(3, devices.length);
-		assertEquals(true, devices[0].isCurrent());
-		assertEquals(false, devices[1].isCurrent());
+		assertEquals(false, devices[0].isCurrent());
+		assertEquals(true, devices[1].isCurrent());
+		assertEquals(false, devices[2].isCurrent());
+
+		// Setting the current device to be current again should have no effect
+		Device.setCurrent("uuid-B");
+		devices = Device.getAll();
+		assertEquals(3, devices.length);
+		assertEquals(false, devices[0].isCurrent());
+		assertEquals(true, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
 
 		// Setting current to a non-existant uuid should create a new device
