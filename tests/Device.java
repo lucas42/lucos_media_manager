@@ -23,9 +23,20 @@ class DeviceTest {
 		assertEquals("Device 2", devices[1].getName());
 		assertEquals("Device 3", devices[2].getName());
 	}
+	@Test
+	@Order(2)
+	void customNames() {
+		Device.getInstance("uuid-A").setName("Aardvark");
+		Device.getInstance("uuid-C").setName("Cardiff Castle");
+		Device[] devices = Device.getAll();
+		assertEquals(3, devices.length);
+		assertEquals("Aardvark", devices[0].getName());
+		assertEquals("Device 2", devices[1].getName());
+		assertEquals("Cardiff Castle", devices[2].getName());
+	}
 
 	@Test
-	@Order(2) // Use the devices set up in the names tests
+	@Order(3) // Use the devices set up in the names tests
 	void trackCurrentDevice() {
 		Device[] devices = Device.getAll();
 		assertEquals(3, devices.length);
