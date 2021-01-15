@@ -165,6 +165,7 @@ public final class Manager {
 		summary.put("tracks", tracks);
 		summary.put("volume", status.get("volume"));
 		summary.put("isPlaying", status.get("isPlaying"));
+		summary.put("devices", Device.getAll());
 		return summary;
 	}
 	private static void updateNowNext() {
