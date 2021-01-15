@@ -33,6 +33,7 @@ public final class Manager {
 			return;
 		}
 
+		// TODO: Don't post to production loganne host when running locally
 		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
 		
 		status.put("isPlaying", true);
