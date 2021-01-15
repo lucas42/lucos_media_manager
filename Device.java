@@ -58,10 +58,15 @@ class Device {
 	 * Only one device should be current at a time
 	 * If a device with the given uuid doesn't exist, it is created
 	 */
-	public static void setCurrent(String uuid) {
+	public static void setCurrent(String uuid, Loganne loganne) {
+		Device newCurrent = getInstance(uuid);
+
+		// Don't bother doing anything if this device is already current
+		if (newCurrent.isCurrent()) return;
 		for (Device device : all.values()) {
 			device.isCurrent = false;
 		}
-		getInstance(uuid).isCurrent = true;
+		newCurrent.isCurrent = true;
+		if (loganne != null) loganne.post("deviceSwitch", "Moving music to play on "+newCurrent.getName());
 	}
 }

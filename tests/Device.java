@@ -3,8 +3,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import java.net.* ;
-import java.io.* ;
+import static org.mockito.Mockito.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class DeviceTest {
@@ -38,6 +37,8 @@ class DeviceTest {
 	@Test
 	@Order(3) // Use the devices set up in the names tests
 	void trackCurrentDevice() {
+		Loganne mockLoganne = mock(Loganne.class);
+		String latestLogannePost;
 
 		// Should default to the first device being current
 		Device[] devices = Device.getAll();
@@ -45,37 +46,42 @@ class DeviceTest {
 		assertEquals(true, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
+		verifyNoMoreInteractions(mockLoganne);
 
-		Device.setCurrent("uuid-C");
+		Device.setCurrent("uuid-C", mockLoganne);
 		devices = Device.getAll();
 		assertEquals(3, devices.length);
 		// Only one device at a time should be current, so uuid-A is no longer current
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(true, devices[2].isCurrent());
+		verify(mockLoganne).post("deviceSwitch","Moving music to play on Cardiff Castle");
 
-		Device.setCurrent("uuid-B");
+		Device.setCurrent("uuid-B", mockLoganne);
 		devices = Device.getAll();
 		assertEquals(3, devices.length);
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(true, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
+		verify(mockLoganne).post("deviceSwitch","Moving music to play on Device 2");
 
 		// Setting the current device to be current again should have no effect
-		Device.setCurrent("uuid-B");
+		Device.setCurrent("uuid-B", mockLoganne);
 		devices = Device.getAll();
 		assertEquals(3, devices.length);
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(true, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
+		verifyNoMoreInteractions(mockLoganne);
 
 		// Setting current to a non-existant uuid should create a new device
-		Device.setCurrent("uuid-D");
+		Device.setCurrent("uuid-D", mockLoganne);
 		devices = Device.getAll();
 		assertEquals(4, devices.length);
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
 		assertEquals(true, devices[3].isCurrent());
+		verify(mockLoganne).post("deviceSwitch","Moving music to play on Device 4");
 	}
 }
