@@ -1,16 +1,16 @@
 run: build
-	java -cp .:bin:libs/* Manager
+	java -cp bin:libs/* Manager
 
 build: libs/gson-2.8.1.jar
 	mkdir -p bin
-	javac -cp .:libs/* -d bin *.java -Xlint:unchecked
+	javac -cp src:libs/* -d bin src/*.java -Xlint:unchecked
 
 build-tests: build libs/junit-platform-console-standalone-1.7.0.jar libs/mockito-core-3.7.0.jar libs/byte-buddy-1.10.19.jar libs/objenesis-3.1.jar
-	javac -cp .:libs/* -d bin tests/*.java -Xlint:unchecked
+	javac -cp src:libs/* -d bin tests/*.java -Xlint:unchecked
 
 test: build-tests libs/junit-platform-console-standalone-1.7.0.jar libs/jacoco/lib/jacocoagent.jar
 	java -javaagent:libs/jacoco/lib/jacocoagent.jar -jar libs/junit-platform-console-standalone-1.7.0.jar --scan-classpath --class-path bin:libs/gson-2.8.1.jar:libs/mockito-core-3.7.0.jar:libs/byte-buddy-1.10.19.jar:libs/objenesis-3.1.jar
-	java -jar libs/jacoco/lib/jacococli.jar report jacoco.exec --html ./reports --classfiles bin --sourcefiles .
+	java -jar libs/jacoco/lib/jacococli.jar report jacoco.exec --html ./reports --classfiles bin --sourcefiles src
 
 libs/gson-2.8.1.jar:
 	mkdir -p libs
