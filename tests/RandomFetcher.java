@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
@@ -20,6 +21,10 @@ class RandomFetcherTest {
 		verify(playlist).queue(tracksCaptor.capture());
 		Track[] tracks = tracksCaptor.getValue();
 		assertEquals(20, tracks.length);
+
+		for (Track track: tracks) {
+			assertNotNull(track.metadata);
+		}
 	}
 
 	@Test

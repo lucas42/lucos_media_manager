@@ -8,6 +8,7 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.net.SocketException;
+import java.lang.reflect.Type;
 final class HttpRequest implements Runnable {
 	final static String CRLF = "\r\n";
 	Socket socket;
@@ -17,7 +18,7 @@ final class HttpRequest implements Runnable {
 	OutputStreamWriter osw;
 	Map<String, String> header = new HashMap<String, String>();
 	Map<String, String> get = new HashMap<String, String>();
-	static Gson gson = new Gson();
+	static Gson gson = customGson();
 	
 	// Constructor
 	public HttpRequest(Socket socket) throws Exception {
@@ -132,9 +133,9 @@ final class HttpRequest implements Runnable {
 				hashcode = 0;
 			}
 			while (true) {
-				if (Manager.hasChanged(hashcode)) {
+				if (Manager.briefSummaryHasChanged(hashcode)) {
 					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write(gson.toJson(Manager.getStatus()));   
+					if (!head) osw.write(gson.toJson(Manager.getBriefSummary()));
 					break;
 				}
 				if ((System.nanoTime() - startTime) > (1000000000L * 30)) {
@@ -252,11 +253,11 @@ final class HttpRequest implements Runnable {
 			String pos = metadata.remove("pos");
 			Track newTrack = new Track(url, metadata);
 			if (pos.equals("now")) {
-				Manager.queue(newTrack, -1);
+				Manager.queueNow(newTrack);
 			} else if (pos.equals("next")) {
-				Manager.queue(newTrack, 0);
+				Manager.queueNext(newTrack);
 			} else {
-				Manager.queue(newTrack);
+				Manager.queueEnd(newTrack);
 			}
 			sendHeaders(204, "Queued", "application/json");
 		} else if (path.equals("/insert")) {
@@ -437,5 +438,19 @@ final class HttpRequest implements Runnable {
 		HashMap<String, String> headers =  new HashMap<String, String>();
 		headers.put("Location", url);
 		sendHeaders(302, "Redirect", headers);
+	}
+	private static Gson customGson() {
+		GsonBuilder gsonBuilder = new GsonBuilder();
+
+		JsonSerializer<Playlist> playlistSerializer =
+			new JsonSerializer<Playlist>() {
+				@Override
+				public JsonElement serialize(Playlist src, Type typeOfSrc, JsonSerializationContext context) {
+					return context.serialize(src.getTracks(), LinkedList.class);
+				}
+			};
+		gsonBuilder.registerTypeAdapter(Playlist.class, playlistSerializer);
+
+		return gsonBuilder.create();
 	}
 }

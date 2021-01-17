@@ -4,9 +4,8 @@ import java.util.* ;
 import java.math.BigInteger;
 public final class Manager {
 	private static Map<String, Object> status = new HashMap<String, Object>();
-	private static LinkedList<Track> playlist = new LinkedList<Track>();
-	private final static String[] noupdates = { "now", "next", "isPlaying" };
-	private static Thread currentFetcherThread = null;
+	private static Playlist playlist;
+	private final static String[] noupdates = { "isPlaying" };
 	private static Properties settings = new Properties();
 	private static Loganne loganne;
 	public static void main(String argv[]) throws Exception {
@@ -34,12 +33,13 @@ public final class Manager {
 		}
 
 		// TODO: Don't post to production loganne host when running locally
-		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
+		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu.local");
 		
 		status.put("isPlaying", true);
 		status.put("volume", 0.5);
 		status.put("openurl", null);
-		next();
+
+		playlist = new Playlist(new RandomFetcher(), loganne);
 		
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);
@@ -76,8 +76,8 @@ public final class Manager {
 		status.put("isPlaying", isPlaying);
 		
 		// If unpausing, then update timeset in the current track, so nothing is missed
-		if (isPlaying && !wasPlaying) {
-			Track now = (Track)status.get("now");
+		if (isPlaying && !wasPlaying && playlist != null) {
+			Track now = playlist.getCurrentTrack();
 			if (now != null) now.timeSetNow();
 		}
 	}
@@ -89,19 +89,14 @@ public final class Manager {
 		if (volume < 0) volume = 0;
 		status.put("volume", volume);
 	}
-	public static boolean hasChanged(int oldhashcode) {
-		return (status.hashCode() != oldhashcode);
-	}
 	public static boolean playlistHasChanged(int oldhashcode) {
 		return (playlist.hashCode() != oldhashcode);
 	}
 	public static boolean fullSummaryHasChanged(int oldhashcode) {
 		return (createFullSummary().hashCode() != oldhashcode);
 	}
-	public static Map<String, Object> getStatus() {
-		Map<String, Object> output = new HashMap<String, Object>(status);
-		output.put("hashcode", status.hashCode());
-		return output;
+	public static boolean briefSummaryHasChanged(int oldhashcode) {
+		return (createBriefSummary().hashCode() != oldhashcode);
 	}
 	public static Map<String, Object> getPlaylist() {
 		Map<String, Object> output = new HashMap<String, Object>();
@@ -115,23 +110,26 @@ public final class Manager {
 		output.put("hashcode", summary.hashCode());
 		return output;
 	}
+	public static Map<String, Object> getBriefSummary() {
+		Map<String, Object> summary = createBriefSummary();
+		Map<String, Object> output = new HashMap<String, Object>(summary);
+		output.put("hashcode", summary.hashCode());
+		return output;
+	}
 	public static void update(Map<String, String> changes) {
 		
 		// Remove any keys which shouldn't be overwritten
 		for (String key : noupdates) changes.remove(key);
 		status.putAll(changes);
 	}
-	public static void queue(Track track) {
-		playlist.add(track);
-		updateNowNext();
+	public static void queueNow(Track track) {
+		playlist.queueNow(track);
 	}
-	public static void queue(Track track, int index) {
-		if (index == -1) {
-			Track now = (Track)status.get("now");
-			if (!now.equals(new NullTrack())) playlist.addFirst(now);
-			status.put("now", track);
-		} else playlist.add(index, track);
-		updateNowNext();
+	public static void queueNext(Track track) {
+		playlist.queueNext(track);
+	}
+	public static void queueEnd(Track track) {
+		playlist.queueEnd(track);
 	}
 	public static void queuem3u(BufferedReader br) throws IOException {
 		queuem3u(br, "");
@@ -141,55 +139,30 @@ public final class Manager {
 		while ((line = br.readLine()) != null) {
 			line = line.trim();
 			if (line.charAt(0) == '#' || line.indexOf('/') == -1) continue;
-			queue(new Track(prefix+line));
+			queueEnd(new Track(prefix+line));
 		}
 	}
 	public static void next() {
-		status.put("now", new NullTrack());
-		status.put("currentTime", 0);
-		updateNowNext();
-		if (getPlaylistLength() < 10) fetchTracks();
+		playlist.next();
 	}
 	
 	// Return info on all tracks, including current playing and queued in playlist
 	private static Map<String, Object> createFullSummary() {
 		Map<String, Object> summary = new HashMap<String, Object>();
-		LinkedList<Track> tracks = new LinkedList<Track>();
-		if (status.get("now") != null && !status.get("now").equals(new NullTrack())) {
-			tracks.add((Track)status.get("now"));
-		}
-		Iterator iter = playlist.iterator();
-		while(iter.hasNext()) {
-			tracks.add((Track)iter.next());
-		}
-		summary.put("tracks", tracks);
+		summary.put("tracks", playlist);
 		summary.put("volume", status.get("volume"));
 		summary.put("isPlaying", status.get("isPlaying"));
 		summary.put("devices", Device.getAll());
 		return summary;
 	}
-	private static void updateNowNext() {
-		if (status.getOrDefault("now", (new NullTrack())).equals(new NullTrack()) && getPlaylistLength() > 0) {
-			status.put("now", playlist.removeFirst());
-			((Track)status.get("now")).timeSetNow();
-		}
-		if (getPlaylistLength() > 0) {
-			status.put("next", playlist.getFirst());
-		} else {
-			status.put("next", new NullTrack());
-		}
-	}
-
-	private static void fetchTracks() {
-		if (currentFetcherThread != null && currentFetcherThread.isAlive()) return;
-		if (loganne != null) loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
-		TrackFetcher fetcher = new TrackFetcher(getSetting("playlist"));
-		
-		// Create a new thread to process the request.
-		currentFetcherThread = new Thread(fetcher);
-		
-		// Start the thread.
-		currentFetcherThread.start();
+	// Return info on the current and next track, volume and isPlaying
+	private static Map<String, Object> createBriefSummary() {
+		Map<String, Object> summary = new HashMap<String, Object>();
+		summary.put("volume", status.get("volume"));
+		summary.put("isPlaying", status.get("isPlaying"));
+		summary.put("now", playlist.getCurrentTrack());
+		summary.put("next", playlist.getNextTrack());
+		return summary;
 	}
 	private static void openUrl(String type, String url) {
 		Map<String, String> openUrl = new HashMap<String, String>();
@@ -205,51 +178,33 @@ public final class Manager {
 		if (status.get("open").hashCode() == openUrl.hashCode()) status.put("open", null);
 	}
 	public static boolean openExtUrl() {
-			Track now = (Track)status.get("now");
-			if (now.equals(new NullTrack())) return false;
+			Track now = playlist.getCurrentTrack();
+			if (now == null) return false;
 			String exturl = now.getExtUrl();
 			if (exturl == null) return false;
 			openUrl("ext", exturl);
 			return true;
 	}
 	public static boolean openEditUrl() {
-			Track now = (Track)status.get("now");
-			if (now.equals(new NullTrack())) return false;
+			Track now = playlist.getCurrentTrack();
+			if (now == null) return false;
 			String editurl = now.getEditUrl();
 			if (editurl == null) return false;
 			openUrl("edit", editurl);
 			return true;
 	}
 	public static void finished(Track oldtrack, String trackstatus) {
-		
-		if (oldtrack.equals(status.get("now"))) {
-
-			// TODO: save the time finished and status.
-			next();
-		}
-
-		playlist.remove(oldtrack);
-		updateNowNext();
-		if (getPlaylistLength() < 10) fetchTracks();
+		playlist.finished(oldtrack, trackstatus);
 	}
 	public static boolean update(Track curtrack, float currentTime, BigInteger currentTimeSet) {
-		if (curtrack.equals(status.get("now"))) {
-			Track now = (Track)status.get("now");
-			now.setTime(currentTime, currentTimeSet);
-			return true;
-		}
-		Iterator iter = playlist.iterator();
-		while(iter.hasNext()) {
-			Track track = (Track)iter.next();
-			if (curtrack.equals(track)) track.setTime(currentTime, currentTimeSet);
-			return true;
-		}
-		return false;
+		return playlist.setTrackTime(curtrack, currentTime, currentTimeSet);
 	}
 	public static boolean isCurrentURL(String url) {
-		return (((Track)status.get("now")).getUrl().equals(url));
+		Track now = playlist.getCurrentTrack();
+		if (now == null) return false;
+		return now.getUrl().equals(url);
 	}
 	public static int getPlaylistLength() {
-		return playlist.size();
+		return playlist.getLength();
 	}
 }

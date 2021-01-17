@@ -72,4 +72,7 @@ class Track {
 		Date date= new Date();
 		timeSet = new BigInteger(Long.toString(date.getTime()));
 	}
+	public float getCurrentTime() {
+		return currentTime;
+	}
 }
