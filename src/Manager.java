@@ -25,7 +25,7 @@ public final class Manager {
 		}
 
 		// TODO: Don't post to production loganne host when running locally
-		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu.local");
+		loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
 		
 		status.put("isPlaying", true);
 		status.put("volume", 0.5);
