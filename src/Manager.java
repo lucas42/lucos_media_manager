@@ -6,16 +6,8 @@ public final class Manager {
 	private static Map<String, Object> status = new HashMap<String, Object>();
 	private static Playlist playlist;
 	private final static String[] noupdates = { "isPlaying" };
-	private static Properties settings = new Properties();
 	private static Loganne loganne;
 	public static void main(String argv[]) throws Exception {
-		
-		try {
-			settings.load(Manager.class.getClassLoader().getResourceAsStream("config.properties"));
-		} catch (NullPointerException e) {
-			System.err.println("FATAL: No config file found");
-			System.exit(4);
-		}
 
 		if (System.getenv("PORT") == null) {
 			System.err.println("FATAL: No PORT environment variable specified");
@@ -60,12 +52,6 @@ public final class Manager {
 
 		}
 	
-	}
-	public static String getSetting(String key) {
-		return settings.getProperty(key);
-	}
-	public static String getSetting(String key, String defaultValue) {
-		return settings.getProperty(key, defaultValue);
 	}
 	public static boolean TogglePlayPause() {
 		setPlaying(!getPlaying());
@@ -180,7 +166,7 @@ public final class Manager {
 	public static boolean openExtUrl() {
 			Track now = playlist.getCurrentTrack();
 			if (now == null) return false;
-			String exturl = now.getExtUrl();
+			String exturl = now.getMetadata("exturl");
 			if (exturl == null) return false;
 			openUrl("ext", exturl);
 			return true;
@@ -188,7 +174,7 @@ public final class Manager {
 	public static boolean openEditUrl() {
 			Track now = playlist.getCurrentTrack();
 			if (now == null) return false;
-			String editurl = now.getEditUrl();
+			String editurl = now.getMetadata("editurl");
 			if (editurl == null) return false;
 			openUrl("edit", editurl);
 			return true;

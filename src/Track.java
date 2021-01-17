@@ -3,8 +3,8 @@ import java.net.* ;
 import java.util.* ; 
 import java.math.BigInteger;
 class Track {
-	protected String url;
-	protected Map<String, String> metadata;
+	private String url;
+	private Map<String, String> metadata;
 	private float currentTime = 0;
 	private BigInteger timeSet = null; // The time currentTime was updated (in millisecs since unix epoch)
 	public Track(String url) {
@@ -14,11 +14,11 @@ class Track {
 		this.url = url;
 		if (metadata.get("img") == null) {
 			if (metadata.get("mbid_artist") != null) metadata.put("img", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
-			else metadata.put("img", Manager.getSetting("default_img"));
+			else metadata.put("img", "https://ceol.l42.eu/default.png");
 		}
 		if (metadata.get("thumb") == null) {
 			if (metadata.get("mbid_artist") != null) metadata.put("thumb", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
-			else metadata.put("thumb", Manager.getSetting("default_thumb"));
+			else metadata.put("thumb", "https://ceol.l42.eu/thumb.png");
 		}
 		if (metadata.get("title") == null) {
 			if (url == null) metadata.put("title", "No Track");
@@ -56,11 +56,11 @@ class Track {
 	public String getUrl() {
 		return url;
 	}
-	public String getExtUrl() {
-		return metadata.get("exturl");
+	public String getMetadata(String key) {
+		return metadata.get(key);
 	}
-	public String getEditUrl() {
-		return metadata.get("editurl");
+	public Map<String, String> getMetadata() {
+		return metadata;
 	}
 	public void setTime(float newTime, BigInteger newTimeSet) {
 		if (newTime > currentTime) {

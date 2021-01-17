@@ -23,7 +23,7 @@ class RandomFetcherTest {
 		assertEquals(20, tracks.length);
 
 		for (Track track: tracks) {
-			assertNotNull(track.metadata);
+			assertNotNull(track.getMetadata());
 		}
 	}
 
