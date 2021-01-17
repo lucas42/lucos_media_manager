@@ -133,7 +133,7 @@ final class HttpRequest implements Runnable {
 				hashcode = 0;
 			}
 			while (true) {
-				if (Manager.briefSummaryHasChanged(hashcode)) {
+				if (Manager.summaryHasChanged(hashcode)) {
 					sendHeaders(200, "Long Poll", "application/json");
 					if (!head) osw.write(gson.toJson(Manager.getBriefSummary()));
 					break;
@@ -183,7 +183,7 @@ final class HttpRequest implements Runnable {
 				hashcode = 0;
 			}
 			while (true) {
-				if (Manager.fullSummaryHasChanged(hashcode)) {
+				if (Manager.summaryHasChanged(hashcode)) {
 					sendHeaders(200, "Long Poll", "application/json");
 					if (!head) osw.write(gson.toJson(Manager.getFullSummary()));   
 					break;

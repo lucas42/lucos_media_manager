@@ -68,6 +68,12 @@ class Playlist {
 		return true;
 	}
 
+
+	@Override
+	public int hashCode() {
+		return tracks.hashCode();
+	}
+
 	private void topupTracks() {
 
 		// Don't do anything if there's already enough tracks

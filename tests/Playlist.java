@@ -1,4 +1,5 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
@@ -102,45 +103,67 @@ class PlaylistTest {
 		Track trackD = new Track("https://example.com/trackD");
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
 
-		assertEquals(0, playlist.getLength());
-		assertEquals(null, playlist.getCurrentTrack());
-		assertEquals(null, playlist.getNextTrack());
+			assertEquals(0, playlist.getLength());
+			assertEquals(null, playlist.getCurrentTrack());
+			assertEquals(null, playlist.getNextTrack());
+			int oldHashcode = playlist.hashCode();
+			int newHashcode = playlist.hashCode();
+			assertEquals(oldHashcode, newHashcode);
 
 		playlist.queueNext(trackA);
-		assertEquals(1, playlist.getLength());
-		assertEquals(trackA, playlist.getCurrentTrack());
-		assertEquals(null, playlist.getNextTrack());
+			assertEquals(1, playlist.getLength());
+			assertEquals(trackA, playlist.getCurrentTrack());
+			assertEquals(null, playlist.getNextTrack());
+
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
 
 		playlist.queueNow(trackB);
-		assertEquals(2, playlist.getLength());
-		assertEquals(trackB, playlist.getCurrentTrack());
-		assertEquals(trackA, playlist.getNextTrack());
+			assertEquals(2, playlist.getLength());
+			assertEquals(trackB, playlist.getCurrentTrack());
+			assertEquals(trackA, playlist.getNextTrack());
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
 
 		playlist.queueNext(trackC);
-		assertEquals(3, playlist.getLength());
-		assertEquals(trackB, playlist.getCurrentTrack());
-		assertEquals(trackC, playlist.getNextTrack());
+			assertEquals(3, playlist.getLength());
+			assertEquals(trackB, playlist.getCurrentTrack());
+			assertEquals(trackC, playlist.getNextTrack());
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
 
 		playlist.queueEnd(trackD);
-		assertEquals(4, playlist.getLength());
-		assertEquals(trackB, playlist.getCurrentTrack());
-		assertEquals(trackC, playlist.getNextTrack());
+			assertEquals(4, playlist.getLength());
+			assertEquals(trackB, playlist.getCurrentTrack());
+			assertEquals(trackC, playlist.getNextTrack());
 
-		Track[] tracks = playlist.getTracks().toArray(new Track[4]);
-		assertEquals(trackB, tracks[0]);
-		assertEquals(trackC, tracks[1]);
-		assertEquals(trackA, tracks[2]);
-		assertEquals(trackD, tracks[3]);
+			Track[] tracks = playlist.getTracks().toArray(new Track[4]);
+			assertEquals(trackB, tracks[0]);
+			assertEquals(trackC, tracks[1]);
+			assertEquals(trackA, tracks[2]);
+			assertEquals(trackD, tracks[3]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
 
 		playlist.finished(trackC, "Skipped");
-		assertEquals(3, playlist.getLength());
-		assertEquals(trackB, playlist.getCurrentTrack());
-		assertEquals(trackA, playlist.getNextTrack());
+			assertEquals(3, playlist.getLength());
+			assertEquals(trackB, playlist.getCurrentTrack());
+			assertEquals(trackA, playlist.getNextTrack());
 
-		tracks = playlist.getTracks().toArray(new Track[3]);
-		assertEquals(trackB, tracks[0]);
-		assertEquals(trackA, tracks[1]);
-		assertEquals(trackD, tracks[2]);
+			tracks = playlist.getTracks().toArray(new Track[3]);
+			assertEquals(trackB, tracks[0]);
+			assertEquals(trackA, tracks[1]);
+			assertEquals(trackD, tracks[2]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
 
 	}
 

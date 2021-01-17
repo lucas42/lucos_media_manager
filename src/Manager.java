@@ -78,11 +78,9 @@ public final class Manager {
 	public static boolean playlistHasChanged(int oldhashcode) {
 		return (playlist.hashCode() != oldhashcode);
 	}
-	public static boolean fullSummaryHasChanged(int oldhashcode) {
-		return (createFullSummary().hashCode() != oldhashcode);
-	}
-	public static boolean briefSummaryHasChanged(int oldhashcode) {
-		return (createBriefSummary().hashCode() != oldhashcode);
+	public static boolean summaryHasChanged(int oldhashcode) {
+		if (playlist == null) return true;
+		return (playlist.hashCode()+status.hashCode() != oldhashcode);
 	}
 	public static Map<String, Object> getPlaylist() {
 		Map<String, Object> output = new HashMap<String, Object>();
@@ -91,16 +89,22 @@ public final class Manager {
 		return output;
 	}
 	public static Map<String, Object> getFullSummary() {
-		Map<String, Object> summary = createFullSummary();
-		Map<String, Object> output = new HashMap<String, Object>(summary);
-		output.put("hashcode", summary.hashCode());
-		return output;
+		Map<String, Object> summary = new HashMap<String, Object>();
+		summary.put("tracks", playlist);
+		summary.put("volume", status.get("volume"));
+		summary.put("isPlaying", status.get("isPlaying"));
+		summary.put("devices", Device.getAll());
+		if (playlist != null) summary.put("hashcode", playlist.hashCode()+status.hashCode());
+		return summary;
 	}
 	public static Map<String, Object> getBriefSummary() {
-		Map<String, Object> summary = createBriefSummary();
-		Map<String, Object> output = new HashMap<String, Object>(summary);
-		output.put("hashcode", summary.hashCode());
-		return output;
+		Map<String, Object> summary = new HashMap<String, Object>();
+		summary.put("volume", status.get("volume"));
+		summary.put("isPlaying", status.get("isPlaying"));
+		summary.put("now", playlist.getCurrentTrack());
+		summary.put("next", playlist.getNextTrack());
+		if (playlist != null) summary.put("hashcode", playlist.hashCode()+status.hashCode());
+		return summary;
 	}
 	public static void update(Map<String, String> changes) {
 		
@@ -130,25 +134,6 @@ public final class Manager {
 	}
 	public static void next() {
 		playlist.next();
-	}
-	
-	// Return info on all tracks, including current playing and queued in playlist
-	private static Map<String, Object> createFullSummary() {
-		Map<String, Object> summary = new HashMap<String, Object>();
-		summary.put("tracks", playlist);
-		summary.put("volume", status.get("volume"));
-		summary.put("isPlaying", status.get("isPlaying"));
-		summary.put("devices", Device.getAll());
-		return summary;
-	}
-	// Return info on the current and next track, volume and isPlaying
-	private static Map<String, Object> createBriefSummary() {
-		Map<String, Object> summary = new HashMap<String, Object>();
-		summary.put("volume", status.get("volume"));
-		summary.put("isPlaying", status.get("isPlaying"));
-		summary.put("now", playlist.getCurrentTrack());
-		summary.put("next", playlist.getNextTrack());
-		return summary;
 	}
 	private static void openUrl(String type, String url) {
 		Map<String, String> openUrl = new HashMap<String, String>();
