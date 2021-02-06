@@ -31,7 +31,7 @@ class TrackTest {
 		final Track trackWithCustomEditUrl = new Track("https://example.com/track", new HashMap<String, String>(Map.of("editurl", "https://example.com/edit")));
 		assertEquals("https://example.com/edit", trackWithCustomEditUrl.getMetadata("editurl"));
 		final Track standardTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("track_id", "42")));
-		assertEquals("null?id=42", standardTrack.getMetadata("editurl"));
+		assertEquals("https://media-metadata.l42.eu/tracks/42", standardTrack.getMetadata("editurl"));
 	}
 	@Test
 	void img() {

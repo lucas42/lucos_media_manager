@@ -39,6 +39,7 @@ public class RandomFetcher extends Fetcher {
 
 					String url = json.getAsJsonObject().get("url").getAsString();
 					Map<String, String> metadata = context.deserialize(json.getAsJsonObject().get("tags"), Map.class);
+					metadata.put("track_id", json.getAsJsonObject().get("trackid").getAsString());
 					return new Track(url, metadata);
 				}
 			};
