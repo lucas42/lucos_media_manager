@@ -61,5 +61,18 @@ class HttpRequestTest {
 		compareRequestResponse("GET /poll/summary HTTP/1.1", "volume\":\"0.7\"");
 		assertTrue(Manager.getPlaying());
 	}
+	@Test
+	void devices() {
+		Device.resetAll();
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[]");
+		compareRequestResponse("POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Device 1\",\"isCurrent\":true}]");
+		compareRequestResponse("POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac&name=Flying%20Fidget HTTP/1.1", "204");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true}]");
+		compareRequestResponse("POST /devices?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a&name=Jolly%20Jumper HTTP/1.1", "204");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":false}]");
+		compareRequestResponse("POST /devices/current?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a HTTP/1.1", "204");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":true}]");
+	}
 
 }

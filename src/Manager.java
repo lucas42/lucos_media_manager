@@ -178,4 +178,7 @@ public final class Manager {
 	public static int getPlaylistLength() {
 		return playlist.getLength();
 	}
+	public static Loganne getLoganne() {
+		return loganne;
+	}
 }

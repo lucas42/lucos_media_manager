@@ -69,4 +69,12 @@ class Device {
 		newCurrent.isCurrent = true;
 		if (loganne != null) loganne.post("deviceSwitch", "Moving music to play on "+newCurrent.getName());
 	}
+
+	/**
+	 * Resets `all` to be empty
+	 * Used for testing purposes
+	 **/
+	public static void resetAll() {
+		all = new HashMap<String, Device>();
+	}
 }
