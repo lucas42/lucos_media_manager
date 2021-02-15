@@ -8,23 +8,20 @@ import java.util.HashMap;
  * One device at a time should be marked as the "current" one
  */
 class Device {
-	private static Map<String, Device> all = new HashMap<String, Device>();
 	private String uuid;
 	private String name;
-	private boolean isCurrent = false;
+	protected boolean isCurrent = false;
 
 	/**
-	 * Don't allow devices to be constructed directly - use Device.getInstance instead
-	 * This prevents multiple devices existing with the same uuid (ie assume it's the same device)
-	 * Defaults to naming devices numerically
+	 * Don't construct devices to be constructed directly - use DeviceList.getDevice instead
+	 * Uses a count of existing devices to default to naming devices numerically
 	 */
-	private Device(String uuid) {
+	protected Device(DeviceList list, String uuid) {
 		this.uuid = uuid;
-		all.put(uuid, this);
-		this.name = "Device "+all.size();
+		this.name = "Device "+(list.size()+1);
 
 		// If this is the only device, it should be marked as current
-		if (all.size() == 1) this.isCurrent = true;
+		if (list.size() == 0) this.isCurrent = true;
 	}
 	public String getName() {
 		return name;
@@ -35,46 +32,8 @@ class Device {
 	public boolean isCurrent() {
 		return isCurrent;
 	}
-
-	/**
-	 * Returns the device with the given uuid, if it exists
-	 * Otherwise, creates a device with the uuid and returns it
-	 */
-	public static Device getInstance(String uuid) {
-		Device instance = all.get(uuid);
-		if (instance != null) return instance;
-		return new Device(uuid);
-	}
-
-	/**
-	 * Returns an array of all devices
-	 */
-	public static Device[] getAll() {
-		return all.values().toArray(new Device[0]);
-	}
-
-	/**
-	 * Sets one device to be "current" (ie which should play music)
-	 * Only one device should be current at a time
-	 * If a device with the given uuid doesn't exist, it is created
-	 */
-	public static void setCurrent(String uuid, Loganne loganne) {
-		Device newCurrent = getInstance(uuid);
-
-		// Don't bother doing anything if this device is already current
-		if (newCurrent.isCurrent()) return;
-		for (Device device : all.values()) {
-			device.isCurrent = false;
-		}
-		newCurrent.isCurrent = true;
-		if (loganne != null) loganne.post("deviceSwitch", "Moving music to play on "+newCurrent.getName());
-	}
-
-	/**
-	 * Resets `all` to be empty
-	 * Used for testing purposes
-	 **/
-	public static void resetAll() {
-		all = new HashMap<String, Device>();
+	public int hashCode() {
+		int currentCode = isCurrent ? uuid.hashCode() : 0;
+		return uuid.hashCode() + name.hashCode() + currentCode;
 	}
 }

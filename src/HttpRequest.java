@@ -273,16 +273,10 @@ final class HttpRequest implements Runnable {
 			System.err.println("WARNING: Using deprected /time");
 			redirect("am.l42.eu");
 		} else if (path.equals("/devices") && post) {
-			String uuid = get.get("uuid");
-			String name = get.get("name");
-			Device device = Device.getInstance(uuid);
-			if (name != null) {
-				device.setName(name);
-			}
+			Manager.updateDevice(get.get("uuid"), get.get("name"));
 			sendHeaders(204, "Changed", "text/plain");
 		} else if (path.equals("/devices/current") && post) {
-			String uuid = get.get("uuid");
-			Device.setCurrent(uuid, Manager.getLoganne());
+			Manager.setCurrentDevice(get.get("uuid"));
 			sendHeaders(204, "Changed", "text/plain");
 		} else if(path.equals("/_info")) {
 			Map<String, Object> output = new HashMap<String, Object>();

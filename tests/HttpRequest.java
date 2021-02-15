@@ -63,7 +63,6 @@ class HttpRequestTest {
 	}
 	@Test
 	void devices() {
-		Device.resetAll();
 		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse("POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
 		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Device 1\",\"isCurrent\":true}]");

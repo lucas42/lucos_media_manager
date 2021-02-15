@@ -5,6 +5,7 @@ import java.math.BigInteger;
 public final class Manager {
 	private static Map<String, Object> status = new HashMap<String, Object>();
 	private static Playlist playlist;
+	private static DeviceList deviceList = new DeviceList(null);
 	private final static String[] noupdates = { "isPlaying" };
 	private static Loganne loganne;
 	public static void main(String argv[]) throws Exception {
@@ -32,6 +33,9 @@ public final class Manager {
 		status.put("openurl", null);
 
 		playlist = new Playlist(new RandomFetcher(), loganne);
+
+		// TODO: Keep state of device list between restarts
+		deviceList = new DeviceList(loganne);
 		
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);
@@ -80,7 +84,7 @@ public final class Manager {
 	}
 	public static boolean summaryHasChanged(int oldhashcode) {
 		if (playlist == null) return true;
-		return (playlist.hashCode()+status.hashCode() != oldhashcode);
+		return (deviceList.hashCode()+playlist.hashCode()+status.hashCode() != oldhashcode);
 	}
 	public static Map<String, Object> getPlaylist() {
 		Map<String, Object> output = new HashMap<String, Object>();
@@ -93,8 +97,8 @@ public final class Manager {
 		summary.put("tracks", playlist);
 		summary.put("volume", status.get("volume"));
 		summary.put("isPlaying", status.get("isPlaying"));
-		summary.put("devices", Device.getAll());
-		if (playlist != null) summary.put("hashcode", playlist.hashCode()+status.hashCode());
+		summary.put("devices", deviceList.getAllDevices());
+		if (playlist != null) summary.put("hashcode", deviceList.hashCode()+playlist.hashCode()+status.hashCode());
 		return summary;
 	}
 	public static Map<String, Object> getBriefSummary() {
@@ -103,7 +107,7 @@ public final class Manager {
 		summary.put("isPlaying", status.get("isPlaying"));
 		summary.put("now", playlist.getCurrentTrack());
 		summary.put("next", playlist.getNextTrack());
-		if (playlist != null) summary.put("hashcode", playlist.hashCode()+status.hashCode());
+		if (playlist != null) summary.put("hashcode", deviceList.hashCode()+playlist.hashCode()+status.hashCode());
 		return summary;
 	}
 	public static void update(Map<String, String> changes) {
@@ -180,5 +184,14 @@ public final class Manager {
 	}
 	public static Loganne getLoganne() {
 		return loganne;
+	}
+	public static void updateDevice(String uuid, String name) {
+		Device device = deviceList.getDevice(uuid);
+		if (name != null) {
+			device.setName(name);
+		}
+	}
+	public static void setCurrentDevice(String uuid) {
+		deviceList.setCurrent(uuid);
 	}
 }
