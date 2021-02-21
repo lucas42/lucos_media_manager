@@ -34,6 +34,7 @@ class Device {
 	}
 	public int hashCode() {
 		int currentCode = isCurrent ? uuid.hashCode() : 0;
-		return uuid.hashCode() + name.hashCode() + currentCode;
+		int connectedCode = Manager.isConnected(this) ? uuid.hashCode() * 2 : 0;
+		return uuid.hashCode() + name.hashCode() + currentCode + connectedCode;
 	}
 }

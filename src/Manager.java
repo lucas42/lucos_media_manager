@@ -6,6 +6,7 @@ public final class Manager {
 	private static Map<String, Object> status = new HashMap<String, Object>();
 	private static Playlist playlist;
 	private static DeviceList deviceList = new DeviceList(null);
+	private static ConnectionTracker connections = new ConnectionTracker();
 	private final static String[] noupdates = { "isPlaying" };
 	private static Loganne loganne;
 	public static void main(String argv[]) throws Exception {
@@ -46,7 +47,6 @@ public final class Manager {
 			// Listen for a TCP connection request.
 
 			Socket clientSocket = serverSocket.accept();
-			PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 			// Construct an object to process the HTTP request message.
 			HttpRequest request = new HttpRequest( clientSocket );
 			// Create a new thread to process the request.
@@ -193,5 +193,15 @@ public final class Manager {
 	}
 	public static void setCurrentDevice(String uuid) {
 		deviceList.setCurrent(uuid);
+	}
+	public static void openConnection(String device_uuid, HttpRequest request) {
+		Device device = deviceList.getDevice(device_uuid);
+		connections.open(device, request);
+	}
+	public static void closeConnection(HttpRequest request) {
+		connections.close(request);
+	}
+	public static boolean isConnected(Device device) {
+		return connections.isConnected(device);
 	}
 }

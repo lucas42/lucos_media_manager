@@ -9,7 +9,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.net.SocketException;
 import java.lang.reflect.Type;
-final class HttpRequest implements Runnable {
+class HttpRequest implements Runnable {
 	final static String CRLF = "\r\n";
 	Socket socket;
 	String fullHostname;
@@ -29,17 +29,22 @@ final class HttpRequest implements Runnable {
 	// Implement the run() method of the Runnable interface.
 	public void run() {
 		try {
-		processRequest();
+			processRequest();
 
-	} catch (java.net.SocketException e) {
-		System.out.println("WARNING: Problem with socket on incoming HTTP Request. "+e.getMessage());
-	} catch (Exception e) {
-		System.err.println("ERROR: Uknown Error (HttpRequest, host:"+fullHostname+"):");
-		e.printStackTrace();
-	}
+		} catch (java.net.SocketException e) {
+			System.out.println("WARNING: Problem with socket on incoming HTTP Request. "+e.getMessage());
+		} catch (Exception e) {
+			System.err.println("ERROR: Uknown Error (HttpRequest, host:"+fullHostname+"):");
+			e.printStackTrace();
+		}
 
+		try {
+			// Wait 3 seconds before marking this connection as closed, to give the client time to re-establish a long poll
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {}
+		Manager.closeConnection(this);
 	}
-	private void processRequest() throws Exception {
+	protected void processRequest() throws Exception {
 	
 		// Get a reference to the socket's input and output streams.
 		InputStream is = new DataInputStream(socket.getInputStream());
@@ -123,6 +128,10 @@ final class HttpRequest implements Runnable {
 				System.err.println("ERROR: Unexpected error updating manager");
 				e.printStackTrace();
 			}
+		}
+		String device_uuid = get.remove("device");
+		if (device_uuid != null) {
+			Manager.openConnection(device_uuid, this);
 		}
 		if (path.equals("/poll")) {
 			long startTime = System.nanoTime();
@@ -456,6 +465,17 @@ final class HttpRequest implements Runnable {
 				}
 			};
 		gsonBuilder.registerTypeAdapter(Playlist.class, playlistSerializer);
+
+		JsonSerializer<Device> deviceSerializer =
+			new JsonSerializer<Device>() {
+				@Override
+				public JsonElement serialize(Device src, Type typeOfSrc, JsonSerializationContext context) {
+					JsonObject tree = (JsonObject)new Gson().toJsonTree(src);
+					tree.addProperty("isConnected", Manager.isConnected(src));
+					return tree;
+				}
+			};
+		gsonBuilder.registerTypeAdapter(Device.class, deviceSerializer);
 
 		return gsonBuilder.create();
 	}

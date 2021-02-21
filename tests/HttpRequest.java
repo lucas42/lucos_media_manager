@@ -21,7 +21,7 @@ class HttpRequestTest {
 			when(socket.getInputStream()).thenReturn(input);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			when(socket.getOutputStream()).thenReturn(output);
-			httpRequest.run();
+			httpRequest.processRequest();
 			assertTrue(output.toString().contains(responseSnippet), "response snippet ("+responseSnippet+") not found in response:\n"+output.toString());
 		} catch (Exception e) {
 			fail(e);
@@ -65,13 +65,14 @@ class HttpRequestTest {
 	void devices() {
 		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse("POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
-		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Device 1\",\"isCurrent\":true}]");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Device 1\",\"isCurrent\":true,\"isConnected\":false}]");
 		compareRequestResponse("POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac&name=Flying%20Fidget HTTP/1.1", "204");
-		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true}]");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true,\"isConnected\":false}]");
 		compareRequestResponse("POST /devices?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a&name=Jolly%20Jumper HTTP/1.1", "204");
-		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":false}]");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":true,\"isConnected\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":false,\"isConnected\":false}]");
 		compareRequestResponse("POST /devices/current?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a HTTP/1.1", "204");
-		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":true}]");
+		compareRequestResponse("GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":false,\"isConnected\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":true,\"isConnected\":false}]");
+		compareRequestResponse("GET /poll/summary?device=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isCurrent\":false,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isCurrent\":true,\"isConnected\":false}]");
 	}
 
 }
