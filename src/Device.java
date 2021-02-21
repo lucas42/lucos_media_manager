@@ -10,6 +10,7 @@ import java.util.HashMap;
 class Device {
 	private String uuid;
 	private String name;
+	private boolean isDefaultName;
 	protected boolean isCurrent = false;
 
 	/**
@@ -19,6 +20,7 @@ class Device {
 	protected Device(DeviceList list, String uuid) {
 		this.uuid = uuid;
 		this.name = "Device "+(list.size()+1);
+		this.isDefaultName = true;
 
 		// If this is the only device, it should be marked as current
 		if (list.size() == 0) this.isCurrent = true;
@@ -27,7 +29,9 @@ class Device {
 		return name;
 	}
 	public void setName(String name) {
+		if (this.name == name) return;
 		this.name = name;
+		this.isDefaultName = false;
 	}
 	public boolean isCurrent() {
 		return isCurrent;
@@ -35,6 +39,7 @@ class Device {
 	public int hashCode() {
 		int currentCode = isCurrent ? uuid.hashCode() : 0;
 		int connectedCode = Manager.isConnected(this) ? uuid.hashCode() * 2 : 0;
+		// No need to check isDefaultName as that only changes when name changes
 		return uuid.hashCode() + name.hashCode() + currentCode + connectedCode;
 	}
 }
