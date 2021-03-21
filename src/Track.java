@@ -14,11 +14,11 @@ class Track {
 		this.url = url;
 		if (metadata.get("img") == null) {
 			if (metadata.get("mbid_artist") != null) metadata.put("img", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
-			else metadata.put("img", "https://ceol.l42.eu/default.png");
+			else metadata.put("img", "https://staticmedia.l42.eu/music-pic.png");
 		}
 		if (metadata.get("thumb") == null) {
 			if (metadata.get("mbid_artist") != null) metadata.put("thumb", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
-			else metadata.put("thumb", "https://ceol.l42.eu/thumb.png");
+			else metadata.put("thumb", "https://staticmedia.l42.eu/music-pic.png");
 		}
 		if (metadata.get("title") == null) {
 			if (url == null) metadata.put("title", "No Track");

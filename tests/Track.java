@@ -36,7 +36,7 @@ class TrackTest {
 	@Test
 	void img() {
 		final Track noMetadataTrack = new Track("https://example.com/track");
-		assertEquals("https://ceol.l42.eu/default.png", noMetadataTrack.getMetadata("img"));
+		assertEquals("https://staticmedia.l42.eu/music-pic.png", noMetadataTrack.getMetadata("img"));
 		final Track musicbrainzArtistTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("mbid_artist", "db92a151-1ac2-438b-bc43-b82e149ddd50")));
 		assertEquals("https://staticmedia.l42.eu/artists/db92a151-1ac2-438b-bc43-b82e149ddd50.jpg", musicbrainzArtistTrack.getMetadata("img"));
 		final Track trackWithCustomImg = new Track("https://example.com/track", new HashMap<String, String>(Map.of("img", "https://example.com/pic.png")));
@@ -45,7 +45,7 @@ class TrackTest {
 	@Test
 	void thumb() {
 		final Track noMetadataTrack = new Track("https://example.com/track");
-		assertEquals("https://ceol.l42.eu/thumb.png", noMetadataTrack.getMetadata("thumb"));
+		assertEquals("https://staticmedia.l42.eu/music-pic.png", noMetadataTrack.getMetadata("thumb"));
 		final Track musicbrainzArtistTrack = new Track("https://example.com/track", new HashMap<String, String>(Map.of("mbid_artist", "db92a151-1ac2-438b-bc43-b82e149ddd50")));
 		assertEquals("https://staticmedia.l42.eu/artists/db92a151-1ac2-438b-bc43-b82e149ddd50.jpg", musicbrainzArtistTrack.getMetadata("thumb"));
 		final Track trackWithCustomThumb = new Track("https://example.com/track", new HashMap<String, String>(Map.of("thumb", "https://example.com/thumb.png")));
