@@ -1,12 +1,13 @@
+import java.util.Map;
+import java.util.HashMap;
+
 class Status {
 	private boolean isPlaying;
 	private float volume;
 	private Playlist playlist;
-	private ConnectionTracker connections;
 	private DeviceList deviceList;
-	public Status(Playlist playlist, ConnectionTracker connections, DeviceList deviceList) {
+	public Status(Playlist playlist, DeviceList deviceList) {
 		this.playlist = playlist;
-		this.connections = connections;
 		this.deviceList = deviceList;
 		volume = (float)0.5;
 		isPlaying = true;
@@ -35,8 +36,26 @@ class Status {
 	public int hashCode() {
 		return playlist.hashCode()
 			+ deviceList.hashCode()
-			+ connections.hashCode()
 			+ Boolean.hashCode(isPlaying)
 			+ Float.hashCode(volume);
+	}
+	public boolean summaryHasChanged(int oldhashcode) {
+		if (playlist == null) return true;
+		return (this.hashCode() != oldhashcode);
+	}
+	public Map<String, Object> getSummary() {
+		Map<String, Object> summary = new HashMap<String, Object>();
+		summary.put("tracks", playlist);
+		summary.put("volume", this.getVolume());
+		summary.put("isPlaying", this.getPlaying());
+		summary.put("devices", deviceList.getAllDevices());
+		if (playlist != null) summary.put("hashcode", this.hashCode());
+		return summary;
+	}
+	public Playlist getPlaylist() {
+		return playlist;
+	}
+	public DeviceList getDeviceList() {
+		return deviceList;
 	}
 }

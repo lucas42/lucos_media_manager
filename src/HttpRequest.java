@@ -11,19 +11,22 @@ import java.net.SocketException;
 import java.lang.reflect.Type;
 class HttpRequest implements Runnable {
 	final static String CRLF = "\r\n";
-	Socket socket;
-	String fullHostname;
-	String hostname;
-	DataOutputStream os;
-	OutputStreamWriter osw;
-	Map<String, String> header = new HashMap<String, String>();
-	Map<String, String> get = new HashMap<String, String>();
-	static Gson gson = customGson();
+	private Socket socket;
+	private String fullHostname;
+	private String hostname;
+	private DataOutputStream os;
+	private OutputStreamWriter osw;
+	private Map<String, String> header = new HashMap<String, String>();
+	private Map<String, String> get = new HashMap<String, String>();
+	private Gson gson;
+	private Status status;
 	
 	// Constructor
-	public HttpRequest(Socket socket) throws Exception {
+	public HttpRequest(Status status, Socket socket) throws Exception {
+		this.status = status;
 		this.socket = socket;
 		fullHostname = socket.getInetAddress().getHostName();
+		this.gson = customGson();
 	}
 	
 	// Implement the run() method of the Runnable interface.
@@ -42,7 +45,7 @@ class HttpRequest implements Runnable {
 			// Wait 3 seconds before marking this connection as closed, to give the client time to re-establish a long poll
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {}
-		Manager.closeConnection(this);
+		status.getDeviceList().closeConnection(this);
 	}
 	protected void processRequest() throws Exception {
 	
@@ -123,7 +126,7 @@ class HttpRequest implements Runnable {
 				Track update_curtrack = new Track(update_url);
 				float update_currentTime = Float.parseFloat(update_time);
 				BigInteger update_currentTimeSet = new BigInteger(update_timeset);
-				update_success = Manager.update(update_curtrack, update_currentTime, update_currentTimeSet);
+				update_success = status.getPlaylist().setTrackTime(update_curtrack, update_currentTime, update_currentTimeSet);
 			} catch (Exception e) {
 				System.err.println("ERROR: Unexpected error updating manager");
 				e.printStackTrace();
@@ -131,7 +134,7 @@ class HttpRequest implements Runnable {
 		}
 		String device_uuid = get.remove("device");
 		if (device_uuid != null) {
-			Manager.openConnection(device_uuid, this);
+			status.getDeviceList().openConnection(device_uuid, this);
 		}
 		if (path.equals("/poll/summary")) {
 			long startTime = System.nanoTime();
@@ -142,9 +145,9 @@ class HttpRequest implements Runnable {
 				hashcode = 0;
 			}
 			while (true) {
-				if (Manager.summaryHasChanged(hashcode)) {
+				if (status.summaryHasChanged(hashcode)) {
 					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write(gson.toJson(Manager.getFullSummary()));   
+					if (!head) osw.write(gson.toJson(status.getSummary()));   
 					break;
 				}
 				if ((System.nanoTime() - startTime) > (1000000000L * 30)) {
@@ -156,28 +159,31 @@ class HttpRequest implements Runnable {
 				Thread.sleep(1);
 			}
 		} else if (path.equals("/next") && post) {
-			if (get.get("now") == null || Manager.isCurrentURL(get.get("now"))) {
-				Manager.next();
+			String expectedNowUrl = get.get("now");
+			Track actualNow = status.getPlaylist().getCurrentTrack();
+			String actualNowUrl = (actualNow == null) ? null : actualNow.getUrl();
+			if (expectedNowUrl == null || expectedNowUrl.equals(actualNowUrl)) {
+				status.getPlaylist().next();
 				sendHeaders(204, "Changed", "application/json");
 			} else {
 				sendHeaders(204, "Wrong current track", "application/json");
 			}
 		} else if (path.equals("/play") && post) {
-			Manager.setPlaying(true);
+			status.setPlaying(true);
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/pause") && post) {
-			Manager.setPlaying(false);
+			status.setPlaying(false);
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/volume") && post) {
 			float volume = getFloat("volume", head);
 			if (volume != -1) {
-				Manager.setVolume(volume);
+				status.setVolume(volume);
 				sendHeaders(204, "Changed", "application/json");
 			}
 		} else if (path.equals("/done") && post) {
 			Track oldtrack = new Track(get.get("track"));
-			String status = get.get("status");
-			Manager.finished(oldtrack, status);
+			String doneStatus = get.get("status");
+			status.getPlaylist().finished(oldtrack, doneStatus);
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/update") && post) {
 			
@@ -190,21 +196,21 @@ class HttpRequest implements Runnable {
 			String pos = metadata.remove("pos");
 			Track newTrack = new Track(url, metadata);
 			if (pos.equals("now")) {
-				Manager.queueNow(newTrack);
+				status.getPlaylist().queueNow(newTrack);
 			} else if (pos.equals("next")) {
-				Manager.queueNext(newTrack);
+				status.getPlaylist().queueNext(newTrack);
 			} else {
-				Manager.queueEnd(newTrack);
+				status.getPlaylist().queueEnd(newTrack);
 			}
 			sendHeaders(204, "Queued", "application/json");
 		} else if (path.equals("/time")) {
 			System.err.println("WARNING: Using deprected /time");
 			redirect("am.l42.eu");
 		} else if (path.equals("/devices") && post) {
-			Manager.updateDevice(get.get("uuid"), get.get("name"));
+			status.getDeviceList().updateDevice(get.get("uuid"), get.get("name"));
 			sendHeaders(204, "Changed", "text/plain");
 		} else if (path.equals("/devices/current") && post) {
-			Manager.setCurrentDevice(get.get("uuid"));
+			status.getDeviceList().setCurrent(get.get("uuid"));
 			sendHeaders(204, "Changed", "text/plain");
 		} else if(path.equals("/_info")) {
 			Map<String, Object> output = new HashMap<String, Object>();
@@ -212,15 +218,15 @@ class HttpRequest implements Runnable {
 			Map<String, Map<String, Object>> metrics = new HashMap<String, Map<String, Object>>();
 			Map<String, Object> queueCheck = new HashMap<String, Object>();
 			queueCheck.put("techDetail", "Queue has at least 5 tracks");
-			queueCheck.put("ok", Manager.getPlaylistLength() >= 5);
+			queueCheck.put("ok", status.getPlaylist().getLength() >= 5);
 			checks.put("queue", queueCheck);
 			Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
 			emptyQueueCheck.put("techDetail", "Queue has any tracks");
-			emptyQueueCheck.put("ok", Manager.getPlaylistLength() > 0);
+			emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0);
 			checks.put("empty-queue", emptyQueueCheck);
 			Map<String, Object> queueMetric = new HashMap<String, Object>();
 			queueMetric.put("techDetail", "Number of tracks in queue");
-			queueMetric.put("value", Manager.getPlaylistLength());
+			queueMetric.put("value", status.getPlaylist().getLength());
 			metrics.put("queue-length", queueMetric);
 			Map<String, String> ci = new HashMap<String, String>();
 			ci.put("circle", "gh/lucas42/lucos_media_manager");
@@ -294,7 +300,7 @@ class HttpRequest implements Runnable {
 		headers.put("Location", url);
 		sendHeaders(302, "Redirect", headers);
 	}
-	private static Gson customGson() {
+	private Gson customGson() {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 
 		JsonSerializer<Playlist> playlistSerializer =
@@ -311,7 +317,7 @@ class HttpRequest implements Runnable {
 				@Override
 				public JsonElement serialize(Device src, Type typeOfSrc, JsonSerializationContext context) {
 					JsonObject tree = (JsonObject)new Gson().toJsonTree(src);
-					tree.addProperty("isConnected", Manager.isConnected(src));
+					tree.addProperty("isConnected", status.getDeviceList().isConnected(src));
 					return tree;
 				}
 			};

@@ -36,9 +36,9 @@ class Device {
 	public boolean isCurrent() {
 		return isCurrent;
 	}
-	public int hashCode() {
+	public int hashCode(ConnectionTracker connections) {
 		int currentCode = isCurrent ? uuid.hashCode() : 0;
-		int connectedCode = Manager.isConnected(this) ? uuid.hashCode() * 2 : 0;
+		int connectedCode = connections.isConnected(this) ? uuid.hashCode() * 2 : 0;
 		// No need to check isDefaultName as that only changes when name changes
 		return uuid.hashCode() + name.hashCode() + currentCode + connectedCode;
 	}

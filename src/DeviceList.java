@@ -7,6 +7,7 @@ import java.util.HashMap;
  */
 class DeviceList {
 	private Map<String, Device> devices = new HashMap<String, Device>();
+	private ConnectionTracker connections = new ConnectionTracker();
 	private Loganne loganne;
 
 	public DeviceList(Loganne loganne) {
@@ -59,8 +60,24 @@ class DeviceList {
 	public int hashCode() {
 		int sumHashCodes = 0;
 		for (Device device : devices.values()) {
-			sumHashCodes += device.hashCode();
+			sumHashCodes += device.hashCode(connections);
 		}
 		return sumHashCodes;
+	}
+	public void openConnection(String device_uuid, HttpRequest request) {
+		Device device = this.getDevice(device_uuid);
+		connections.open(device, request);
+	}
+	public void closeConnection(HttpRequest request) {
+		connections.close(request);
+	}
+	public void updateDevice(String uuid, String name) {
+		Device device = this.getDevice(uuid);
+		if (name != null) {
+			device.setName(name);
+		}
+	}
+	public boolean isConnected(Device device) {
+		return connections.isConnected(device);
 	}
 }
