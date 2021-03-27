@@ -236,6 +236,16 @@ class HttpRequest implements Runnable {
 		} else if(path.equals("/robots.txt")) {
 			sendHeaders(200, "OK", "text/plain");
 			osw.write("User-agent: *\nDisallow: /\n");
+		} else if(path.equals("/trackUpdated") && post) {
+			try {
+				LoganneTrackEvent event = gson.fromJson(data, LoganneTrackEvent.class);
+				status.getPlaylist().updateTracks(event.track.getMetadata("track_id"), event.track);
+				sendHeaders(204, "No Content", "text/plain");
+			} catch (JsonSyntaxException exception) {
+				sendHeaders(400, "Bad Request", "text/plain");
+				osw.write("JSON Syntax Error"+CRLF);
+				osw.write(exception.getMessage()+CRLF);
+			}
 		} else {
 			final Set<String> PLAYER_REDIRECTS = Set.of(
 			    "/",

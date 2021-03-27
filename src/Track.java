@@ -42,6 +42,9 @@ class Track {
 		}
 		this.metadata = metadata;
 	}
+	public void update(Track updateTrack) {
+		update(updateTrack.getUrl(), updateTrack.getMetadata());
+	}
 	@Override
 	public int hashCode() {
 		if (url == null) return 0;

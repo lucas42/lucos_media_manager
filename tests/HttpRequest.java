@@ -1,6 +1,8 @@
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
@@ -72,6 +74,38 @@ class HttpRequestTest {
 		compareRequestResponse(status, "POST /devices/current?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a HTTP/1.1", "204");
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false}]");
 		compareRequestResponse(status, "GET /poll/summary?device=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false}]");
+	}
+	@Test
+	void trackUpdated() {
+		Fetcher fetcher = mock(RandomFetcher.class);
+		Loganne loganne = mock(Loganne.class);
+		Playlist playlist = new Playlist(fetcher, loganne);
+		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "track_id", "1347"));
+		Map<String, String> noChangeMetadata = new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "track_id", "8532"));
+		Track trackToChange = new Track("http://example.com/track/1337",initialMetadata);
+		Track trackNoChange = new Track("http://example.com/track/8532", noChangeMetadata);
+		playlist.queueNext(trackToChange);
+		playlist.queueNext(trackNoChange);
+		Status status = new Status(playlist, new DeviceList(null));
+		int startingHashCode = status.hashCode();
+
+		compareRequestResponse(status, "POST /trackUpdated HTTP/1.1\nContent-Length: 325\n\n{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		trackid: 1347,\n		tags: {\n			artist: \"Dolly Parton\",\n			title: \"Stairway To Heaven\"\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}", "204 No Content");
+
+		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
+		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");
+		assertEquals(trackNoChange.getMetadata("track_id"), "8532");
+
+		assertEquals(trackToChange.getUrl(), "http://example.com/track/1347");
+		assertEquals(trackToChange.getMetadata("artist"), "Dolly Parton");
+		assertEquals(trackToChange.getMetadata("track_id"), "1347");
+
+		assertNotEquals(status.hashCode(), startingHashCode);
+
+		compareRequestResponse(status, "POST /trackUpdated HTTP/1.1\nContent-Length: 3\n\n{\"}","400 Bad Request");
+
+		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
+		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");
+		assertEquals(trackNoChange.getMetadata("track_id"), "8532");
 	}
 
 }

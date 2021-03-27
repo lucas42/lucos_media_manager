@@ -50,3 +50,8 @@ class CustomGson {
 		return get(null);
 	}
 }
+
+class LoganneTrackEvent {
+	Track track;
+	String type;
+}
