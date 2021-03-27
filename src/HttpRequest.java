@@ -168,18 +168,6 @@ class HttpRequest implements Runnable {
 		} else if (path.equals("/pause") && post) {
 			Manager.setPlaying(false);
 			sendHeaders(204, "Changed", "application/json");
-			
-		// Basic paths for user agents without JS
-		} else if (path.equals("/basic/next") && post) {
-			Manager.next();
-			
-			// Use full url for lynx optimisation
-			redirect("https://".concat(header.get("Host").trim().concat("/")));
-		} else if (path.equals("/basic/playpause") && post) {
-			Manager.TogglePlayPause();
-			
-			// Use full url for lynx optimisation
-			redirect("https://".concat(header.get("Host").trim().concat("/")));
 		} else if (path.equals("/volume") && post) {
 			float volume = getFloat("volume", head);
 			if (volume != -1) {
@@ -243,16 +231,23 @@ class HttpRequest implements Runnable {
 			sendHeaders(200, "OK", "application/json");
 			osw.write(gson.toJson(output));
 		} else {
-			String fileName;
+			final Set<String> PLAYER_REDIRECTS = Set.of(
+			    "/",
+			    "/player",
+			    "/controller",
+			    "/mobile",
+			    "/controller-icon",
+			    "/player-icon",
+			    "/basic/next",
+			    "/basic/playpause"
+			);
+			if (PLAYER_REDIRECTS.contains(path)) {
+				System.err.println("WARNING: Using deprected "+path+", redirecting to seinn.l42.eu");
+				redirect("https://seinn.l42.eu/");
+				return;
+			}
 			
-			// TODO: remove hardcoded absolute paths
-			if (path.equals("/player")) fileName = "/web/lucos/lucos_media_player/";
-			else if (path.equals("/")) fileName = "/web/lucos/lucos_media_controller/index.xhtml";
-			else if (path.equals("/controller")) fileName = "/web/lucos/lucos_media_controller/";
-			else if (path.equals("/mobile")) fileName = "/web/lucos/lucos_media_controller/mobile.html";
-			else if (path.equals("/controller-icon")) fileName = "/web/lucos/lucos_media_controller/icon.png";
-			else if (path.equals("/player-icon")) fileName = "/web/lucos/lucos_media_player/icon.png";
-			else fileName = "./data" + path;
+			String fileName = "./data" + path;
 			fileName.replaceAll("/\\.\\./","");
 			if (fileName.charAt(fileName.length()-1) == '/') fileName += "index.html";
 			

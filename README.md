@@ -10,8 +10,6 @@ A java service for keeping track of which music is currently playing.
 * Make
 * wget
 * [Google gson](https://code.google.com/p/google-gson/)
-* [lucos media player](https://github.com/lucas42/lucos_media_player) (path of media player is currently hardcoded)
-* [lucos media controller](https://github.com/lucas42/lucos_media_controller) (path of media controller is currently hardcoded)
 
 ## Test Dependencies
 * [Junit5](https://junit.org/junit5/docs/current/user-guide/)
@@ -26,4 +24,4 @@ Alternatively, run `java -cp .:bin:../lib/java/* Manager $port` (assumes ../../l
 `nice -19 docker-compose up -d --no-build`
 
 ## Building
-The build is configured to run in Dockerhub when a commit is pushed to the master branch in github.
+The build is configured to run in Dockerhub when a commit is pushed to the main branch in github.
