@@ -203,9 +203,6 @@ class HttpRequest implements Runnable {
 				status.getPlaylist().queueEnd(newTrack);
 			}
 			sendHeaders(204, "Queued", "application/json");
-		} else if (path.equals("/time")) {
-			System.err.println("WARNING: Using deprected /time");
-			redirect("am.l42.eu");
 		} else if (path.equals("/devices") && post) {
 			status.getDeviceList().updateDevice(get.get("uuid"), get.get("name"));
 			sendHeaders(204, "Changed", "text/plain");
