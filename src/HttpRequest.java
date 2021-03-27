@@ -230,6 +230,9 @@ class HttpRequest implements Runnable {
 			output.put("ci", ci);
 			sendHeaders(200, "OK", "application/json");
 			osw.write(gson.toJson(output));
+		} else if(path.equals("/robots.txt")) {
+			sendHeaders(200, "OK", "text/plain");
+			osw.write("User-agent: *\nDisallow: /\n");
 		} else {
 			final Set<String> PLAYER_REDIRECTS = Set.of(
 			    "/",

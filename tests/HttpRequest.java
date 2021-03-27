@@ -34,7 +34,7 @@ class HttpRequestTest {
 	}
 	@Test
 	void robots() {
-		compareRequestResponse("Get /robots.txt HTTP/1.1\n", "Disallow:");
+		compareRequestResponse("Get /robots.txt HTTP/1.1\n", "Disallow: /");
 	}
 	@Test
 	void playPause() {
