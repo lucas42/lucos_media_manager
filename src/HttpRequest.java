@@ -133,57 +133,7 @@ class HttpRequest implements Runnable {
 		if (device_uuid != null) {
 			Manager.openConnection(device_uuid, this);
 		}
-		if (path.equals("/poll")) {
-			long startTime = System.nanoTime();
-			int hashcode;
-			try {
-				hashcode = Integer.parseInt(get.get("hashcode"));
-			} catch (NumberFormatException e) {
-				hashcode = 0;
-			}
-			while (true) {
-				if (Manager.summaryHasChanged(hashcode)) {
-					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write(gson.toJson(Manager.getBriefSummary()));
-					break;
-				}
-				if ((System.nanoTime() - startTime) > (1000000000L * 30)) {
-					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write("{ }");
-					break;
-				}
-				
-				Thread.sleep(1);
-			}
-		} else if (path.equals("/poll/playlist")) {
-			long startTime = System.nanoTime();
-			int hashcode;
-			try {
-				hashcode = Integer.parseInt(get.get("hashcode"));
-			} catch (NumberFormatException e) {
-				hashcode = 0;
-			}
-			while (true) {
-				if (Manager.playlistHasChanged(hashcode)) {
-					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write(gson.toJson(Manager.getPlaylist()));   
-					break;
-				}
-				if ((System.nanoTime() - startTime) > (1000000000L * 30)) {
-					sendHeaders(200, "Long Poll", "application/json");
-					if (!head) osw.write("{ }");
-					break;
-				}
-				
-				Thread.sleep(1);
-			}
-		// Returns the number of tracks currently in the playlist (can be used for monitoring etc)
-		} else if (path.equals("/poll/playlist/length")) {
-			sendHeaders(200, "OK", "text/plain");
-			if (!head) osw.write(gson.toJson(Manager.getPlaylistLength()));
-
-		// Includes all tracks, including current playing and queued in playlist
-		} else if (path.equals("/poll/summary")) {
+		if (path.equals("/poll/summary")) {
 			long startTime = System.nanoTime();
 			int hashcode;
 			try {
@@ -205,10 +155,6 @@ class HttpRequest implements Runnable {
 				
 				Thread.sleep(1);
 			}
-		} else if (path.equals("/control") && post) {
-			System.err.println("WARNING: Using deprected /control");
-			Manager.update(get);
-			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/next") && post) {
 			if (get.get("now") == null || Manager.isCurrentURL(get.get("now"))) {
 				Manager.next();
@@ -221,12 +167,6 @@ class HttpRequest implements Runnable {
 			sendHeaders(204, "Changed", "application/json");
 		} else if (path.equals("/pause") && post) {
 			Manager.setPlaying(false);
-			sendHeaders(204, "Changed", "application/json");
-		} else if (path.equals("/playpause")) {
-			System.err.println("WARNING: Using deprected /playpause");
-			
-			// Try to use /play and /pause instead.
-			Manager.TogglePlayPause();
 			sendHeaders(204, "Changed", "application/json");
 			
 		// Basic paths for user agents without JS
@@ -269,15 +209,6 @@ class HttpRequest implements Runnable {
 				Manager.queueEnd(newTrack);
 			}
 			sendHeaders(204, "Queued", "application/json");
-		} else if (path.equals("/insert")) {
-			// deprecated, use /queue?pos=next instead
-			redirect(fullpath.replaceFirst("/insert\\?", "/queue?pos=next&"));
-		} else if (path.equals("/openexturl") && post) {
-			if (Manager.openExtUrl()) sendHeaders(204, "Changed", "application/json");
-			else sendHeaders(400, "Can't find external url", "application/json");
-		} else if (path.equals("/openediturl") && post) {
-			if (Manager.openEditUrl()) sendHeaders(204, "Changed", "application/json");
-			else sendHeaders(400, "Can't find edit url", "application/json");
 		} else if (path.equals("/time")) {
 			System.err.println("WARNING: Using deprected /time");
 			redirect("am.l42.eu");

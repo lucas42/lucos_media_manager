@@ -79,18 +79,9 @@ public final class Manager {
 		if (volume < 0) volume = 0;
 		status.put("volume", volume);
 	}
-	public static boolean playlistHasChanged(int oldhashcode) {
-		return (playlist.hashCode() != oldhashcode);
-	}
 	public static boolean summaryHasChanged(int oldhashcode) {
 		if (playlist == null) return true;
 		return (deviceList.hashCode()+playlist.hashCode()+status.hashCode() != oldhashcode);
-	}
-	public static Map<String, Object> getPlaylist() {
-		Map<String, Object> output = new HashMap<String, Object>();
-		output.put("playlist", playlist);
-		output.put("hashcode", playlist.hashCode());
-		return output;
 	}
 	public static Map<String, Object> getFullSummary() {
 		Map<String, Object> summary = new HashMap<String, Object>();
@@ -98,15 +89,6 @@ public final class Manager {
 		summary.put("volume", status.get("volume"));
 		summary.put("isPlaying", status.get("isPlaying"));
 		summary.put("devices", deviceList.getAllDevices());
-		if (playlist != null) summary.put("hashcode", deviceList.hashCode()+playlist.hashCode()+status.hashCode());
-		return summary;
-	}
-	public static Map<String, Object> getBriefSummary() {
-		Map<String, Object> summary = new HashMap<String, Object>();
-		summary.put("volume", status.get("volume"));
-		summary.put("isPlaying", status.get("isPlaying"));
-		summary.put("now", playlist.getCurrentTrack());
-		summary.put("next", playlist.getNextTrack());
 		if (playlist != null) summary.put("hashcode", deviceList.hashCode()+playlist.hashCode()+status.hashCode());
 		return summary;
 	}
