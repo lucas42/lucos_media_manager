@@ -88,5 +88,22 @@ class TrackTest {
 		assertNotEquals(trackWithoutUrlA.hashCode(), trackA.hashCode());
 		assertEquals(trackWithoutUrlA.hashCode(), trackWithoutUrlB.hashCode());
 	}
+	@Test
+	void updates() {
+		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin"));
+		Track track = new Track("https://example.com/LZ", initialMetadata);
+		track.setTime(137, null);
+		assertEquals(track.getCurrentTime(), 137);
+		assertEquals(track.getUrl(), "https://example.com/LZ");
+		assertEquals(track.getMetadata("artist"), "Led Zeplin");
+		assertEquals(track.getMetadata("title"), "Stairway To Heaven");
+
+		Map<String, String> newMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Dolly Parton"));
+		track.update("https://example.com/DP",newMetadata);
+		assertEquals(track.getCurrentTime(), 137);
+		assertEquals(track.getUrl(), "https://example.com/DP");
+		assertEquals(track.getMetadata("artist"), "Dolly Parton");
+		assertEquals(track.getMetadata("title"), "Stairway To Heaven");
+	}
 
 }

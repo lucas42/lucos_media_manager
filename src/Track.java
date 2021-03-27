@@ -11,6 +11,9 @@ class Track {
 		this(url, new HashMap<String, String>());
 	}
 	public Track(String url, Map<String, String> metadata) {
+		this.update(url, metadata);
+	}
+	public void update(String url, Map<String, String> metadata) {
 		this.url = url;
 		if (metadata.get("img") == null) {
 			if (metadata.get("mbid_artist") != null) metadata.put("img", "https://staticmedia.l42.eu/artists/"+metadata.get("mbid_artist")+".jpg");
