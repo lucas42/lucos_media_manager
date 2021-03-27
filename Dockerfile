@@ -4,7 +4,8 @@ WORKDIR /web/lucos/lucos_media_manager
 
 RUN apk add make
 
-COPY . .
+COPY Makefile ./
+COPY src ./src
 RUN make build
 
 ENV PORT 8080
