@@ -1,10 +1,9 @@
 import java.io.* ;
 import java.net.* ;
-import java.util.* ;
 import com.google.gson.*;
-import java.lang.reflect.Type;
+
 public class RandomFetcher extends Fetcher {
-	private static Gson gson = customGson();
+	private static Gson gson = CustomGson.get();
 	
 	// Implement the run() method of the Runnable interface.
 	@Override
@@ -24,27 +23,6 @@ public class RandomFetcher extends Fetcher {
 		Track[] tracks = gson.fromJson(reader, Track[].class);
 		playlist.queue(tracks);
 		System.err.println("DEBUG: New tracks added to playlist");
-	}
-
-	/**
-	 * Returns a Gson object with a custom deserializer for handling tracks from the media api
-	 **/
-	private static Gson customGson() {
-		GsonBuilder gsonBuilder = new GsonBuilder();
-
-		JsonDeserializer<Track> trackDeserializer =
-			new JsonDeserializer<Track>() {
-				@Override
-				public Track deserialize(JsonElement json, Type typeOfSrc, JsonDeserializationContext context) {
-
-					String url = json.getAsJsonObject().get("url").getAsString();
-					Map<String, String> metadata = context.deserialize(json.getAsJsonObject().get("tags"), Map.class);
-					metadata.put("track_id", json.getAsJsonObject().get("trackid").getAsString());
-					return new Track(url, metadata);
-				}
-			};
-		gsonBuilder.registerTypeAdapter(Track.class, trackDeserializer);
-		return gsonBuilder.create();
 	}
 
 }

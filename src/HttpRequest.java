@@ -26,7 +26,7 @@ class HttpRequest implements Runnable {
 		this.status = status;
 		this.socket = socket;
 		fullHostname = socket.getInetAddress().getHostName();
-		this.gson = customGson();
+		this.gson = CustomGson.get(status);
 	}
 	
 	// Implement the run() method of the Runnable interface.
@@ -296,30 +296,5 @@ class HttpRequest implements Runnable {
 		HashMap<String, String> headers =  new HashMap<String, String>();
 		headers.put("Location", url);
 		sendHeaders(302, "Redirect", headers);
-	}
-	private Gson customGson() {
-		GsonBuilder gsonBuilder = new GsonBuilder();
-
-		JsonSerializer<Playlist> playlistSerializer =
-			new JsonSerializer<Playlist>() {
-				@Override
-				public JsonElement serialize(Playlist src, Type typeOfSrc, JsonSerializationContext context) {
-					return context.serialize(src.getTracks(), LinkedList.class);
-				}
-			};
-		gsonBuilder.registerTypeAdapter(Playlist.class, playlistSerializer);
-
-		JsonSerializer<Device> deviceSerializer =
-			new JsonSerializer<Device>() {
-				@Override
-				public JsonElement serialize(Device src, Type typeOfSrc, JsonSerializationContext context) {
-					JsonObject tree = (JsonObject)new Gson().toJsonTree(src);
-					tree.addProperty("isConnected", status.getDeviceList().isConnected(src));
-					return tree;
-				}
-			};
-		gsonBuilder.registerTypeAdapter(Device.class, deviceSerializer);
-
-		return gsonBuilder.create();
 	}
 }
