@@ -105,5 +105,22 @@ class TrackTest {
 		assertEquals(track.getMetadata("artist"), "Dolly Parton");
 		assertEquals(track.getMetadata("title"), "Stairway To Heaven");
 	}
+	@Test
+	void hashCodeChangeOnMetadataUpdate() {
+		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin"));
+		Track track = new Track("https://example.com/track", initialMetadata);
+
+		assertEquals(track.getUrl(), "https://example.com/track");
+		assertEquals(track.getMetadata("artist"), "Led Zeplin");
+		assertEquals(track.getMetadata("title"), "Stairway To Heaven");
+		int initialHashCode = track.hashCode();
+
+		Map<String, String> newMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Dolly Parton"));
+		track.update(new Track("https://example.com/track", newMetadata));
+		assertEquals(track.getMetadata("artist"), "Dolly Parton");
+		assertEquals(track.getMetadata("title"), "Stairway To Heaven");
+
+		assertNotEquals(track.hashCode(), initialHashCode);
+	}
 
 }

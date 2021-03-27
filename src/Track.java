@@ -48,7 +48,7 @@ class Track {
 	@Override
 	public int hashCode() {
 		if (url == null) return 0;
-		return url.hashCode();
+		return url.hashCode() + metadata.hashCode();
 	}
 	@Override
 	public boolean equals(Object other) {
