@@ -247,41 +247,7 @@ class HttpRequest implements Runnable {
 			if (PLAYER_REDIRECTS.contains(path)) {
 				System.err.println("WARNING: Using deprected "+path+", redirecting to seinn.l42.eu");
 				redirect("https://seinn.l42.eu/");
-				return;
-			}
-			
-			String fileName = "./data" + path;
-			fileName.replaceAll("/\\.\\./","");
-			if (fileName.charAt(fileName.length()-1) == '/') fileName += "index.html";
-			
-			// Open the requested file.
-			FileInputStream fis = null;
-			boolean fileExists = true;
-			String statusLine = null;
-			try {
-				fis = new FileInputStream(fileName);
-				statusLine = "HTTP/1.1 200 OK";
-
-
-
-				// Construct the response message.
-				String contentTypeLine = null;
-				String entityBody = null;
-				if (fileExists) {
-					contentTypeLine = "Content-Type: " +
-						contentType( fileName ) + "; charset=UTF-8";
-				}
-				// Send the status line.
-				os.writeBytes(statusLine + CRLF);
-				// Send the content type line.
-				if (contentTypeLine != null) os.writeBytes(contentTypeLine + CRLF);
-				// Send a blank line to indicate the end of the header lines.
-				os.writeBytes(CRLF);
-
-				// Send the entity body.
-				sendBytes(fis);
-				fis.close();
-			} catch (FileNotFoundException e) {
+			} else {
 				System.err.println("WARNING: File Not found: ".concat(path));
 				sendHeaders(404, "Not Found", "text/plain");
 				osw.write("File Not Found" + CRLF);
@@ -295,52 +261,6 @@ class HttpRequest implements Runnable {
 
 	}
 
-
-
-	private void sendBytes(FileInputStream fis) throws Exception {
-	   // Construct a 1K buffer to hold bytes on their way to the socket.
-	   byte[] buffer = new byte[1024];
-	   int bytes = 0;
-	   
-	   // Copy requested file into the socket's output stream.
-	   while((bytes = fis.read(buffer)) != -1 ) {
-		  os.write(buffer, 0, bytes);
-	   }
-	}
-
-	private static String contentType(String fileName) {
-		if(fileName.endsWith(".htm") || fileName.endsWith(".html")) {
-			return "text/html";
-		}
-		if(fileName.endsWith(".xhtml")) {
-			return "application/xhtml+xml";
-		}
-		if(fileName.endsWith(".png")) {
-			return "image/png";
-		}
-		if(fileName.endsWith(".gif")) {
-			return "image/gif";
-		}
-		if(fileName.endsWith(".jpg")) {
-			return "image/jpeg";
-		}
-		if(fileName.endsWith(".css")) {
-			return "text/css";
-		}
-		if(fileName.endsWith(".js")) {
-			return "text/javascript";
-		}
-		if(fileName.endsWith(".mp3")) {
-			return "audio/mpeg";
-		}
-		if(fileName.endsWith(".txt")) {
-			return "text/plain";
-		}
-		if(fileName.endsWith("manifest")) {
-			return "text/cache-manifest";
-		}
-		return "application/octet-stream";
-	}
 	private float getFloat(String param, boolean head) throws IOException {
 		try{
 			float value = Float.parseFloat(get.get(param));
