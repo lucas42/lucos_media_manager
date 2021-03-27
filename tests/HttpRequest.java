@@ -30,7 +30,7 @@ class HttpRequestTest {
 
 	@Test
 	void notFound() {
-		compareRequestResponse("GET /unknown HTTP/1.1\n", "404 File Not Found");
+		compareRequestResponse("GET /unknown HTTP/1.1\n", "404 Not Found");
 	}
 	@Test
 	void robots() {

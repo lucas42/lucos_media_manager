@@ -260,40 +260,31 @@ class HttpRequest implements Runnable {
 			String statusLine = null;
 			try {
 				fis = new FileInputStream(fileName);
-				 statusLine = "HTTP/1.1 200 OK";
-			} catch (FileNotFoundException e) {
-				System.err.println("WARNING: File Not found: ".concat(fileName));
-				fileName = "./data/404.html";
-				statusLine = "HTTP/1.1 404 File Not Found";
-				try {
-					fis = new FileInputStream(fileName);
-				} catch (FileNotFoundException e2) {
-					fileExists = false;
+				statusLine = "HTTP/1.1 200 OK";
+
+
+
+				// Construct the response message.
+				String contentTypeLine = null;
+				String entityBody = null;
+				if (fileExists) {
+					contentTypeLine = "Content-Type: " +
+						contentType( fileName ) + "; charset=UTF-8";
 				}
-			}
+				// Send the status line.
+				os.writeBytes(statusLine + CRLF);
+				// Send the content type line.
+				if (contentTypeLine != null) os.writeBytes(contentTypeLine + CRLF);
+				// Send a blank line to indicate the end of the header lines.
+				os.writeBytes(CRLF);
 
-
-
-			// Construct the response message.
-			String contentTypeLine = null;
-			String entityBody = null;
-			if (fileExists) {
-				contentTypeLine = "Content-Type: " +
-					contentType( fileName ) + "; charset=UTF-8";
-			}
-			// Send the status line.
-			os.writeBytes(statusLine + CRLF);
-			// Send the content type line.
-			if (contentTypeLine != null) os.writeBytes(contentTypeLine + CRLF);
-			// Send a blank line to indicate the end of the header lines.
-			os.writeBytes(CRLF);
-
-			// Send the entity body.
-			if (fileExists) {
-				 sendBytes(fis);
-				 fis.close();
-			} else {
-				 os.writeBytes("error: 404 file not found");
+				// Send the entity body.
+				sendBytes(fis);
+				fis.close();
+			} catch (FileNotFoundException e) {
+				System.err.println("WARNING: File Not found: ".concat(path));
+				sendHeaders(404, "Not Found", "text/plain");
+				osw.write("File Not Found" + CRLF);
 			}
 		}
 		
