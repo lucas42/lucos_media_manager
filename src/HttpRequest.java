@@ -197,6 +197,7 @@ class HttpRequest implements Runnable {
 			Track newTrack = new Track(url, metadata);
 			if (pos.equals("now")) {
 				status.getPlaylist().queueNow(newTrack);
+				status.setPlaying(true);
 			} else if (pos.equals("next")) {
 				status.getPlaylist().queueNext(newTrack);
 			} else {
