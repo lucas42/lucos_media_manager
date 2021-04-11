@@ -38,7 +38,7 @@ class Track {
 			else if(metadata.get("mbid_artist") != null) metadata.put("exturl", "https://musicbrainz.org/artist/"+metadata.get("mbid_artist"));
 		}
 		if (metadata.get("editurl") == null) {
-			if (metadata.get("track_id") != null) metadata.put("editurl", "https://media-metadata.l42.eu/tracks/"+metadata.get("track_id"));
+			if (metadata.get("trackid") != null) metadata.put("editurl", "https://media-metadata.l42.eu/tracks/"+metadata.get("trackid"));
 		}
 		this.metadata = metadata;
 	}

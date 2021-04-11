@@ -68,9 +68,9 @@ class Playlist {
 		return true;
 	}
 
-	public void updateTracks(String track_id, Track trackUpdate) {
+	public void updateTracks(String trackid, Track trackUpdate) {
 		for (Track track : tracks) {
-			if (track.getMetadata("track_id").equals(track_id)) {
+			if (track.getMetadata("trackid").equals(trackid)) {
 				track.update(trackUpdate);
 			}
 		}

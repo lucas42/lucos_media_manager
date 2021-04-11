@@ -239,7 +239,7 @@ class HttpRequest implements Runnable {
 		} else if(path.equals("/trackUpdated") && post) {
 			try {
 				LoganneTrackEvent event = gson.fromJson(data, LoganneTrackEvent.class);
-				status.getPlaylist().updateTracks(event.track.getMetadata("track_id"), event.track);
+				status.getPlaylist().updateTracks(event.track.getMetadata("trackid"), event.track);
 				sendHeaders(204, "No Content", "text/plain");
 			} catch (JsonSyntaxException exception) {
 				sendHeaders(400, "Bad Request", "text/plain");

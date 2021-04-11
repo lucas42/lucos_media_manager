@@ -80,8 +80,8 @@ class HttpRequestTest {
 		Fetcher fetcher = mock(RandomFetcher.class);
 		Loganne loganne = mock(Loganne.class);
 		Playlist playlist = new Playlist(fetcher, loganne);
-		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "track_id", "1347"));
-		Map<String, String> noChangeMetadata = new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "track_id", "8532"));
+		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"));
+		Map<String, String> noChangeMetadata = new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"));
 		Track trackToChange = new Track("http://example.com/track/1337",initialMetadata);
 		Track trackNoChange = new Track("http://example.com/track/8532", noChangeMetadata);
 		playlist.queueNext(trackToChange);
@@ -93,11 +93,11 @@ class HttpRequestTest {
 
 		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
 		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");
-		assertEquals(trackNoChange.getMetadata("track_id"), "8532");
+		assertEquals(trackNoChange.getMetadata("trackid"), "8532");
 
 		assertEquals(trackToChange.getUrl(), "http://example.com/track/1347");
 		assertEquals(trackToChange.getMetadata("artist"), "Dolly Parton");
-		assertEquals(trackToChange.getMetadata("track_id"), "1347");
+		assertEquals(trackToChange.getMetadata("trackid"), "1347");
 
 		assertNotEquals(status.hashCode(), startingHashCode);
 
@@ -105,7 +105,7 @@ class HttpRequestTest {
 
 		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
 		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");
-		assertEquals(trackNoChange.getMetadata("track_id"), "8532");
+		assertEquals(trackNoChange.getMetadata("trackid"), "8532");
 	}
 
 }
