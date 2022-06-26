@@ -209,6 +209,7 @@ class HttpRequest implements Runnable {
 			sendHeaders(204, "Changed", "text/plain");
 		} else if (path.equals("/devices/current") && post) {
 			status.getDeviceList().setCurrent(get.get("uuid"));
+			if (get.getOrDefault("play", "false").equals("true")) status.setPlaying(true);
 			sendHeaders(204, "Changed", "text/plain");
 		} else if(path.equals("/_info")) {
 			Map<String, Object> output = new HashMap<String, Object>();

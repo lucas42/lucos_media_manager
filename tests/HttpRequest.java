@@ -64,6 +64,7 @@ class HttpRequestTest {
 	@Test
 	void devices() {
 		Status status = new Status(null, new DeviceList(null));
+		status.setPlaying(false);
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse(status, "POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Device 1\",\"isDefaultName\":true,\"isCurrent\":true,\"isConnected\":false}]");
@@ -71,9 +72,34 @@ class HttpRequestTest {
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false}]");
 		compareRequestResponse(status, "POST /devices?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a&name=Jolly%20Jumper HTTP/1.1", "204");
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false}]");
+		// Changing the current device without a 'play' param, should:
+		// * set that device's isCurrent to be true
+		// * set the other devices' isCurrent to be false
+		// * Not affect the isPlaying status
 		compareRequestResponse(status, "POST /devices/current?uuid=3f03fae2-7a79-4ca1-9593-07c080f8402a HTTP/1.1", "204");
+		assertFalse(status.getPlaying());
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false}]");
 		compareRequestResponse(status, "GET /poll/summary?device=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":false}]");
+		// Changing the current device with 'play' param set to true, should:
+		// * set that device's isCurrent to be true
+		// * set the other devices' isCurrent to be false
+		// * Change the isPlaying status to true
+		compareRequestResponse(status, "POST /devices/current?uuid=46eca36b-2e4f-46bd-a756-249c45850cac&play=true HTTP/1.1", "204");
+		assertTrue(status.getPlaying());
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false}]");
+		// Setting current device to the one which is already current with 'play' param set to true, should:
+		// * have no affect on an devices' isCurrent status
+		// * Change the isPlaying status to true
+		status.setPlaying(false);
+		compareRequestResponse(status, "POST /devices/current?uuid=46eca36b-2e4f-46bd-a756-249c45850cac&play=true HTTP/1.1", "204");
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false}]");
+		assertTrue(status.getPlaying());
+		// Setting current device to the one which is already current with 'play' param set to true when aleady playing, should:
+		// * Make no change to status.
+		status.setPlaying(false);
+		compareRequestResponse(status, "POST /devices/current?uuid=46eca36b-2e4f-46bd-a756-249c45850cac&play=true HTTP/1.1", "204");
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[{\"uuid\":\"46eca36b-2e4f-46bd-a756-249c45850cac\",\"name\":\"Flying Fidget\",\"isDefaultName\":false,\"isCurrent\":true,\"isConnected\":true},{\"uuid\":\"3f03fae2-7a79-4ca1-9593-07c080f8402a\",\"name\":\"Jolly Jumper\",\"isDefaultName\":false,\"isCurrent\":false,\"isConnected\":false}]");
+		assertTrue(status.getPlaying());
 	}
 	@Test
 	void trackUpdated() {
