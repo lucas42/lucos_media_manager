@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: circleci/openjdk:15-buster
+      - image: cimg/openjdk:18.0
     steps:
       - checkout
       - run:
