@@ -57,8 +57,20 @@ class HttpRequestTest {
 	@Test
 	void volume() {
 		Status status = new Status(null, new DeviceList(null));
+
+		// The following values should update the volume
+		compareRequestResponse(status, "POST /volume?volume=1.0 HTTP/1.1", "204");
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "volume\":1");
+		compareRequestResponse(status, "POST /volume?volume=0 HTTP/1.1", "204");
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "volume\":0");
 		compareRequestResponse(status, "POST /volume?volume=0.7 HTTP/1.1", "204");
-		System.out.println(status.getVolume());
+		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "volume\":0.7");
+
+		// The following values should all fail, and not update the volume
+		compareRequestResponse(status, "POST /volume?volume=string HTTP/1.1", "400");
+		compareRequestResponse(status, "POST /volume?volume=NaN HTTP/1.1", "400");
+		compareRequestResponse(status, "POST /volume?volume=-1 HTTP/1.1", "400");
+		compareRequestResponse(status, "POST /volume?volume=1.3 HTTP/1.1", "400");
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "volume\":0.7");
 	}
 	@Test

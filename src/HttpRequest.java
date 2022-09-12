@@ -279,6 +279,15 @@ class HttpRequest implements Runnable {
 	private float getFloat(String param, boolean head) throws IOException {
 		try{
 			float value = Float.parseFloat(get.get(param));
+			if (!(value <= 1.0)) {
+				sendHeaders(400, "Not Changed", "application/json");
+				if (!head) osw.write(param + " must not be greater than 1.0");
+				return -1;
+			} else if (!(value >= 0.0)) {
+				sendHeaders(400, "Not Changed", "application/json");
+				if (!head) osw.write(param + " must not be less than 0.0");
+				return -1;
+			}
 			return value;
 		} catch (NumberFormatException e) {
 			sendHeaders(400, "Not Changed", "application/json");
