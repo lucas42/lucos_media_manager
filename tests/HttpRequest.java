@@ -18,19 +18,19 @@ class HttpRequestTest {
 			InetAddress mockedAddress = mock(InetAddress.class);
 			when(mockedAddress.getHostName()).thenReturn("test.host");
 			when(socket.getInetAddress()).thenReturn(mockedAddress);
-			HttpRequest httpRequest = new HttpRequest(status, socket);
+			FrontController controller = new FrontController(status, socket);
 			InputStream input = new StringBufferInputStream(request);
 			when(socket.getInputStream()).thenReturn(input);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			when(socket.getOutputStream()).thenReturn(output);
-			httpRequest.processRequest();
+			controller.processRequest();
 			assertTrue(output.toString().contains(responseSnippet), "response snippet ("+responseSnippet+") not found in response:\n"+output.toString());
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
 	void compareRequestResponse(String request, String responseSnippet) {
-		compareRequestResponse(null, request, responseSnippet);
+		compareRequestResponse(new Status(null, new DeviceList(null)), request, responseSnippet);
 	}
 
 	@Test
@@ -43,7 +43,7 @@ class HttpRequestTest {
 	}
 	@Test
 	void playPause() {
-		Status status = new Status(null, null);
+		Status status = new Status(null, new DeviceList(null));
 		status.setPlaying(true);
 		compareRequestResponse(status, "POST /pause HTTP/1.0\n", "204");
 		assertFalse(status.getPlaying());

@@ -64,9 +64,12 @@ class DeviceList {
 		}
 		return sumHashCodes;
 	}
-	public void openConnection(String device_uuid, HttpRequest request) {
+	public Device openConnection(HttpRequest request) {
+		String device_uuid = request.removeParam("device");
+		if (device_uuid == null) return null;
 		Device device = this.getDevice(device_uuid);
 		connections.open(device, request);
+		return device;
 	}
 	public void closeConnection(HttpRequest request) {
 		connections.close(request);
