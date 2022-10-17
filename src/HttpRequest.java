@@ -140,7 +140,7 @@ class HttpRequest {
 		return path;
 	}
 	public String getData() {
-		return data;
+		return data.trim();
 	}
 	public Method getMethod() {
 		return method;
