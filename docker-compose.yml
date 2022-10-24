@@ -6,3 +6,4 @@ services:
     ports:
       - "8001:8080"
     image: lucas42/lucos_media_manager
+    restart: always
