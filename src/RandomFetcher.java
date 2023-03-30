@@ -17,7 +17,7 @@ public class RandomFetcher extends Fetcher {
 		}
 	}
 	private void fetchList() throws MalformedURLException, IOException{
-		URL url = new URL("https://media-api.l42.eu/tracks/random");
+		URL url = new URL("https://media-api.l42.eu/v2/tracks/random");
 		InputStreamReader reader = new InputStreamReader(url.openStream());
 
 		Track[] tracks = gson.fromJson(reader, Track[].class);
