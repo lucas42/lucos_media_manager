@@ -55,3 +55,7 @@ class LoganneTrackEvent {
 	Track track;
 	String type;
 }
+class MediaApiResult {
+	Track[] tracks;
+	int totalPages;
+}
