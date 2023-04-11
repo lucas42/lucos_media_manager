@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.Duration;
+
 
 class TrackTest {
 
@@ -59,6 +64,25 @@ class TrackTest {
 		assertEquals("track2", noMetadataTrack.getMetadata("title"));
 		final Track noMetadataTrackWithExtension = new Track("https://example.com/track3.ogg");
 		assertEquals("track3", noMetadataTrackWithExtension.getMetadata("title"));
+	}
+	@Test
+	void isNew() {
+		// There's some subtle variation between ISO 8601 and RFC 3339, and some places append Z for UTC and others leave it out.  Try 2 different datetime formats to ensure compatibily.
+		final String lastWeek =  new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").format(Date.from(Instant.now().minus(Duration.ofDays(7))));
+		final Track trackWithRecentAdded = new Track("https://example.com/track", new HashMap<String, String>(Map.of("added", lastWeek)));
+		assertEquals("true", trackWithRecentAdded.getMetadata("new"));
+		final String lastWeekPlusTimezone =  new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Date.from(Instant.now().minus(Duration.ofDays(7))));
+		final Track trackWithRecentAddedTimezone = new Track("https://example.com/track", new HashMap<String, String>(Map.of("added", lastWeekPlusTimezone)));
+		assertEquals("true", trackWithRecentAddedTimezone.getMetadata("new"));
+		final String severalWeeksAgo =  new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(Date.from(Instant.now().minus(Duration.ofDays(21))));
+		final Track trackWithOldAdded = new Track("https://example.com/track", new HashMap<String, String>(Map.of("added", severalWeeksAgo)));
+		assertEquals(null, trackWithOldAdded.getMetadata("new"));
+		final Track trackWithNoAdded = new Track("https://example.com/track");
+		assertEquals(null, trackWithNoAdded.getMetadata("new"));
+		final Track trackWithInvalidAdded = new Track("https://example.com/track", new HashMap<String, String>(Map.of("added", "yes")));
+		assertEquals(null, trackWithNoAdded.getMetadata("new"));
+		final Track trackWithIncorrectNewField = new Track("https://example.com/track", new HashMap<String, String>(Map.of("added", severalWeeksAgo, "new", "true")));
+		assertEquals(null, trackWithIncorrectNewField.getMetadata("new"));
 	}
 	@Test
 	void equality() {

@@ -19,5 +19,8 @@ A java service for keeping track of which music is currently playing.
 ## Running
 `nice -19 docker-compose up -d --no-build`
 
+## Running tests locally
+`make test`
+
 ## Building
 The build is configured to run in Dockerhub when a commit is pushed to the main branch in github.

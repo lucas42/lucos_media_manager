@@ -2,6 +2,10 @@ import java.io.* ;
 import java.net.* ;
 import java.util.* ; 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.Duration;
+import java.time.format.DateTimeParseException;
+
 class Track {
 	private String url;
 	private Map<String, String> metadata;
@@ -39,6 +43,23 @@ class Track {
 		}
 		if (metadata.get("editurl") == null) {
 			if (metadata.get("trackid") != null) metadata.put("editurl", "https://media-metadata.l42.eu/tracks/"+metadata.get("trackid"));
+		}
+		if (metadata.get("added") != null) {
+			String added = metadata.get("added");
+
+			// Really hacky way to support dates with no timezone attached (assumes all times are UTC and expressed as 'Z', rather than +0000)
+			if (!added.endsWith("Z")) added += "Z";
+			try {
+				Instant addedTime = Instant.parse(added);
+				Instant fortnightAgo = Instant.now().minus(Duration.ofDays(14));
+				if (addedTime.isAfter(fortnightAgo)) {
+					metadata.put("new", "true");
+				} else {
+					metadata.remove("new");
+				}
+			} catch (DateTimeParseException e) {
+				metadata.remove("new");
+			}
 		}
 		this.metadata = metadata;
 	}
