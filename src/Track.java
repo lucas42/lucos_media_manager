@@ -5,6 +5,8 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
+import java.nio.charset.StandardCharsets;
+import com.google.gson.*;
 
 class Track {
 	private String url;
@@ -101,5 +103,12 @@ class Track {
 	}
 	public float getCurrentTime() {
 		return currentTime;
+	}
+	public void refreshMetadata() throws MalformedURLException, IOException {
+		Gson gson = CustomGson.get();
+		URL queryUrl = new URL("https://media-api.l42.eu/v2/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
+		InputStreamReader reader = new InputStreamReader(queryUrl.openStream());
+		Track latestTrack = gson.fromJson(reader, Track.class);
+		this.update(latestTrack.getUrl(), latestTrack.getMetadata());
 	}
 }
