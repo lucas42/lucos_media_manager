@@ -71,16 +71,6 @@ class FrontController implements Runnable {
 				
 				Thread.sleep(1);
 			}
-		} else if (request.getPath().equals("/next") && request.getMethod() == Method.POST) {
-			String expectedNowUrl = request.getParam("now");
-			Track actualNow = status.getPlaylist().getCurrentTrack();
-			String actualNowUrl = (actualNow == null) ? null : actualNow.getUrl();
-			if (expectedNowUrl == null || expectedNowUrl.equals(actualNowUrl)) {
-				status.getPlaylist().next();
-				request.sendHeaders(204, "Changed", "application/json");
-			} else {
-				request.sendHeaders(204, "Wrong current track", "application/json");
-			}
 		} else if (request.getPath().equals("/play") && request.getMethod() == Method.POST) {
 			status.setPlaying(true);
 			request.sendHeaders(204, "Changed", "application/json");
@@ -93,11 +83,46 @@ class FrontController implements Runnable {
 				status.setVolume(volume);
 				request.sendHeaders(204, "Changed", "application/json");
 			}
+		} else if (request.getPath().equals("/next") && request.getMethod() == Method.POST) {
+			String expectedNowUrl = request.getParam("now");
+			if (expectedNowUrl == null) {
+				status.getPlaylist().skipTrack();
+				request.sendHeaders(204, "Changed", "application/json");
+			} else {
+				Track nowTrack = new Track(expectedNowUrl);
+				if (status.getPlaylist().skipTrack(nowTrack)) {
+					request.sendHeaders(204, "Changed", "application/json");
+				} else {
+					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+				}
+			}
 		} else if (request.getPath().equals("/done") && request.getMethod() == Method.POST) {
-			Track oldtrack = new Track(request.getParam("track"));
-			String doneStatus = request.getParam("status");
-			status.getPlaylist().finished(oldtrack, doneStatus);
-			request.sendHeaders(204, "Changed", "application/json");
+			String oldTrackUrl = request.getParam("track");
+			if (oldTrackUrl == null) {
+				request.sendHeaders(400, "Missing `track` parameter", "application/json");
+			} else {
+				Track oldTrack = new Track(oldTrackUrl);
+				if (status.getPlaylist().completeTrack(oldTrack)) {
+					request.sendHeaders(204, "Changed", "application/json");
+				} else {
+					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+				}
+			}
+		} else if (request.getPath().equals("/error") && request.getMethod() == Method.POST) {
+			String oldTrackUrl = request.getParam("track");
+			String errorMessage = request.getParam("message");
+			if (oldTrackUrl == null) {
+				request.sendHeaders(400, "Missing `track` parameter", "application/json");
+			} else if (errorMessage == null) {
+				request.sendHeaders(400, "Missing `message` parameter", "application/json");
+			} else {
+				Track oldTrack = new Track(oldTrackUrl);
+				if (status.getPlaylist().flagTrackAsError(oldTrack, errorMessage)) {
+					request.sendHeaders(204, "Changed", "application/json");
+				} else {
+					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+				}
+			}
 		} else if (request.getPath().equals("/update") && request.getMethod() == Method.POST) {
 			
 			// All the work has already been done, so just return headers based on result.

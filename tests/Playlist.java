@@ -53,7 +53,7 @@ class PlaylistTest {
 		// Cycle through the first 5 tracks (out of 15)
 		// These shouldn't trigger a fetch
 		for (int ii=0; ii<5; ii++) {
-			playlist.next();
+			playlist.skipTrack();
 			verifyNoMoreInteractions(fetcher);
 			verifyNoMoreInteractions(loganne);
 		}
@@ -62,20 +62,20 @@ class PlaylistTest {
 		final CountDownLatch fetching = new CountDownLatch(1);
 		final CountDownLatch callingNext = new CountDownLatch(5);
 		doAnswer(invocation -> {
-			callingNext.await(); // Wait until next() has been called a bunch of times
+			callingNext.await(); // Wait until skipTrack() has been called a bunch of times
 			fetching.countDown();
 			return null;
 		}).when(fetcher).run();
 
-		// When calling next() results in the number of tracks being below 10
+		// When calling skipTrack() results in the number of tracks being below 10
 		// the fetcher should be called
-		playlist.next();
+		playlist.skipTrack();
 		verify(loganne, times(2)).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 		assertEquals(9, playlist.getLength());
 
 		// Shouldn't trigger another fetch when a previous one is still in flight
 		for (int ii=0; ii<5; ii++) {
-			playlist.next();
+			playlist.skipTrack();
 			verifyNoMoreInteractions(loganne);
 			callingNext.countDown();
 		}
@@ -89,10 +89,10 @@ class PlaylistTest {
 
 	@Test
 	// Under normal operation, a playlist shouldn't be empty for long
-	// But in case next() is called when it is empty, verify no exception is thrown
+	// But in case skipTrack() is called when it is empty, verify no exception is thrown
 	void nextOnEmptyPlaylist() {
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
-		playlist.next();
+		playlist.skipTrack();
 	}
 
 	@Test
@@ -151,7 +151,7 @@ class PlaylistTest {
 			newHashcode = playlist.hashCode();
 			assertNotEquals(oldHashcode, newHashcode);
 
-		playlist.finished(trackC, "Skipped");
+		playlist.skipTrack(trackC);
 			assertEquals(3, playlist.getLength());
 			assertEquals(trackB, playlist.getCurrentTrack());
 			assertEquals(trackA, playlist.getNextTrack());
@@ -160,6 +160,31 @@ class PlaylistTest {
 			assertEquals(trackB, tracks[0]);
 			assertEquals(trackA, tracks[1]);
 			assertEquals(trackD, tracks[2]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
+
+		playlist.completeTrack(trackB);
+			assertEquals(2, playlist.getLength());
+			assertEquals(trackA, playlist.getCurrentTrack());
+			assertEquals(trackD, playlist.getNextTrack());
+
+			tracks = playlist.getTracks().toArray(new Track[2]);
+			assertEquals(trackA, tracks[0]);
+			assertEquals(trackD, tracks[1]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
+
+		playlist.flagTrackAsError(trackA, "Http status 404 returned");
+			assertEquals(1, playlist.getLength());
+			assertEquals(trackD, playlist.getCurrentTrack());
+			assertEquals(null, playlist.getNextTrack());
+
+			tracks = playlist.getTracks().toArray(new Track[1]);
+			assertEquals(trackD, tracks[0]);
 
 			oldHashcode = newHashcode;
 			newHashcode = playlist.hashCode();

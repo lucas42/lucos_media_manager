@@ -18,12 +18,41 @@ class Playlist {
 		topupTracks();
 	}
 
-	public void next() {
-		if (tracks.size() > 0) tracks.removeFirst();
+	/**
+	 * Removes the first instance of a given track from the playlist
+	 * (Queues additional tracks if necessary)
+	 * @returns boolean Whether or not the track was found in the playlist
+	 */
+	private boolean removeTrack(Track track) {
+		boolean trackRemoved = tracks.remove(track);
 		topupTracks();
+		return trackRemoved;
 	}
-	public void finished(Track track, String trackstatus) {
-		tracks.remove(track);
+
+	// Called when a track gets to the end of its playback
+	public boolean completeTrack(Track track) {
+		return removeTrack(track);
+	}
+	// Called when loading or playback of a track encounters an error
+	public boolean flagTrackAsError(Track track, String errorMessage) {
+		boolean trackRemoved = removeTrack(track);
+		if (trackRemoved) {
+			System.out.println("NOTICE: Track "+track.getUrl()+" flagged with error: "+errorMessage);
+			// TODO: Record the error somewhere more presistent than application log
+		}
+		return trackRemoved;
+	}
+	// Called when a track is deliberatly skipped
+	public boolean skipTrack(Track track) {
+		return removeTrack(track);
+	}
+
+	/**
+	 * Removes the first track from the playlist
+	 * (Queues additional tracks if necessary)
+	 */
+	public void skipTrack() {
+		if (tracks.size() > 0) tracks.removeFirst();
 		topupTracks();
 	}
 
