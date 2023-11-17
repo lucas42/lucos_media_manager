@@ -73,61 +73,61 @@ class FrontController implements Runnable {
 			}
 		} else if (request.getPath().equals("/play") && request.getMethod() == Method.POST) {
 			status.setPlaying(true);
-			request.sendHeaders(204, "Changed", "application/json");
+			request.sendHeaders(204, "Changed");
 		} else if (request.getPath().equals("/pause") && request.getMethod() == Method.POST) {
 			status.setPlaying(false);
-			request.sendHeaders(204, "Changed", "application/json");
+			request.sendHeaders(204, "Changed");
 		} else if (request.getPath().equals("/volume") && request.getMethod() == Method.POST) {
 			float volume = parseVolume();
 			if (volume != -1) {
 				status.setVolume(volume);
-				request.sendHeaders(204, "Changed", "application/json");
+				request.sendHeaders(204, "Changed");
 			}
 		} else if (request.getPath().equals("/next") && request.getMethod() == Method.POST) {
 			String expectedNowUrl = request.getParam("now");
 			if (expectedNowUrl == null) {
 				status.getPlaylist().skipTrack();
-				request.sendHeaders(204, "Changed", "application/json");
+				request.sendHeaders(204, "Changed");
 			} else {
 				Track nowTrack = new Track(expectedNowUrl);
 				if (status.getPlaylist().skipTrack(nowTrack)) {
-					request.sendHeaders(204, "Changed", "application/json");
+					request.sendHeaders(204, "Changed");
 				} else {
-					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+					request.sendHeaders(404, "Track Not In Playlist");
 				}
 			}
 		} else if (request.getPath().equals("/done") && request.getMethod() == Method.POST) {
 			String oldTrackUrl = request.getParam("track");
 			if (oldTrackUrl == null) {
-				request.sendHeaders(400, "Missing `track` parameter", "application/json");
+				request.sendHeaders(400, "Missing `track` parameter");
 			} else {
 				Track oldTrack = new Track(oldTrackUrl);
 				if (status.getPlaylist().completeTrack(oldTrack)) {
-					request.sendHeaders(204, "Changed", "application/json");
+					request.sendHeaders(204, "Changed");
 				} else {
-					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+					request.sendHeaders(404, "Track Not In Playlist");
 				}
 			}
 		} else if (request.getPath().equals("/error") && request.getMethod() == Method.POST) {
 			String oldTrackUrl = request.getParam("track");
 			String errorMessage = request.getParam("message");
 			if (oldTrackUrl == null) {
-				request.sendHeaders(400, "Missing `track` parameter", "application/json");
+				request.sendHeaders(400, "Missing `track` parameter");
 			} else if (errorMessage == null) {
-				request.sendHeaders(400, "Missing `message` parameter", "application/json");
+				request.sendHeaders(400, "Missing `message` parameter");
 			} else {
 				Track oldTrack = new Track(oldTrackUrl);
 				if (status.getPlaylist().flagTrackAsError(oldTrack, errorMessage)) {
-					request.sendHeaders(204, "Changed", "application/json");
+					request.sendHeaders(204, "Changed");
 				} else {
-					request.sendHeaders(404, "Track Not In Playlist", "application/json");
+					request.sendHeaders(404, "Track Not In Playlist");
 				}
 			}
 		} else if (request.getPath().equals("/update") && request.getMethod() == Method.POST) {
 			
 			// All the work has already been done, so just return headers based on result.
-			if (update_success) request.sendHeaders(204, "Changed", "application/json");
-			else request.sendHeaders(400, "Incorrect params", "application/json");
+			if (update_success) request.sendHeaders(204, "Changed");
+			else request.sendHeaders(400, "Incorrect params");
 		} else if (request.getPath().equals("/queue") && request.getMethod() == Method.POST) {
 			Map<String, String> metadata = request.getAllParameters();
 			String url = metadata.remove("url");
@@ -141,18 +141,18 @@ class FrontController implements Runnable {
 			} else {
 				status.getPlaylist().queueEnd(newTrack);
 			}
-			request.sendHeaders(204, "Queued", "application/json");
+			request.sendHeaders(204, "Queued");
 
 			// The queued track is unlikely to include a full set of metadata
 			// So do a refresh to get the latest (but don't let that block any of the above queuing action)
 			newTrack.refreshMetadata();
 		} else if (request.getPath().equals("/devices") && request.getMethod() == Method.POST) {
 			status.getDeviceList().updateDevice(request.getParam("uuid"), request.getParam("name"));
-			request.sendHeaders(204, "Changed", "text/plain");
+			request.sendHeaders(204, "Changed");
 		} else if (request.getPath().equals("/devices/current") && request.getMethod() == Method.POST) {
 			status.getDeviceList().setCurrent(request.getParam("uuid"));
 			if (request.getParam("play", "false").equals("true")) status.setPlaying(true);
-			request.sendHeaders(204, "Changed", "text/plain");
+			request.sendHeaders(204, "Changed");
 		} else if(request.getPath().equals("/_info")) {
 			Map<String, Object> output = new HashMap<String, Object>();
 			Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();
@@ -184,9 +184,9 @@ class FrontController implements Runnable {
 			try {
 				LoganneTrackEvent event = gson.fromJson(request.getData(), LoganneTrackEvent.class);
 				status.getPlaylist().updateTracks(event.track.getMetadata("trackid"), event.track);
-				request.sendHeaders(204, "No Content", "text/plain");
+				request.sendHeaders(204, "No Content");
 			} catch (JsonSyntaxException exception) {
-				request.sendHeaders(400, "Bad Request", "text/plain");
+				request.sendHeaders(400, "Bad Request");
 				request.writeBody("JSON Syntax Error");
 				request.writeBody(exception.getMessage());
 			}

@@ -162,6 +162,9 @@ class HttpRequest {
 		headers.put("Content-type", contentType+ "; charset=utf-8");
 		sendHeaders(status, statusstring, headers);
 	}
+	public void sendHeaders(int status, String statusstring) throws IOException {
+		sendHeaders(status, statusstring, new HashMap<String, String>());
+	}
 	public void redirect(String url) throws IOException {
 		HashMap<String, String> headers =  new HashMap<String, String>();
 		headers.put("Location", url);
