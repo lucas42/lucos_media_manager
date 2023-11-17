@@ -33,7 +33,7 @@ public final class Manager {
 
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);
-		System.out.println("INFO: outgoing data server ready");
+		System.out.println("INFO: outgoing data server ready on port "+port);
     
 		// Process HTTP service requests in an infinite loop.
 		while (true) {

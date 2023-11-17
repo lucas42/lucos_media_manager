@@ -8,7 +8,7 @@ COPY Makefile ./
 COPY src ./src
 RUN make build
 
-ENV PORT 8080
+ENV PORT 8001
 EXPOSE $PORT
 
 CMD [ "java", "-cp", ".:bin:libs/*", "Manager" ]
