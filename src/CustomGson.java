@@ -19,6 +19,17 @@ class CustomGson {
 					String url = json.getAsJsonObject().get("url").getAsString();
 					Map<String, String> metadata = context.deserialize(json.getAsJsonObject().get("tags"), Map.class);
 					metadata.put("trackid", json.getAsJsonObject().get("trackid").getAsString());
+
+					/** The following tags are only for debugging purposes **/
+					if (json.getAsJsonObject().has("weighting")) {
+						metadata.put("_track_weighting", json.getAsJsonObject().get("weighting").getAsString());
+					}
+					if (json.getAsJsonObject().has("_random_weighting")) {
+						metadata.put("_random_weighting", json.getAsJsonObject().get("_random_weighting").getAsString());
+					}
+					if (json.getAsJsonObject().has("_cum_weighting")) {
+						metadata.put("_cum_weighting", json.getAsJsonObject().get("_cum_weighting").getAsString());
+					}
 					return new Track(url, metadata);
 				}
 			};
