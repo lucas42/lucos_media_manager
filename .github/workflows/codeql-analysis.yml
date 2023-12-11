@@ -52,7 +52,7 @@ jobs:
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
     - run: |
-       mvn clean install
+       mvn clean install -Dmaven.test.skip=true
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
