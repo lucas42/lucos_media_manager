@@ -29,15 +29,16 @@ class PlaylistTest {
 		Fetcher fetcher = mock(RandomFetcher.class);
 		Loganne loganne = mock(Loganne.class);
 		Track[] tracks = new Track[15];
-		for (int ii=0; ii<15; ii++) {
-			tracks[ii] = new Track("https://example.com/track/"+ii);
-		}
 
 		final CountDownLatch initialFetch = new CountDownLatch(1);
 		doAnswer(invocation -> {
 			initialFetch.countDown();
 			return null;
 		}).when(fetcher).run();
+
+		for (int ii=0; ii<15; ii++) {
+			tracks[ii] = new Track("https://example.com/track/"+ii);
+		}
 
 		Playlist playlist = new Playlist(fetcher, loganne);
 		verify(fetcher).setPlaylist(playlist);
@@ -70,8 +71,8 @@ class PlaylistTest {
 		// When calling skipTrack() results in the number of tracks being below 10
 		// the fetcher should be called
 		playlist.skipTrack();
-		verify(loganne, times(2)).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 		assertEquals(9, playlist.getLength());
+		verify(loganne, times(2)).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		// Shouldn't trigger another fetch when a previous one is still in flight
 		for (int ii=0; ii<5; ii++) {
