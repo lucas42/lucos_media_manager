@@ -8,9 +8,9 @@ jobs:
       - checkout
       - run:
           name: Run Tests
-          command: make test
+          command: mvn clean test
       - store_artifacts:
-          path: reports
+          path: target/site/jacoco
 
 orbs:
   lucos: lucos/deploy@0

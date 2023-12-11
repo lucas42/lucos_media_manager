@@ -7,20 +7,16 @@ A java service for keeping track of which music is currently playing.
 
 ## Build-time Dependencies
 * Java
-* Make
-* wget
-* [Google gson](https://code.google.com/p/google-gson/)
+* Maven
+* [Google gson](https://code.google.com/p/google-gson/) - installed by Maven
 
 ## Test Dependencies
-* [Junit5](https://junit.org/junit5/docs/current/user-guide/)
-* [JaCoCo](https://www.jacoco.org/jacoco/trunk/index.html)
-* Unzip (used for setting up jacoco)
+* [Junit5](https://junit.org/junit5/docs/current/user-guide/) - installed by Maven
+* [JaCoCo](https://www.jacoco.org/jacoco/trunk/index.html) - installed by Maven
+* [Mockito](https://site.mockito.org/) - installed by Maven
 
 ## Running
-`nice -19 docker-compose up -d --no-build`
+`docker compose up --build`
 
 ## Running tests locally
-`make test`
-
-## Building
-The build is configured to run in Dockerhub when a commit is pushed to the main branch in github.
+`mvn clean test`

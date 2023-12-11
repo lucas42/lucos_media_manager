@@ -26,7 +26,7 @@ class HttpRequestTest {
 			controller.processRequest();
 			assertTrue(output.toString().contains(responseSnippet), "response snippet ("+responseSnippet+") not found in response:\n"+output.toString());
 		} catch (Exception e) {
-			fail(e);
+			fail("Unexpected HTTP Error", e);
 		}
 	}
 	void compareRequestResponse(String request, String responseSnippet) {
