@@ -12,10 +12,8 @@ class Playlist {
 	static final int TOPUP_LIMIT = 10;
 
 	public Playlist(Fetcher fetcher, Loganne loganne) {
-		this.fetcher = fetcher;
-		fetcher.setPlaylist(this);
 		this.loganne = loganne;
-		topupTracks();
+		setFetcher(fetcher);
 	}
 
 	/**
@@ -53,6 +51,15 @@ class Playlist {
 	 */
 	public void skipTrack() {
 		if (tracks.size() > 0) tracks.removeFirst();
+		topupTracks();
+	}
+
+	/**
+	 * Removes all the tracks from the playlist
+	 * Queues additional
+	 */
+	private void removeAllTracks() {
+		tracks = new LinkedList<Track>();
 		topupTracks();
 	}
 
@@ -122,5 +129,15 @@ class Playlist {
 		currentFetcherThread = new Thread(fetcher);
 
 		currentFetcherThread.start();
+	}
+
+	/**
+	 * Sets the fetcher for this playlist
+	 * Also, clears all the current tracks and queues fresh ones from the new fetcher
+	 */
+	public void setFetcher(Fetcher fetcher) {
+		this.fetcher = fetcher;
+		fetcher.setPlaylist(this);
+		removeAllTracks();
 	}
 }

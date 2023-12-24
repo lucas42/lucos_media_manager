@@ -146,6 +146,16 @@ class FrontController implements Runnable {
 			// The queued track is unlikely to include a full set of metadata
 			// So do a refresh to get the latest (but don't let that block any of the above queuing action)
 			newTrack.refreshMetadata();
+		} else if (request.getPath().equals("/collection") && request.getMethod() == Method.POST) {
+			String collectionSlug = request.getParam("slug");
+			Fetcher fetcher;
+			if (collectionSlug == null || collectionSlug.equals("")) {
+				fetcher = new RandomFetcher();
+			} else {
+				fetcher = new CollectionFetcher(collectionSlug);
+			}
+			status.getPlaylist().setFetcher(fetcher);
+			request.sendHeaders(204, "Changed");
 		} else if (request.getPath().equals("/devices") && request.getMethod() == Method.POST) {
 			status.getDeviceList().updateDevice(request.getParam("uuid"), request.getParam("name"));
 			request.sendHeaders(204, "Changed");
