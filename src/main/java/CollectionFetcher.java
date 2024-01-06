@@ -24,7 +24,7 @@ public class CollectionFetcher extends Fetcher {
 		}
 	}
 	private void fetchList() throws MalformedURLException, IOException{
-		URL url = new URL("https://media-api.l42.eu/v2/collections/" + slug);
+		URL url = new URL("https://media-api.l42.eu/v2/collections/" + slug + "/random");
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		int responseCode = connection.getResponseCode();
 		if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
