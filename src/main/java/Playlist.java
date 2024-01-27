@@ -55,6 +55,15 @@ class Playlist {
 	}
 
 	/**
+	 * Called when a track has been removed from the media collection
+	 * Removes all instances of it from the playlist
+	 */
+	public void deleteTrack(Track track) {
+		while (tracks.remove(track)) {}
+		topupTracks();
+	}
+
+	/**
 	 * Removes all the tracks from the playlist
 	 * Queues additional
 	 */

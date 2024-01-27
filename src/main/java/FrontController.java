@@ -200,6 +200,16 @@ class FrontController implements Runnable {
 				request.writeBody("JSON Syntax Error");
 				request.writeBody(exception.getMessage());
 			}
+		} else if(request.getPath().equals("/trackDeleted") && request.getMethod() == Method.POST) {
+			try {
+				LoganneTrackEvent event = gson.fromJson(request.getData(), LoganneTrackEvent.class);
+				status.getPlaylist().deleteTrack(event.track);
+				request.sendHeaders(204, "No Content");
+			} catch (JsonSyntaxException exception) {
+				request.sendHeaders(400, "Bad Request");
+				request.writeBody("JSON Syntax Error");
+				request.writeBody(exception.getMessage());
+			}
 		} else {
 			final Set<String> PLAYER_REDIRECTS = Set.of(
 			    "/",
