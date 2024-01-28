@@ -28,8 +28,10 @@ public final class Manager {
 
 		// TODO: Keep state of device list between restarts
 		DeviceList deviceList = new DeviceList(loganne);
+
+		CollectionList collectionList = new CollectionList();
 		
-		Status status = new Status(playlist, deviceList);
+		Status status = new Status(playlist, deviceList, collectionList);
 
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);

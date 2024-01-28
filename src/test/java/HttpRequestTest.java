@@ -30,7 +30,7 @@ class HttpRequestTest {
 		}
 	}
 	void compareRequestResponse(String request, String responseSnippet) {
-		compareRequestResponse(new Status(null, new DeviceList(null)), request, responseSnippet);
+		compareRequestResponse(new Status(null, new DeviceList(null), mock(CollectionList.class)), request, responseSnippet);
 	}
 
 	@Test
@@ -43,7 +43,7 @@ class HttpRequestTest {
 	}
 	@Test
 	void playPause() {
-		Status status = new Status(null, new DeviceList(null));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "POST /pause HTTP/1.0\n", "204");
 		assertFalse(status.getPlaying());
@@ -56,7 +56,7 @@ class HttpRequestTest {
 	}
 	@Test
 	void volume() {
-		Status status = new Status(null, new DeviceList(null));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 
 		// The following values should update the volume
 		compareRequestResponse(status, "POST /volume?volume=1.0 HTTP/1.1", "204");
@@ -75,7 +75,7 @@ class HttpRequestTest {
 	}
 	@Test
 	void devices() {
-		Status status = new Status(null, new DeviceList(null));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 		status.setPlaying(false);
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse(status, "POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
@@ -124,7 +124,7 @@ class HttpRequestTest {
 		Track trackNoChange = new Track("http://example.com/track/8532", noChangeMetadata);
 		playlist.queueNext(trackToChange);
 		playlist.queueNext(trackNoChange);
-		Status status = new Status(playlist, new DeviceList(null));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int startingHashCode = status.hashCode();
 
 		compareRequestResponse(status, "POST /trackUpdated HTTP/1.1\nContent-Length: 325\n\n{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		trackid: 1347,\n		tags: {\n			artist: \"Dolly Parton\",\n			title: \"Stairway To Heaven\"\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}", "204 No Content");
@@ -157,7 +157,7 @@ class HttpRequestTest {
 		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
 		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
 
-		Status status = new Status(playlist, new DeviceList(null));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int startingHashCode = status.hashCode();
 
 		compareRequestResponse(status, "POST /trackDeleted HTTP/1.1\nContent-Length: 289\n\n{\"humanReadable\":\"Track #1347 deleted\",\"source\":\"test_updater\",\"track\":{\"fingerprint\":\"abcfxx\",\"duration\":73,\"url\":\"http://example.com/track/1347\",\"trackid\":1347,\"tags\":{\"title\":\"Stairway to Heaven\"},\"weighting\":0,\"collections\":[]},\"type\":\"trackDeleted\",\"date\":\"2024-01-27T16:18:47.676Z\"}", "204 No Content");

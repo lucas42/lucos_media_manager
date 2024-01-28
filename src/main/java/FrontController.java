@@ -210,6 +210,14 @@ class FrontController implements Runnable {
 				request.writeBody("JSON Syntax Error");
 				request.writeBody(exception.getMessage());
 			}
+		} else if(request.getPath().equals("/collectionsChanged") && request.getMethod() == Method.POST) {
+			// If anything has changed with collections (added, removed, edited etc), it's easier to refresh the full list than track the changes.
+			if (status.getCollectionList().refreshList()) {
+				request.sendHeaders(204, "No Content");
+			} else {
+				request.sendHeaders(500, "Internal Server Error");
+				request.writeBody("Failed to fetch collections from media API");
+			}
 		} else {
 			final Set<String> PLAYER_REDIRECTS = Set.of(
 			    "/",

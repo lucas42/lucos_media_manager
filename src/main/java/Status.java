@@ -6,9 +6,11 @@ class Status {
 	private float volume;
 	private Playlist playlist;
 	private DeviceList deviceList;
-	public Status(Playlist playlist, DeviceList deviceList) {
+	private CollectionList collectionList;
+	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList) {
 		this.playlist = playlist;
 		this.deviceList = deviceList;
+		this.collectionList = collectionList;
 		volume = (float)0.5;
 		isPlaying = true;
 	}
@@ -36,6 +38,7 @@ class Status {
 	public int hashCode() {
 		return playlist.hashCode()
 			+ deviceList.hashCode()
+			+ collectionList.hashCode()
 			+ Boolean.hashCode(isPlaying)
 			+ Float.hashCode(volume);
 	}
@@ -49,6 +52,7 @@ class Status {
 		summary.put("volume", this.getVolume());
 		summary.put("isPlaying", this.getPlaying());
 		summary.put("devices", deviceList.getAllDevices());
+		summary.put("collections", collectionList.getAllCollections());
 		if (playlist != null) summary.put("hashcode", this.hashCode());
 		return summary;
 	}
@@ -57,5 +61,8 @@ class Status {
 	}
 	public DeviceList getDeviceList() {
 		return deviceList;
+	}
+	public CollectionList getCollectionList() {
+		return collectionList;
 	}
 }
