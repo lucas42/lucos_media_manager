@@ -4,4 +4,7 @@ public abstract class Fetcher implements Runnable {
 		if (this.playlist != null) throw new RuntimeException("Fetcher already has playlist associated");
 		this.playlist = playlist;
 	}
+	public String getSlug() {
+		return null;
+	}
 }

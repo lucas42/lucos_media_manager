@@ -39,4 +39,8 @@ public class CollectionFetcher extends Fetcher {
 		System.err.println("DEBUG: New tracks added to playlist from " + slug);
 	}
 
+	public String getSlug() {
+		return slug;
+	}
+
 }

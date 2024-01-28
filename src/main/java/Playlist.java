@@ -123,7 +123,8 @@ class Playlist {
 
 	@Override
 	public int hashCode() {
-		return tracks.hashCode();
+		if (getCurrentFetcherSlug() == null) return tracks.hashCode();
+		return tracks.hashCode() + getCurrentFetcherSlug().hashCode();
 	}
 
 	private void topupTracks() {
@@ -148,5 +149,14 @@ class Playlist {
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
 		removeAllTracks();
+	}
+
+	/**
+	 * Returns the slug of the current fetcher
+	 * (`null` if a fetcher isn't set or isn't a type which supports slugs)
+	 */
+	public String getCurrentFetcherSlug() {
+		if (fetcher == null) return null;
+		return fetcher.getSlug();
 	}
 }

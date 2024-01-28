@@ -19,6 +19,9 @@ class CollectionList {
 			URL queryUrl = new URL("https://media-api.l42.eu/v2/collections");
 			InputStreamReader reader = new InputStreamReader(queryUrl.openStream());
 			this.collections = gson.fromJson(reader, MediaCollection[].class);
+			for (MediaCollection collection: this.collections) {
+				collection.editurl = "https://media-metadata.l42.eu/collections/"+collection.slug;
+			}
 			System.err.println("DEBUG: New collection list fetched from media api");
 			return true;
 		} catch (Exception e) {
@@ -28,7 +31,10 @@ class CollectionList {
 		}
 	}
 
-	public MediaCollection[] getAllCollections() {
+	public MediaCollection[] getAllCollections(String currentSlug) {
+		for (MediaCollection collection: this.collections) {
+			collection.isCurrent = (collection.slug.equals(currentSlug));
+		}
 		return this.collections;
 	}
 
@@ -44,4 +50,6 @@ class MediaCollection {
 	String name;
 	int totalTracks;
 	int totalPages;
+	String editurl;
+	boolean isCurrent;
 }
