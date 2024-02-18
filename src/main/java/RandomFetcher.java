@@ -1,10 +1,5 @@
-import java.io.* ;
-import java.net.* ;
-import com.google.gson.*;
-
 public class RandomFetcher extends Fetcher {
-	private static Gson gson = CustomGson.get();
-	
+
 	// Implement the run() method of the Runnable interface.
 	@Override
 	public void run() {
@@ -16,13 +11,10 @@ public class RandomFetcher extends Fetcher {
 			e.printStackTrace(System.err);
 		}
 	}
-	private void fetchList() throws MalformedURLException, IOException{
-		URL url = new URL("https://media-api.l42.eu/v2/tracks/random");
-		InputStreamReader reader = new InputStreamReader(url.openStream());
-
-		MediaApiResult result = gson.fromJson(reader, MediaApiResult.class);
+	private void fetchList() throws Exception{
+		MediaApi api = new MediaApi();
+		MediaApiResult result = api.fetchTracks("/v2/tracks/random");
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist");
 	}
-
 }

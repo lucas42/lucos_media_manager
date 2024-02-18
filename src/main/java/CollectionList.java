@@ -1,7 +1,3 @@
-import java.io.* ;
-import java.net.* ;
-import com.google.gson.*;
-
 /**
  * Represents the list of available collections in the media library
  */
@@ -15,10 +11,9 @@ class CollectionList {
 	// Returns a boolean of whether the fetch was successful
 	public boolean refreshList() {
 		try {
-			Gson gson = CustomGson.get();
-			URL queryUrl = new URL("https://media-api.l42.eu/v2/collections");
-			InputStreamReader reader = new InputStreamReader(queryUrl.openStream());
-			this.collections = gson.fromJson(reader, MediaCollection[].class);
+			MediaApi api = new MediaApi();
+			this.collections = api.fetchCollections("/v2/collections");
+
 			for (MediaCollection collection: this.collections) {
 				collection.editurl = "https://media-metadata.l42.eu/collections/"+collection.slug;
 			}

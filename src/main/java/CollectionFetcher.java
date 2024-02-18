@@ -1,11 +1,5 @@
-import java.io.* ;
-import java.net.* ;
-import com.google.gson.*;
-
 public class CollectionFetcher extends Fetcher {
-	private static Gson gson = CustomGson.get();
 	private String slug;
-
 
 	// Constructor
 	public CollectionFetcher(String slug) {
@@ -23,18 +17,9 @@ public class CollectionFetcher extends Fetcher {
 			e.printStackTrace(System.err);
 		}
 	}
-	private void fetchList() throws MalformedURLException, IOException{
-		URL url = new URL("https://media-api.l42.eu/v2/collections/" + slug + "/random");
-		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-		int responseCode = connection.getResponseCode();
-		if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
-			throw new IOException("Can't fetch more tracks; collection not found "+slug);
-		} else if (responseCode >= 400) {
-			throw new IOException("API error when fetching more tracks");
-		}
-		InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-
-		MediaApiResult result = gson.fromJson(reader, MediaApiResult.class);
+	private void fetchList() throws Exception{
+		MediaApi api = new MediaApi();
+		MediaApiResult result = api.fetchTracks("/v2/collections/" + slug + "/random");
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist from " + slug);
 	}
