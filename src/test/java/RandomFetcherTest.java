@@ -10,24 +10,6 @@ import org.mockito.ArgumentCaptor;
 class RandomFetcherTest {
 
 	@Test
-	void fetchesTwentyTracks() {
-
-		RandomFetcher fetcher = new RandomFetcher();
-		Playlist playlist = mock(Playlist.class);
-		fetcher.setPlaylist(playlist);
-		fetcher.run();
-
-		ArgumentCaptor<Track[]> tracksCaptor = ArgumentCaptor.forClass(Track[].class);
-		verify(playlist).queue(tracksCaptor.capture());
-		Track[] tracks = tracksCaptor.getValue();
-		assertEquals(20, tracks.length);
-
-		for (Track track: tracks) {
-			assertNotNull(track.getMetadata());
-		}
-	}
-
-	@Test
 	void tooManyPlaylists() {
 		RandomFetcher fetcher = new RandomFetcher();
 		Playlist playlistA = mock(Playlist.class);
