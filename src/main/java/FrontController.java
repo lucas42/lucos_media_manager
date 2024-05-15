@@ -129,10 +129,9 @@ class FrontController implements Runnable {
 			if (update_success) request.sendHeaders(204, "Changed");
 			else request.sendHeaders(400, "Incorrect params");
 		} else if (request.getPath().equals("/queue") && request.getMethod() == Method.POST) {
-			Map<String, String> metadata = request.getAllParameters();
-			String url = metadata.remove("url");
-			String pos = metadata.remove("pos");
-			Track newTrack = new Track(url, metadata);
+			String url = request.getParam("url", "");
+			String pos = request.getParam("pos", "end");
+			Track newTrack = new Track(url);
 			if (pos.equals("now")) {
 				status.getPlaylist().queueNow(newTrack);
 				status.setPlaying(true);

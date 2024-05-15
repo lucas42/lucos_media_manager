@@ -133,9 +133,6 @@ class HttpRequest {
 	public String removeParam(String key) {
 		return getParameters.remove(key);
 	}
-	public Map<String, String> getAllParameters() {
-		return new HashMap<String, String>(getParameters);
-	}
 	public String getPath() {
 		return path;
 	}
