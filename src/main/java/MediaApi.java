@@ -20,6 +20,9 @@ public class MediaApi {
 		return new InputStreamReader(connection.getInputStream());
 
 	}
+	public Track fetchTrack(String path) throws MalformedURLException, IOException {
+		return gson.fromJson(fetch(path), Track.class);
+	}
 	public MediaApiResult fetchTracks(String path) throws MalformedURLException, IOException {
 		return gson.fromJson(fetch(path), MediaApiResult.class);
 	}
