@@ -6,8 +6,10 @@ RUN mvn clean package -Dmaven.test.skip=true
 
 
 
-FROM openjdk:18-alpine
+FROM alpine:3.19
 WORKDIR /web/lucos/lucos_media_manager
+
+RUN apk add openjdk11
 COPY --from=build target/manager-latest.jar manager.jar
 
 ENV PORT 8001
