@@ -1,4 +1,4 @@
-FROM maven:3.9.6 as build
+FROM maven:3.9.7 as build
 
 COPY pom.xml ./
 COPY src ./src
