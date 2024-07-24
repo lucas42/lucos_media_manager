@@ -30,6 +30,9 @@ class FrontController implements Controller {
 	// Based on the request, decide which controller to use
 	private Controller chooseController() throws IOException {
 		request.readFromSocket();
+		if (request.getPath().startsWith("/v3/") || request.getPath().equals("/v3")) {
+			return new ControllerV3(status, request);
+		}
 		return new ControllerV2(status, request);
 	}
 }
