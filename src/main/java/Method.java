@@ -1,4 +1,3 @@
-
 public enum Method {
 	HEAD,
 	GET,

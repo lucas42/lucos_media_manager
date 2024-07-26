@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.Iterator;
+import java.util.Collection;
+import java.util.stream.Collectors;
 class HttpRequest {
 	final static String CRLF = "\r\n";
 	private Socket socket;
@@ -170,5 +172,12 @@ class HttpRequest {
 	public void writeBody(String content) throws IOException {
 		if (method == Method.HEAD) return; // HEAD Requests shouldn't return a body
 		osw.write(content + CRLF);
+	}
+
+	// Convenience method for returning a 405 "Method Not Allowed" response including the "Allow" header
+	public void notAllowed(Collection<Method> allowedMethods) throws IOException {
+		String allow = allowedMethods.stream().map( method -> method.name() ).collect(Collectors.joining (","));
+		this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
+		this.close();
 	}
 }
