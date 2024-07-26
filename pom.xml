@@ -61,7 +61,7 @@
         <version>3.3.1</version>
         <configuration>
           <!-- Allows mockito to use byte-buddy-agent without warnings -->
-          <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+          <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
         </configuration>
       </plugin>
       <plugin>
