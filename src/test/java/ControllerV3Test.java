@@ -1,5 +1,6 @@
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 import java.util.Map;
@@ -32,26 +33,48 @@ class ControllerV3Test {
 	@Test
 	void unknownPathReturns404() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
-		compareRequestResponse(status, "/v3/unknown", Method.GET, null, 404, "Not Found", "text/plain", "File Not Found\n");
+		compareRequestResponse(status, "/v3/unknown", Method.GET, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test
 	void playingPause() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 		status.setPlaying(true);
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "False", 204, "No Content", null, null);
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "False", 204, "Changed", null, null);
 		assertFalse(status.getPlaying());
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "False", 204, "No Content", null, null);
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "False", 204, "Changed", null, null);
 		assertFalse(status.getPlaying());
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "True", 204, "No Content", null, null);
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "True", 204, "Changed", null, null);
 		assertTrue(status.getPlaying());
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "True", 204, "No Content", null, null);
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "True", 204, "Changed", null, null);
 		assertTrue(status.getPlaying());
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "Unknown", 400, "Bad Request", "text/plain", "Unknown value \"Unknown\"\n"); // Test unknown value doesn't change anything
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "Unknown", 400, "Not Changed", "text/plain", "Unknown value \"Unknown\""); // Test unknown value doesn't change anything
 		assertTrue(status.getPlaying());
-		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "fAlSe", 204, "No Content", null, null); // Test case insensitive
+		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "fAlSe", 204, "Changed", null, null); // Test case insensitive
 		assertFalse(status.getPlaying());
 		checkNotAllowed(status, "/v3/is-playing", Method.POST, Arrays.asList(Method.PUT));
 		assertFalse(status.getPlaying());
+	}
+
+	@Test
+	void volume() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+
+		// The following values should update the volume
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "1.0", 204, "Changed", null, null);
+		assertEquals(1, status.getVolume(), 0);
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "0", 204, "Changed", null, null);
+		assertEquals(0, status.getVolume(), 0);
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "0.7", 204, "Changed", null, null);
+		assertEquals(0.7, status.getVolume(), 0.0002);
+
+		// The following values should all fail, and not update the volume
+		compareRequestResponse(status, "/v3/volume", Method.PUT, null, 400, "Not Changed", "text/plain", "Request body must be set to value for volume");
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "string", 400, "Not Changed", "text/plain", "Volume must be a number");
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "NaN", 400, "Not Changed", "text/plain", "Volume must not be greater than 1.0");
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "-1", 400, "Not Changed", "text/plain", "Volume must not be less than 0.0");
+		compareRequestResponse(status, "/v3/volume", Method.PUT, "1.3", 400, "Not Changed", "text/plain", "Volume must not be greater than 1.0");
+		checkNotAllowed(status, "/v3/volume", Method.POST, Arrays.asList(Method.PUT));
+		assertEquals(0.7, status.getVolume(), 0.0002);
 	}
 }
