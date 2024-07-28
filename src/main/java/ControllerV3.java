@@ -82,6 +82,26 @@ class ControllerV3 implements Controller {
 			} else {
 				request.notAllowed(Arrays.asList(Method.PUT));
 			}
+		} else if (request.getPath().equals("/v3/track-complete")) {
+			if (request.getMethod().equals(Method.POST)) {
+				String oldTrackUrl = request.getParam("track");
+				if (request.getData() == null) {
+					request.sendHeaders(400, "Bad Request", "text/plain");
+					request.writeBody("Missing track url from request body");
+					request.close();
+				} else {
+					Track oldTrack = new Track(request.getData());
+					if (status.getPlaylist().completeTrack(oldTrack)) {
+						request.sendHeaders(204, "Changed");
+						request.close();
+					} else {
+						request.sendHeaders(204, "Not Changed");
+						request.close();
+					}
+				}
+			} else {
+				request.notAllowed(Arrays.asList(Method.POST));
+			}
 		} else {
 			System.err.println("WARNING: File Not found: ".concat(request.getPath()));
 			request.sendHeaders(404, "Not Found", "text/plain");

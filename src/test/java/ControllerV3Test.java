@@ -1,11 +1,13 @@
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.io.IOException;
 
 class ControllerV3Test {
@@ -93,6 +95,7 @@ class ControllerV3Test {
 		assertEquals("Personal Laptop", status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").getName()); // Existing device's name updated
 		assertEquals("Phone", status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").getName()); // Existing divec unnafected
 
+		checkNotAllowed(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.POST, Arrays.asList(Method.PUT));
 	}
 
 	@Test
@@ -112,6 +115,48 @@ class ControllerV3Test {
 		assertTrue(status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").isCurrent()); // Existing device set as current one
 		assertFalse(status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").isCurrent()); // Existing device marked as not current
 		verify(loganne).post("deviceSwitch", "Moving music to play on Device 1");
+
+		checkNotAllowed(status, "/v3/current-device", Method.POST, Arrays.asList(Method.PUT));
+
+	}
+
+	@Test
+	void trackComplete() throws IOException {
+		Fetcher fetcher = mock(RandomFetcher.class);
+		Loganne loganne = mock(Loganne.class);
+
+		// Create playlist with 4 tracks, 2 of which are the same track
+		Playlist playlist = new Playlist(fetcher, loganne);
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
+		int hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-complete", Method.POST, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
+
+		assertEquals(3, playlist.getLength());
+		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
+		assertEquals("Stairway To Heaven", playlist.getNextTrack().getMetadata("title"));
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-complete", Method.POST, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the second instance of the track
+		assertEquals(2, playlist.getLength());
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-complete", Method.POST, "http://example.com/track/1347", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No instances of track remain - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		checkNotAllowed(status, "/v3/track-complete", Method.PUT, Arrays.asList(Method.POST));
 
 	}
 }
