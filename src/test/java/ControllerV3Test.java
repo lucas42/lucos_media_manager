@@ -15,6 +15,7 @@ class ControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
 		ControllerV3 controller = new ControllerV3(status, request);
 		controller.processRequest();
@@ -152,11 +153,55 @@ class ControllerV3Test {
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No instances of track remain - no-op
+		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No track specified - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
 		checkNotAllowed(status, "/v3/track-complete", Method.PUT, Arrays.asList(Method.POST));
+
+	}
+
+	@Test
+	void trackError() throws IOException {
+		Fetcher fetcher = mock(RandomFetcher.class);
+		Loganne loganne = mock(Loganne.class);
+
+		// Create playlist with 4 tracks, 2 of which are the same track
+		Playlist playlist = new Playlist(fetcher, loganne);
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
+		int hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-error", Method.POST, "http://example.com/track/1347\nFailed to load track", 204, "Changed", null, null);  // Removes the first instance of the track
+
+		assertEquals(3, playlist.getLength());
+		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
+		assertEquals("Stairway To Heaven", playlist.getNextTrack().getMetadata("title"));
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-error", Method.POST, "http://example.com/track/1347\r\nTracked cut out early", 204, "Changed", null, null);  // Removes the second instance of the track
+		assertEquals(2, playlist.getLength());
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/track-error", Method.POST, "http://example.com/track/1347\nFailed to load track", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		compareRequestResponse(status, "/v3/track-error", Method.POST, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No track specified - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		compareRequestResponse(status, "/v3/track-error", Method.POST, "http://example.com/track/1347", 400, "Bad Request", "text/plain", "Missing error message from request body");  // No message specified - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		checkNotAllowed(status, "/v3/track-error", Method.PUT, Arrays.asList(Method.POST));
 
 	}
 }

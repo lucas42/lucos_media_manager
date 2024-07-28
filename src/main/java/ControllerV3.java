@@ -37,29 +37,31 @@ class ControllerV3 implements Controller {
 			}
 		} else if (request.getPath().equals("/v3/volume")) {
 			if (request.getMethod().equals(Method.PUT)) {
-				try{
-					float value = Float.parseFloat(request.getData());
-					if (!(value <= 1.0)) {
-						request.sendHeaders(400, "Not Changed", "text/plain");
-						request.writeBody("Volume must not be greater than 1.0");
-						request.close();
-					} else if (!(value >= 0.0)) {
-						request.sendHeaders(400, "Not Changed", "text/plain");
-						request.writeBody("Volume must not be less than 0.0");
-						request.close();
-					} else {
-						status.setVolume(value);
-						request.sendHeaders(204, "Changed");
-						request.close();
-					}
-				} catch (NullPointerException e) {
+				if (request.getData() == "") {
 					request.sendHeaders(400, "Not Changed", "text/plain");
 					request.writeBody("Request body must be set to value for volume");
 					request.close();
-				} catch (NumberFormatException e) {
-					request.sendHeaders(400, "Not Changed", "text/plain");
-					request.writeBody("Volume must be a number");
-					request.close();
+				} else {
+					try{
+						float value = Float.parseFloat(request.getData());
+						if (!(value <= 1.0)) {
+							request.sendHeaders(400, "Not Changed", "text/plain");
+							request.writeBody("Volume must not be greater than 1.0");
+							request.close();
+						} else if (!(value >= 0.0)) {
+							request.sendHeaders(400, "Not Changed", "text/plain");
+							request.writeBody("Volume must not be less than 0.0");
+							request.close();
+						} else {
+							status.setVolume(value);
+							request.sendHeaders(204, "Changed");
+							request.close();
+						}
+					} catch (NumberFormatException e) {
+						request.sendHeaders(400, "Not Changed", "text/plain");
+						request.writeBody("Volume must be a number");
+						request.close();
+					}
 				}
 			} else {
 				request.notAllowed(Arrays.asList(Method.PUT));
@@ -84,14 +86,38 @@ class ControllerV3 implements Controller {
 			}
 		} else if (request.getPath().equals("/v3/track-complete")) {
 			if (request.getMethod().equals(Method.POST)) {
-				String oldTrackUrl = request.getParam("track");
-				if (request.getData() == null) {
+				if (request.getData() == "") {
 					request.sendHeaders(400, "Bad Request", "text/plain");
 					request.writeBody("Missing track url from request body");
 					request.close();
 				} else {
 					Track oldTrack = new Track(request.getData());
 					if (status.getPlaylist().completeTrack(oldTrack)) {
+						request.sendHeaders(204, "Changed");
+						request.close();
+					} else {
+						request.sendHeaders(204, "Not Changed");
+						request.close();
+					}
+				}
+			} else {
+				request.notAllowed(Arrays.asList(Method.POST));
+			}
+		} else if (request.getPath().equals("/v3/track-error")) {
+			if (request.getMethod().equals(Method.POST)) {
+				String[] dataParts = request.getData().split("\\R", 2);
+				if (dataParts[0] == "") {
+					request.sendHeaders(400, "Bad Request", "text/plain");
+					request.writeBody("Missing track url from request body");
+					request.close();
+				} else if (dataParts.length == 1) {
+					request.sendHeaders(400, "Bad Request", "text/plain");
+					request.writeBody("Missing error message from request body");
+					request.close();
+				} else {
+					Track oldTrack = new Track(dataParts[0]);
+					String errorMessage = dataParts[1];
+					if (status.getPlaylist().flagTrackAsError(oldTrack, errorMessage)) {
 						request.sendHeaders(204, "Changed");
 						request.close();
 					} else {
