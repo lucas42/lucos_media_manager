@@ -128,6 +128,25 @@ class ControllerV3 implements Controller {
 			} else {
 				request.notAllowed(Arrays.asList(Method.POST));
 			}
+		} else if (request.getPath().equals("/v3/skip-track")) {
+			if (request.getMethod().equals(Method.POST)) {
+				if (request.getData() == "") {
+					status.getPlaylist().skipTrack();
+					request.sendHeaders(204, "Changed");
+					request.close();
+				} else {
+					Track oldTrack = new Track(request.getData());
+					if (status.getPlaylist().skipTrack(oldTrack)) {
+						request.sendHeaders(204, "Changed");
+						request.close();
+					} else {
+						request.sendHeaders(204, "Not Changed");
+						request.close();
+					}
+				}
+			} else {
+				request.notAllowed(Arrays.asList(Method.POST));
+			}
 		} else {
 			System.err.println("WARNING: File Not found: ".concat(request.getPath()));
 			request.sendHeaders(404, "Not Found", "text/plain");

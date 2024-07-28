@@ -204,4 +204,45 @@ class ControllerV3Test {
 		checkNotAllowed(status, "/v3/track-error", Method.PUT, Arrays.asList(Method.POST));
 
 	}
+
+
+	@Test
+	void skipTrack() throws IOException {
+		Fetcher fetcher = mock(RandomFetcher.class);
+		Loganne loganne = mock(Loganne.class);
+
+		// Create playlist with 4 tracks, 2 of which are the same track
+		Playlist playlist = new Playlist(fetcher, loganne);
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
+		int hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/skip-track", Method.POST, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
+
+		assertEquals(3, playlist.getLength());
+		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
+		assertEquals("Stairway To Heaven", playlist.getNextTrack().getMetadata("title"));
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/skip-track", Method.POST, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the second instance of the track
+		assertEquals(2, playlist.getLength());
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/skip-track", Method.POST, "http://example.com/track/1347", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
+
+		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, 204, "Changed", null, null);  // Not track given, so skips the first track in playlist
+		assertEquals(1, playlist.getLength());
+		assertNotEquals(hashCode, status.hashCode());
+
+		checkNotAllowed(status, "/v3/skip-track", Method.PUT, Arrays.asList(Method.POST));
+
+	}
 }
