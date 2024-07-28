@@ -21,9 +21,6 @@ class Device {
 		this.uuid = uuid;
 		this.name = "Device "+(list.size()+1);
 		this.isDefaultName = true;
-
-		// If this is the only device, it should be marked as current
-		if (list.size() == 0) this.isCurrent = true;
 	}
 	public String getName() {
 		return name;

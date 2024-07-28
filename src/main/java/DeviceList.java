@@ -22,6 +22,12 @@ class DeviceList {
 		if (instance != null) return instance;
 		instance = new Device(this, uuid);
 		devices.put(uuid, instance);
+
+		// If this is the first device, it should be marked as current
+		if (size() == 1) {
+			instance.isCurrent = true;
+			if (loganne != null) loganne.post("deviceSwitch", "Playing music on first device connected");
+		}
 		return instance;
 	}
 

@@ -49,7 +49,7 @@ class DeviceTest {
 		assertEquals(true, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
-		verifyNoMoreInteractions(mockLoganne);
+		verify(mockLoganne).post("deviceSwitch","Playing music on first device connected");
 
 		deviceList.setCurrent("uuid-C");
 		devices = deviceList.getAllDevices();
