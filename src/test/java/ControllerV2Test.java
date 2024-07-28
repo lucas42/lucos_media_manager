@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.net.*;
 import java.io.*;
 import java.util.*;
-class HttpRequestTest {
+class ControllerV2Test {
 
 	void compareRequestResponse(Status status, String request, String responseSnippet) {
 		try {
