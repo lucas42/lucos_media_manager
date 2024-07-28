@@ -93,4 +93,20 @@ class ControllerV3Test {
 		assertEquals("Phone", status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").getName()); // Existing divec unnafected
 
 	}
+
+	@Test
+	void setCurrentDevice() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+
+		// Create a device if none exists, and set its name
+		compareRequestResponse(status, "/v3/current-device", Method.PUT, "47d9cba3-fd9f-445d-b984-072e4f75732c", 204, "Changed", null, null);
+		assertTrue(status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").isCurrent()); // Device created and set as current one
+		compareRequestResponse(status, "/v3/current-device", Method.PUT, "a7441bd5-65a1-4357-bc96-c0ece53def07", 204, "Changed", null, null);
+		assertTrue(status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").isCurrent()); // Device created and set as current one
+		assertFalse(status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").isCurrent()); // Existing device marked as not current
+		compareRequestResponse(status, "/v3/current-device", Method.PUT, "47d9cba3-fd9f-445d-b984-072e4f75732c", 204, "Changed", null, null);
+		assertTrue(status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").isCurrent()); // Existing device set as current one
+		assertFalse(status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").isCurrent()); // Existing device marked as not current
+
+	}
 }
