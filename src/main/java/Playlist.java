@@ -90,7 +90,7 @@ class Playlist {
 		return tracks.size();
 	}
 
-	public Collection<Track> getTracks() {
+	public List<Track> getTracks() {
 		return tracks;
 	}
 	public Track getCurrentTrack() {

@@ -147,6 +147,29 @@ class ControllerV3 implements Controller {
 			} else {
 				request.notAllowed(Arrays.asList(Method.POST));
 			}
+		} else if (request.getPath().equals("/v3/queue-track")) {
+			if (request.getMethod().equals(Method.POST)) {
+				if (request.getData() == "") {
+					request.sendHeaders(400, "Bad Request", "text/plain");
+					request.writeBody("Missing track url from request body");
+					request.close();
+				} else {
+					Track newTrack = new Track(request.getData());
+					String position = request.getParam("position", "end");
+					if (position.equals("now")) {
+						status.getPlaylist().queueNow(newTrack);
+						status.setPlaying(true);
+					} else if (position.equals("next")) {
+						status.getPlaylist().queueNext(newTrack);
+					} else {
+						status.getPlaylist().queueEnd(newTrack);
+					}
+					request.sendHeaders(204, "Changed");
+					request.close();
+				}
+			} else {
+				request.notAllowed(Arrays.asList(Method.POST));
+			}
 		} else {
 			System.err.println("WARNING: File Not found: ".concat(request.getPath()));
 			request.sendHeaders(404, "Not Found", "text/plain");
