@@ -77,12 +77,14 @@ class HttpRequest {
 			method = Method.PUT;
 		} else if (methodString.equalsIgnoreCase("GET")) {
 			method = Method.GET;
+		} else if (methodString.equalsIgnoreCase("DELETE")) {
+			method = Method.DELETE;
 		} else {
 			method = null;
 		}
 		path = tokens.nextToken().trim();
 		
-		data = null;
+		data = "";
 		if (header.containsKey("Content-Length")) {
 			try {
 				int length = Integer.parseInt(header.get("Content-Length").trim());
@@ -158,7 +160,7 @@ class HttpRequest {
 	}
 	public void sendHeaders(int status, String statusstring, String contentType) throws IOException {
 		HashMap<String, String> headers =  new HashMap<String, String>();
-		headers.put("Content-type", contentType+ "; charset=utf-8");
+		headers.put("Content-Type", contentType+ "; charset=utf-8");
 		sendHeaders(status, statusstring, headers);
 	}
 	public void sendHeaders(int status, String statusstring) throws IOException {
@@ -176,7 +178,7 @@ class HttpRequest {
 
 	// Convenience method for returning a 405 "Method Not Allowed" response including the "Allow" header
 	public void notAllowed(Collection<Method> allowedMethods) throws IOException {
-		String allow = allowedMethods.stream().map( method -> method.name() ).collect(Collectors.joining (","));
+		String allow = allowedMethods.stream().map( method -> method.name() ).collect(Collectors.joining (", "));
 		this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
 		this.close();
 	}
