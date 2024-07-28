@@ -6,38 +6,39 @@ import static org.mockito.Mockito.*;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Arrays;
+import java.io.IOException;
 
 class ControllerV3Test {
-	void compareRequestResponse(Status status, String path, Method method, String requestBody, int responseStatus, String responseString, String contentType, String responseBody) throws Exception {
+	void compareRequestResponse(Status status, String path, Method method, String requestBody, int responseStatus, String responseString, String contentType, String responseBody) throws IOException {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
 		when(request.getData()).thenReturn(requestBody);
-		Controller controller = new ControllerV3(status, request);
+		ControllerV3 controller = new ControllerV3(status, request);
 		controller.processRequest();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
 		if (responseBody != null) verify(request).writeBody(responseBody);
 		verify(request).close();
 	}
-	void checkNotAllowed(Status status, String path, Method method, Collection<Method> allowedMethods) throws Exception {
+	void checkNotAllowed(Status status, String path, Method method, Collection<Method> allowedMethods) throws IOException {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
-		Controller controller = new ControllerV3(status, request);
+		ControllerV3 controller = new ControllerV3(status, request);
 		controller.processRequest();
 
 		verify(request).notAllowed(allowedMethods);
 	}
 
 	@Test
-	void unknownPathReturns404() throws Exception {
+	void unknownPathReturns404() throws IOException {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test
-	void playingPause() throws Exception {
+	void playingPause() throws IOException {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "/v3/is-playing", Method.PUT, "False", 204, "Changed", null, null);
@@ -57,7 +58,7 @@ class ControllerV3Test {
 	}
 
 	@Test
-	void volume() throws Exception {
+	void volume() throws IOException {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 
 		// The following values should update the volume
@@ -79,7 +80,7 @@ class ControllerV3Test {
 	}
 
 	@Test
-	void setDeviceName() throws Exception {
+	void setDeviceName() throws IOException {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
 
 		// Create a device if none exists, and set its name
@@ -95,7 +96,7 @@ class ControllerV3Test {
 	}
 
 	@Test
-	void setCurrentDevice() throws Exception {
+	void setCurrentDevice() throws IOException {
 		Loganne loganne = mock(Loganne.class);
 		Status status = new Status(null, new DeviceList(loganne), mock(CollectionList.class));
 
