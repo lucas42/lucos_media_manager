@@ -77,4 +77,20 @@ class ControllerV3Test {
 		checkNotAllowed(status, "/v3/volume", Method.POST, Arrays.asList(Method.PUT));
 		assertEquals(0.7, status.getVolume(), 0.0002);
 	}
+
+	@Test
+	void setDeviceName() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+
+		// Create a device if none exists, and set its name
+		compareRequestResponse(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.PUT, "Home Laptop", 204, "Changed", null, null);
+		assertEquals("Home Laptop", status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").getName()); // Device created and given a name
+		compareRequestResponse(status, "/v3/device-names/a7441bd5-65a1-4357-bc96-c0ece53def07", Method.PUT, "Phone", 204, "Changed", null, null);
+		assertEquals("Phone", status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").getName()); // Device created and given a name
+		assertEquals("Home Laptop", status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").getName()); // Existing device unaffected
+		compareRequestResponse(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.PUT, "Personal Laptop", 204, "Changed", null, null);
+		assertEquals("Personal Laptop", status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").getName()); // Existing device's name updated
+		assertEquals("Phone", status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").getName()); // Existing divec unnafected
+
+	}
 }

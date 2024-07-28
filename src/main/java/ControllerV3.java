@@ -65,6 +65,15 @@ class ControllerV3 implements Controller {
 				request.notAllowed(Arrays.asList(Method.PUT));
 			}
 
+		} else if (request.getPath().startsWith("/v3/device-names/")) {
+			if (request.getMethod().equals(Method.PUT)) {
+				String uuid = request.getPath().replace("/v3/device-names/", "");
+				status.getDeviceList().updateDevice(uuid, request.getData());
+				request.sendHeaders(204, "Changed");
+				request.close();
+			} else {
+				request.notAllowed(Arrays.asList(Method.PUT));
+			}
 		} else {
 			System.err.println("WARNING: File Not found: ".concat(request.getPath()));
 			request.sendHeaders(404, "Not Found", "text/plain");
