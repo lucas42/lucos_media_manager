@@ -3,10 +3,13 @@ import java.net.* ;
 import com.google.gson.*;
 
 public class MediaApi {
-	private static Gson gson = CustomGson.get();
+	private Gson gson;
 	private	String apiUrl = System.getenv("MEDIA_API");
 	private	String apiKey = System.getenv("KEY_LUCOS_MEDIA_METADATA_API");
 
+	public MediaApi() {
+		gson = CustomGson.get(this);
+	}
 	private InputStreamReader fetch(String path) throws MalformedURLException, IOException {
 		URL url = new URL(apiUrl+path);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();

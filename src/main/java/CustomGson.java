@@ -8,7 +8,7 @@ class CustomGson {
 	/**
 	 * Returns a Gson object with a custom deserializer for handling tracks from the media api
 	 **/
-	public static Gson get(Status status) {
+	public static Gson get(Status status, MediaApi mediaApi) {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 
 		JsonDeserializer<Track> trackDeserializer =
@@ -30,7 +30,7 @@ class CustomGson {
 					if (json.getAsJsonObject().has("_cum_weighting")) {
 						metadata.put("_cum_weighting", json.getAsJsonObject().get("_cum_weighting").getAsString());
 					}
-					return new Track(status.getMediaApi(), url, metadata);
+					return new Track(mediaApi, url, metadata);
 				}
 			};
 		gsonBuilder.registerTypeAdapter(Track.class, trackDeserializer);
@@ -57,8 +57,11 @@ class CustomGson {
 
 		return gsonBuilder.create();
 	}
-	public static Gson get() {
-		return get(null);
+	public static Gson get(Status status) {
+		return get(status, status.getMediaApi());
+	}
+	public static Gson get(MediaApi mediaApi) {
+		return get(null, mediaApi);
 	}
 }
 

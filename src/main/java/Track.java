@@ -8,7 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.nio.charset.StandardCharsets;
 
 class Track {
-	private MediaApi mediaApi;
+	private transient MediaApi mediaApi;
 	private String url;
 	private Map<String, String> metadata;
 	private float currentTime = 0;
