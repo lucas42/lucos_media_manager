@@ -30,7 +30,7 @@ class CustomGson {
 					if (json.getAsJsonObject().has("_cum_weighting")) {
 						metadata.put("_cum_weighting", json.getAsJsonObject().get("_cum_weighting").getAsString());
 					}
-					return new Track(url, metadata);
+					return new Track(status.getMediaApi(), url, metadata);
 				}
 			};
 		gsonBuilder.registerTypeAdapter(Track.class, trackDeserializer);

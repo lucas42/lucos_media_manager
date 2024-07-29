@@ -84,7 +84,7 @@ class ControllerV2 implements Controller {
 				status.getPlaylist().skipTrack();
 				request.sendHeaders(204, "Changed");
 			} else {
-				Track nowTrack = new Track(expectedNowUrl);
+				Track nowTrack = new Track(status.getMediaApi(), expectedNowUrl);
 				if (status.getPlaylist().skipTrack(nowTrack)) {
 					request.sendHeaders(204, "Changed");
 				} else {
@@ -96,7 +96,7 @@ class ControllerV2 implements Controller {
 			if (oldTrackUrl == null) {
 				request.sendHeaders(400, "Missing `track` parameter");
 			} else {
-				Track oldTrack = new Track(oldTrackUrl);
+				Track oldTrack = new Track(status.getMediaApi(), oldTrackUrl);
 				if (status.getPlaylist().completeTrack(oldTrack)) {
 					request.sendHeaders(204, "Changed");
 				} else {
@@ -111,7 +111,7 @@ class ControllerV2 implements Controller {
 			} else if (errorMessage == null) {
 				request.sendHeaders(400, "Missing `message` parameter");
 			} else {
-				Track oldTrack = new Track(oldTrackUrl);
+				Track oldTrack = new Track(status.getMediaApi(), oldTrackUrl);
 				if (status.getPlaylist().flagTrackAsError(oldTrack, errorMessage)) {
 					request.sendHeaders(204, "Changed");
 				} else {
@@ -126,7 +126,7 @@ class ControllerV2 implements Controller {
 		} else if (request.getPath().equals("/queue") && request.getMethod() == Method.POST) {
 			String url = request.getParam("url", "");
 			String pos = request.getParam("pos", "end");
-			Track newTrack = new Track(url);
+			Track newTrack = new Track(status.getMediaApi(), url);
 			if (pos.equals("now")) {
 				status.getPlaylist().queueNow(newTrack);
 				status.setPlaying(true);
@@ -268,7 +268,7 @@ class ControllerV2 implements Controller {
 		boolean update_success = false;
 		if (update_url != null && update_time != null) {
 			try{
-				Track update_curtrack = new Track(update_url);
+				Track update_curtrack = new Track(status.getMediaApi(), update_url);
 				float update_currentTime = Float.parseFloat(update_time);
 				BigInteger update_currentTimeSet = new BigInteger(update_timeset);
 				update_success = playlist.setTrackTime(update_curtrack, update_currentTime, update_currentTimeSet);

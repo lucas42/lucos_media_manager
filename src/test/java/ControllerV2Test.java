@@ -30,7 +30,7 @@ class ControllerV2Test {
 		}
 	}
 	void compareRequestResponse(String request, String responseSnippet) {
-		compareRequestResponse(new Status(null, new DeviceList(null), mock(CollectionList.class)), request, responseSnippet);
+		compareRequestResponse(new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class)), request, responseSnippet);
 	}
 
 	@Test
@@ -43,7 +43,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void playPause() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "POST /pause HTTP/1.0\n", "204");
 		assertFalse(status.getPlaying());
@@ -56,7 +56,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void volume() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 
 		// The following values should update the volume
 		compareRequestResponse(status, "POST /volume?volume=1.0 HTTP/1.1", "204");
@@ -75,7 +75,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void devices() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		status.setPlaying(false);
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse(status, "POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");
@@ -118,13 +118,13 @@ class ControllerV2Test {
 		Fetcher fetcher = mock(RandomFetcher.class);
 		Loganne loganne = mock(Loganne.class);
 		Playlist playlist = new Playlist(fetcher, loganne);
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"));
 		Map<String, String> noChangeMetadata = new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"));
-		Track trackToChange = new Track("http://example.com/track/1337",initialMetadata);
-		Track trackNoChange = new Track("http://example.com/track/8532", noChangeMetadata);
+		Track trackToChange = new Track(status.getMediaApi(), "http://example.com/track/1337",initialMetadata);
+		Track trackNoChange = new Track(status.getMediaApi(), "http://example.com/track/8532", noChangeMetadata);
 		playlist.queueNext(trackToChange);
 		playlist.queueNext(trackNoChange);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int startingHashCode = status.hashCode();
 
 		compareRequestResponse(status, "POST /trackUpdated HTTP/1.1\nContent-Length: 325\n\n{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		trackid: 1347,\n		tags: {\n			artist: \"Dolly Parton\",\n			title: \"Stairway To Heaven\"\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}", "204 No Content");
@@ -152,12 +152,12 @@ class ControllerV2Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, loganne);
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
 
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int startingHashCode = status.hashCode();
 
 		compareRequestResponse(status, "POST /trackDeleted HTTP/1.1\nContent-Length: 289\n\n{\"humanReadable\":\"Track #1347 deleted\",\"source\":\"test_updater\",\"track\":{\"fingerprint\":\"abcfxx\",\"duration\":73,\"url\":\"http://example.com/track/1347\",\"trackid\":1347,\"tags\":{\"title\":\"Stairway to Heaven\"},\"weighting\":0,\"collections\":[]},\"type\":\"trackDeleted\",\"date\":\"2024-01-27T16:18:47.676Z\"}", "204 No Content");

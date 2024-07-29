@@ -7,10 +7,12 @@ class Status {
 	private Playlist playlist;
 	private DeviceList deviceList;
 	private CollectionList collectionList;
-	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList) {
+	private MediaApi mediaApi;
+	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList, MediaApi mediaApi) {
 		this.playlist = playlist;
 		this.deviceList = deviceList;
 		this.collectionList = collectionList;
+		this.mediaApi = mediaApi;
 		volume = (float)0.5;
 		isPlaying = true;
 	}
@@ -68,5 +70,8 @@ class Status {
 	private String getCurrentFetcherSlug() {
 		if (playlist == null) return null;
 		return playlist.getCurrentFetcherSlug();
+	}
+	public MediaApi getMediaApi() {
+		return mediaApi;
 	}
 }

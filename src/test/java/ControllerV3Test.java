@@ -41,13 +41,13 @@ class ControllerV3Test {
 
 	@Test
 	void unknownPathReturns404() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test
 	void playingPause() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "/v3/is-playing", Method.PUT, null, "False", 204, "Changed", null, null);
 		assertFalse(status.getPlaying());
@@ -67,7 +67,7 @@ class ControllerV3Test {
 
 	@Test
 	void volume() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 
 		// The following values should update the volume
 		compareRequestResponse(status, "/v3/volume", Method.PUT, null, "1.0", 204, "Changed", null, null);
@@ -89,7 +89,7 @@ class ControllerV3Test {
 
 	@Test
 	void setDeviceName() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 
 		// Create a device if none exists, and set its name
 		compareRequestResponse(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.PUT, null, "Home Laptop", 204, "Changed", null, null);
@@ -107,7 +107,7 @@ class ControllerV3Test {
 	@Test
 	void setCurrentDevice() throws Exception {
 		Loganne loganne = mock(Loganne.class);
-		Status status = new Status(null, new DeviceList(loganne), mock(CollectionList.class));
+		Status status = new Status(null, new DeviceList(loganne), mock(CollectionList.class), mock(MediaApi.class));
 
 		// Create a device if none exists, and set its name
 		compareRequestResponse(status, "/v3/current-device", Method.PUT, null, "47d9cba3-fd9f-445d-b984-072e4f75732c", 204, "Changed", null, null);
@@ -131,12 +131,12 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
 
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
@@ -169,12 +169,12 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
 
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/v3/track-error", Method.POST, null, "http://example.com/track/1347\nFailed to load track", 204, "Changed", null, null);  // Removes the first instance of the track
@@ -212,12 +212,12 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
 
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
@@ -250,37 +250,50 @@ class ControllerV3Test {
 		Fetcher fetcher = mock(RandomFetcher.class);
 
 		Playlist playlist = new Playlist(fetcher, null);
-		playlist.queueNext(new Track("http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track("http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
+		MediaApi mediaApi = mock(MediaApi.class);
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mediaApi);
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
+		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
 
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class));
 		status.setPlaying(false);
 		int hashCode = status.hashCode();
 
+		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234")).thenReturn(new Track(status.getMediaApi(), "http://example.com/track/1234", new HashMap<String, String>(Map.of("title", "One Two Three Four", "trackid", "1234"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "now"), "http://example.com/track/1234", 204, "Changed", null, null);  // Adds a track to the start of the playlist
 		assertEquals(3, playlist.getLength());
 		assertEquals("http://example.com/track/1234", playlist.getCurrentTrack().getUrl());
+		assertEquals("One Two Three Four", playlist.getCurrentTrack().getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		assertTrue(status.getPlaying()); // Queuing a track now, should start playing automatically
 		hashCode = status.hashCode();
+		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234");
 
+		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468")).thenReturn(new Track(status.getMediaApi(), "http://example.com/track/2468", new HashMap<String, String>(Map.of("title", "Evens", "trackid", "2468"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "next"), "http://example.com/track/2468", 204, "Changed", null, null);  // Adds a track to second place in the playlist
 		assertEquals(4, playlist.getLength());
 		assertEquals("http://example.com/track/2468", playlist.getNextTrack().getUrl());
+		assertEquals("Evens", playlist.getNextTrack().getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
+		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468");
 
+		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579")).thenReturn(new Track(status.getMediaApi(), "http://example.com/track/3579", new HashMap<String, String>(Map.of("title", "Oddz", "trackid", "3579"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "end"), "http://example.com/track/3579", 204, "Changed", null, null);  // Adds a track to the end of the playlist
 		assertEquals(5, playlist.getLength());
 		assertEquals("http://example.com/track/3579", playlist.getTracks().get(playlist.getLength()-1).getUrl());
+		assertEquals("Oddz", playlist.getTracks().get(playlist.getLength()-1).getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
+		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579");
 
+		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876")).thenReturn(new Track(status.getMediaApi(), "http://example.com/track/9876", new HashMap<String, String>(Map.of("title", "Downwards", "trackid", "9876"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", ""), "http://example.com/track/9876", 204, "Changed", null, null);  // Adds a track to the end of the playlist
 		assertEquals(6, playlist.getLength());
 		assertEquals("http://example.com/track/9876", playlist.getTracks().get(playlist.getLength()-1).getUrl());
+		assertEquals("Downwards", playlist.getTracks().get(playlist.getLength()-1).getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
+		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876");
 
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, null, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No track specified - no-op
 		assertEquals(6, playlist.getLength());

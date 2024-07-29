@@ -8,14 +8,16 @@ import java.time.format.DateTimeParseException;
 import java.nio.charset.StandardCharsets;
 
 class Track {
+	private MediaApi mediaApi;
 	private String url;
 	private Map<String, String> metadata;
 	private float currentTime = 0;
 	private BigInteger timeSet = null; // The time currentTime was updated (in millisecs since unix epoch)
-	public Track(String url) {
-		this(url, new HashMap<String, String>());
+	public Track(MediaApi mediaApi, String url) {
+		this(mediaApi, url, new HashMap<String, String>());
 	}
-	public Track(String url, Map<String, String> metadata) {
+	public Track(MediaApi mediaApi, String url, Map<String, String> metadata) {
+		this.mediaApi = mediaApi;
 		this.update(url, metadata);
 	}
 	public void update(String url, Map<String, String> metadata) {
@@ -104,8 +106,7 @@ class Track {
 		return currentTime;
 	}
 	public void refreshMetadata() throws MalformedURLException, IOException {
-		MediaApi api = new MediaApi();
-		Track latestTrack = api.fetchTrack("/v2/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
+		Track latestTrack = this.mediaApi.fetchTrack("/v2/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
 		this.update(latestTrack.getUrl(), latestTrack.getMetadata());
 	}
 }

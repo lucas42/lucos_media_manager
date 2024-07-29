@@ -30,8 +30,10 @@ public final class Manager {
 		DeviceList deviceList = new DeviceList(loganne);
 
 		CollectionList collectionList = new CollectionList();
+
+		MediaApi mediaApi= new MediaApi();
 		
-		Status status = new Status(playlist, deviceList, collectionList);
+		Status status = new Status(playlist, deviceList, collectionList, mediaApi);
 
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);

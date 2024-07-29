@@ -91,7 +91,7 @@ class ControllerV3 implements Controller {
 					request.writeBody("Missing track url from request body");
 					request.close();
 				} else {
-					Track oldTrack = new Track(request.getData());
+					Track oldTrack = new Track(status.getMediaApi(), request.getData());
 					if (status.getPlaylist().completeTrack(oldTrack)) {
 						request.sendHeaders(204, "Changed");
 						request.close();
@@ -115,7 +115,7 @@ class ControllerV3 implements Controller {
 					request.writeBody("Missing error message from request body");
 					request.close();
 				} else {
-					Track oldTrack = new Track(dataParts[0]);
+					Track oldTrack = new Track(status.getMediaApi(), dataParts[0]);
 					String errorMessage = dataParts[1];
 					if (status.getPlaylist().flagTrackAsError(oldTrack, errorMessage)) {
 						request.sendHeaders(204, "Changed");
@@ -135,7 +135,7 @@ class ControllerV3 implements Controller {
 					request.sendHeaders(204, "Changed");
 					request.close();
 				} else {
-					Track oldTrack = new Track(request.getData());
+					Track oldTrack = new Track(status.getMediaApi(), request.getData());
 					if (status.getPlaylist().skipTrack(oldTrack)) {
 						request.sendHeaders(204, "Changed");
 						request.close();
@@ -154,7 +154,7 @@ class ControllerV3 implements Controller {
 					request.writeBody("Missing track url from request body");
 					request.close();
 				} else {
-					Track newTrack = new Track(request.getData());
+					Track newTrack = new Track(status.getMediaApi(), request.getData());
 					String position = request.getParam("position", "end");
 					if (position.equals("now")) {
 						status.getPlaylist().queueNow(newTrack);
@@ -166,6 +166,10 @@ class ControllerV3 implements Controller {
 					}
 					request.sendHeaders(204, "Changed");
 					request.close();
+
+					// The queued track won't include a full set of metadata
+					// So do a refresh to get the latest (but don't let that block any of the above queuing action)
+					newTrack.refreshMetadata();
 				}
 			} else {
 				request.notAllowed(Arrays.asList(Method.POST));

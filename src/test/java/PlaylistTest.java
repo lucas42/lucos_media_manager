@@ -37,7 +37,7 @@ class PlaylistTest {
 		}).when(fetcher).run();
 
 		for (int ii=0; ii<15; ii++) {
-			tracks[ii] = new Track("https://example.com/track/"+ii);
+			tracks[ii] = new Track(mock(MediaApi.class), "https://example.com/track/"+ii);
 		}
 
 		Playlist playlist = new Playlist(fetcher, loganne);
@@ -98,10 +98,10 @@ class PlaylistTest {
 
 	@Test
 	void manipulatePlaylist() {
-		Track trackA = new Track("https://example.com/trackA");
-		Track trackB = new Track("https://example.com/trackB");
-		Track trackC = new Track("https://example.com/trackC");
-		Track trackD = new Track("https://example.com/trackD");
+		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
+		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
+		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
+		Track trackD = new Track(mock(MediaApi.class), "https://example.com/trackD");
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
 
 			assertEquals(0, playlist.getLength());
@@ -196,25 +196,25 @@ class PlaylistTest {
 	@Test
 	void trackTimes() {
 		boolean returnVal;
-		Track trackA = new Track("https://example.com/trackA");
-		Track trackB = new Track("https://example.com/trackB");
-		Track trackC = new Track("https://example.com/trackC");
-		Track trackD = new Track("https://example.com/trackD");
+		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
+		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
+		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
+		Track trackD = new Track(mock(MediaApi.class), "https://example.com/trackD");
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
 		playlist.queueEnd(trackA);
 		playlist.queueEnd(trackB);
 		playlist.queueEnd(trackC);
 		playlist.queueEnd(trackD);
 
-		returnVal = playlist.setTrackTime(new Track("https://example.com/trackC"), 13.7f, new BigInteger("946684800"));
+		returnVal = playlist.setTrackTime(new Track(mock(MediaApi.class), "https://example.com/trackC"), 13.7f, new BigInteger("946684800"));
 		assertTrue(returnVal);
 		assertEquals(trackC.getCurrentTime(), 13.7f);
 
-		returnVal = playlist.setTrackTime(new Track("https://example.com/trackB"), 69f, new BigInteger("946684800"));
+		returnVal = playlist.setTrackTime(new Track(mock(MediaApi.class), "https://example.com/trackB"), 69f, new BigInteger("946684800"));
 		assertTrue(returnVal);
 		assertEquals(trackB.getCurrentTime(), 69f);
 
-		returnVal = playlist.setTrackTime(new Track("https://example.com/trackF"), 66.6f, new BigInteger("946684800"));
+		returnVal = playlist.setTrackTime(new Track(mock(MediaApi.class), "https://example.com/trackF"), 66.6f, new BigInteger("946684800"));
 		assertFalse(returnVal);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
