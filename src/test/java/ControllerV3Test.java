@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
+import org.mockito.MockedStatic;
 import java.util.Map;
 import java.util.Collection;
 import java.util.Arrays;
@@ -311,5 +312,29 @@ class ControllerV3Test {
 		assertEquals(hashCode, status.hashCode());
 
 		checkNotAllowed(status, "/v3/queue-track", Method.PUT, null, Arrays.asList(Method.POST));
+	}
+
+	@Test
+	void setCurrentCollection() throws Exception {
+		try (MockedStatic mockedAbstractFetcher = mockStatic(Fetcher.class)) {
+			Fetcher robotFetcher = mock(CollectionFetcher.class);
+			when(robotFetcher.getSlug()).thenReturn("robots");
+			Fetcher allFetcher = mock(RandomFetcher.class);
+			when(allFetcher.getSlug()).thenReturn("all");
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug("robots")).thenReturn(robotFetcher);
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug("all")).thenReturn(allFetcher);
+			Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
+			Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Changed", null, null);
+			assertEquals("robots", playlist.getCurrentFetcherSlug());
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Changed", null, null);
+			assertEquals("robots", playlist.getCurrentFetcherSlug());
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Changed", null, null);
+			assertEquals("all", playlist.getCurrentFetcherSlug());
+
+			checkNotAllowed(status, "/v3/current-collection", Method.POST, null, Arrays.asList(Method.PUT));
+		}
+
 	}
 }

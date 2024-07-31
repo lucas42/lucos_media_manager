@@ -168,6 +168,15 @@ class ControllerV3 implements Controller {
 			} else {
 				request.notAllowed(Arrays.asList(Method.POST));
 			}
+		} else if (request.getPath().equals("/v3/current-collection")) {
+			if (request.getMethod().equals(Method.PUT)) {
+				Fetcher fetcher = Fetcher.createFromSlug(request.getData());
+				status.getPlaylist().setFetcher(fetcher);
+				request.sendHeaders(204, "Changed");
+				request.close();
+			} else {
+				request.notAllowed(Arrays.asList(Method.PUT));
+			}
 		} else {
 			System.err.println("WARNING: File Not found: ".concat(request.getPath()));
 			request.sendHeaders(404, "Not Found", "text/plain");

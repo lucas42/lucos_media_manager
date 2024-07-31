@@ -5,4 +5,11 @@ public abstract class Fetcher implements Runnable {
 		this.playlist = playlist;
 	}
 	abstract String getSlug();
+	static Fetcher createFromSlug(String slug) {
+		if (slug.equals("all")) {
+			return new RandomFetcher();
+		} else {
+			return new CollectionFetcher(slug);
+		}
+	}
 }
