@@ -194,6 +194,75 @@ class PlaylistTest {
 	}
 
 	@Test
+	void manipulatePlaylistByUuid() {
+		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
+		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
+		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
+		Track trackD = new Track(mock(MediaApi.class), "https://example.com/trackD");
+		String uuidA = trackA.getUuid();
+		String uuidB = trackB.getUuid();
+		String uuidC = trackC.getUuid();
+		String uuidD = trackD.getUuid();
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		playlist.queue(new Track[]{trackB, trackC, trackA, trackD});
+			int oldHashcode = playlist.hashCode();
+			int newHashcode = playlist.hashCode();
+			assertEquals(oldHashcode, newHashcode);
+
+		assertTrue(playlist.skipTrack(uuidC));
+			assertEquals(3, playlist.getLength());
+			assertEquals(trackB, playlist.getCurrentTrack());
+			assertEquals(trackA, playlist.getNextTrack());
+
+			Track[] tracks = playlist.getTracks().toArray(new Track[3]);
+			assertEquals(trackB, tracks[0]);
+			assertEquals(trackA, tracks[1]);
+			assertEquals(trackD, tracks[2]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
+
+		assertTrue(playlist.completeTrack(uuidB));
+			assertEquals(2, playlist.getLength());
+			assertEquals(trackA, playlist.getCurrentTrack());
+			assertEquals(trackD, playlist.getNextTrack());
+
+			tracks = playlist.getTracks().toArray(new Track[2]);
+			assertEquals(trackA, tracks[0]);
+			assertEquals(trackD, tracks[1]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
+
+		assertTrue(playlist.flagTrackAsError(uuidA, "Http status 404 returned"));
+			assertEquals(1, playlist.getLength());
+			assertEquals(trackD, playlist.getCurrentTrack());
+			assertEquals(null, playlist.getNextTrack());
+
+			tracks = playlist.getTracks().toArray(new Track[1]);
+			assertEquals(trackD, tracks[0]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertNotEquals(oldHashcode, newHashcode);
+
+		assertFalse(playlist.skipTrack("01321f3e-87ca-4417-8183-0dc7d83e379f"));  // Uuid which doesn't match any in the list should have no impact
+			assertEquals(1, playlist.getLength());
+			assertEquals(trackD, playlist.getCurrentTrack());
+			assertEquals(null, playlist.getNextTrack());
+
+			tracks = playlist.getTracks().toArray(new Track[1]);
+			assertEquals(trackD, tracks[0]);
+
+			oldHashcode = newHashcode;
+			newHashcode = playlist.hashCode();
+			assertEquals(oldHashcode, newHashcode);
+
+	}
+
+	@Test
 	void trackTimes() {
 		boolean returnVal;
 		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");

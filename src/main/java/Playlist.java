@@ -27,10 +27,27 @@ class Playlist {
 		return trackRemoved;
 	}
 
+	/**
+	 * Finds the first track in the playlist which matches the given uuid
+	 * (There should only ever be one track which matches a given uuid, but this method doesn't enforce that)
+	 *
+	 * @returns Track The matched track, or null if none is found
+	 */
+	private Track getTrackByUuid(String uuid) {
+		return tracks.stream()
+			.filter(track -> track.getUuid().equals(uuid))
+			.findFirst()
+			.orElse(null);
+	}
+
 	// Called when a track gets to the end of its playback
 	public boolean completeTrack(Track track) {
 		return removeTrack(track);
 	}
+	public boolean completeTrack(String uuid) {
+		return completeTrack(getTrackByUuid(uuid));
+	}
+
 	// Called when loading or playback of a track encounters an error
 	public boolean flagTrackAsError(Track track, String errorMessage) {
 		boolean trackRemoved = removeTrack(track);
@@ -40,10 +57,18 @@ class Playlist {
 		}
 		return trackRemoved;
 	}
+	public boolean flagTrackAsError(String uuid, String errorMessage) {
+		return flagTrackAsError(getTrackByUuid(uuid), errorMessage);
+	}
+
 	// Called when a track is deliberatly skipped
 	public boolean skipTrack(Track track) {
 		return removeTrack(track);
 	}
+	public boolean skipTrack(String uuid) {
+		return skipTrack(getTrackByUuid(uuid));
+	}
+
 
 	/**
 	 * Removes the first track from the playlist

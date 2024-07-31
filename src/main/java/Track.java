@@ -13,11 +13,13 @@ class Track {
 	private Map<String, String> metadata;
 	private float currentTime = 0;
 	private BigInteger timeSet = null; // The time currentTime was updated (in millisecs since unix epoch)
+	private String uuid;
 	public Track(MediaApi mediaApi, String url) {
 		this(mediaApi, url, new HashMap<String, String>());
 	}
 	public Track(MediaApi mediaApi, String url, Map<String, String> metadata) {
 		this.mediaApi = mediaApi;
+		this.uuid = UUID.randomUUID().toString();
 		this.update(url, metadata);
 	}
 	public void update(String url, Map<String, String> metadata) {
@@ -108,5 +110,8 @@ class Track {
 	public void refreshMetadata() throws MalformedURLException, IOException {
 		Track latestTrack = this.mediaApi.fetchTrack("/v2/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
 		this.update(latestTrack.getUrl(), latestTrack.getMetadata());
+	}
+	public String getUuid() {
+		return uuid;
 	}
 }

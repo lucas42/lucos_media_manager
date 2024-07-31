@@ -147,5 +147,17 @@ class TrackTest {
 
 		assertNotEquals(track.hashCode(), initialHashCode);
 	}
+	@Test
+	void trackHasUniqueUuid() {
+		final Track trackA = new Track(mock(MediaApi.class), "https://example.com/track1");
+		final Track trackB = new Track(mock(MediaApi.class), "https://example.com/track1");
+		final Track trackC = new Track(mock(MediaApi.class), "https://example.com/track2");
+		final Track trackWithoutUrlA = new Track(mock(MediaApi.class), null);
+
+		assertNotEquals(trackA.getUuid(), trackB.getUuid());
+		assertNotEquals(trackA.getUuid(), trackC.getUuid());
+		assertNotEquals(trackA.getUuid(), trackWithoutUrlA.getUuid());
+		assertEquals(trackA.getUuid(), trackA.getUuid()); // uuid for a given track object should be consistent
+	}
 
 }
