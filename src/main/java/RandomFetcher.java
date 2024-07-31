@@ -17,4 +17,7 @@ public class RandomFetcher extends Fetcher {
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist");
 	}
+	public String getSlug() {
+		return "all"; // The metadata API treats this is a reserved slug, so it should never clash with a collection
+	}
 }
