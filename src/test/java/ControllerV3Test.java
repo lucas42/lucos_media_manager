@@ -16,6 +16,7 @@ class ControllerV3Test {
 		if (getParameters != null) {
 			for (String paramKey : getParameters.keySet()) {
 				when(request.getParam(paramKey, "end")).thenReturn(getParameters.getOrDefault(paramKey, "end"));  // HACK: hardcoding "end" here, as that's the default for queue position.  Currently it's the only v3 endpoint relying on GET params, so it kinda works.
+				when(request.getParam(paramKey)).thenReturn(getParameters.get(paramKey));
 			}
 		}
 		when(request.getPath()).thenReturn(path);
@@ -128,18 +129,21 @@ class ControllerV3Test {
 
 	@Test
 	void trackComplete() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
 
 		// Create playlist with 4 tracks, 2 of which are the same track
-		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
+		Playlist playlist = new Playlist(fetcher, null);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackD = new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
+		playlist.queue(new Track[]{trackA, trackB, trackC, trackD});
 
 		int hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "complete"), null, 204, "Changed", null, null);  // Removes the first instance of the track
 
 		assertEquals(3, playlist.getLength());
 		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
@@ -147,37 +151,45 @@ class ControllerV3Test {
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the second instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackC.getUuid(), Method.DELETE, Map.of("action", "complete"), null, 204, "Changed", null, null);  // Removes the second instance of the track
 		assertEquals(2, playlist.getLength());
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, "http://example.com/track/1347", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "complete"), null, 204, "Not Changed", null, null);  // No instances of track remain - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		compareRequestResponse(status, "/v3/track-complete", Method.POST, null, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No track specified - no-op
+		compareRequestResponse(status, "/v3/playlist/special/"+trackD.getUuid(), Method.DELETE, null, "", 400, "Bad Request", "text/plain", "Missing required `action` GET parameter.  Must be one of: complete, error, skip");  // Unknown action specified - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		checkNotAllowed(status, "/v3/track-complete", Method.PUT, null, Arrays.asList(Method.POST));
+		compareRequestResponse(status, "/v3/playlist/special/"+trackD.getUuid(), Method.DELETE, Map.of("action", "jump"), "", 400, "Bad Request", "text/plain", "Unknown `action` GET parameter \"jump\".  Must be one of: complete, error, skip");  // Unknown action specified - no-op
+		assertEquals(2, playlist.getLength());
+		assertEquals(hashCode, status.hashCode());
 
+		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "complete"), Arrays.asList(Method.DELETE));
+
+		compareRequestResponse(status, "/v3/playlist/special/", Method.DELETE, null, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test
 	void trackError() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
 
 		// Create playlist with 4 tracks, 2 of which are the same track
-		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
+		Playlist playlist = new Playlist(fetcher, null);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackD = new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
+		playlist.queue(new Track[]{trackA, trackB, trackC, trackD});
 
 		int hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-error", Method.POST, null, "http://example.com/track/1347\nFailed to load track", 204, "Changed", null, null);  // Removes the first instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "error"), "Failed to load track", 204, "Changed", null, null);  // Removes the first instance of the track
 
 		assertEquals(3, playlist.getLength());
 		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
@@ -185,42 +197,41 @@ class ControllerV3Test {
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-error", Method.POST, null, "http://example.com/track/1347\r\nTracked cut out early", 204, "Changed", null, null);  // Removes the second instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackC.getUuid(), Method.DELETE, Map.of("action", "error"), "Tracked cut out early", 204, "Changed", null, null);  // Removes the second instance of the track
 		assertEquals(2, playlist.getLength());
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/track-error", Method.POST, null, "http://example.com/track/1347\nFailed to load track", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "error"), "Failed to load track", 204, "Not Changed", null, null);  // No instances of track remain - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		compareRequestResponse(status, "/v3/track-error", Method.POST, null, null, 400, "Bad Request", "text/plain", "Missing track url from request body");  // No track specified - no-op
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "error"), "", 400, "Bad Request", "text/plain", "Missing error message from request body");  // No message specified - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		compareRequestResponse(status, "/v3/track-error", Method.POST, null, "http://example.com/track/1347", 400, "Bad Request", "text/plain", "Missing error message from request body");  // No message specified - no-op
-		assertEquals(2, playlist.getLength());
-		assertEquals(hashCode, status.hashCode());
-
-		checkNotAllowed(status, "/v3/track-error", Method.PUT, null, Arrays.asList(Method.POST));
+		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "error"), Arrays.asList(Method.DELETE));
 
 	}
 
 
 	@Test
 	void skipTrack() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
 
 		// Create playlist with 4 tracks, 2 of which are the same track
-		Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
+		Playlist playlist = new Playlist(fetcher, null);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
-		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533"))));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackD = new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
+		playlist.queue(new Track[]{trackA, trackB, trackC, trackD});
 
 		int hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the first instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "skip"), null, 204, "Changed", null, null);  // Removes the first instance of the track
 
 		assertEquals(3, playlist.getLength());
 		assertNotEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
@@ -228,16 +239,16 @@ class ControllerV3Test {
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, "http://example.com/track/1347", 204, "Changed", null, null);  // Removes the second instance of the track
+		compareRequestResponse(status, "/v3/playlist/special/"+trackC.getUuid(), Method.DELETE, Map.of("action", "skip"), null, 204, "Changed", null, null);  // Removes the second instance of the track
 		assertEquals(2, playlist.getLength());
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
 
-		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, "http://example.com/track/1347", 204, "Not Changed", null, null);  // No instances of track remain - no-op
+		compareRequestResponse(status, "/v3/playlist/special/"+trackA.getUuid(), Method.DELETE, Map.of("action", "skip"), null, 204, "Not Changed", null, null);  // No instances of track remain - no-op
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, null, 204, "Changed", null, null);  // Not track given, so skips the first track in playlist
+		compareRequestResponse(status, "/v3/skip-track", Method.POST, null, null, 204, "Changed", null, null);  // Separate endpoint for when track isn't known
 		assertEquals(1, playlist.getLength());
 		assertNotEquals(hashCode, status.hashCode());
 
