@@ -45,8 +45,7 @@ class HttpRequest {
 		String requestLine = br.readLine();
 
 		if (requestLine == null) {
-			System.err.println("WARNING: Incoming HTTP Request interrupted before receiving headers.  Aborting response.");
-			return;
+			throw new IOException("Incoming HTTP Request interrupted before receiving headers.  Aborting response.");
 		}
 
 		// Get the header lines.
