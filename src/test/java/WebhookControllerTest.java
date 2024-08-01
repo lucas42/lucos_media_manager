@@ -18,7 +18,7 @@ class WebhookControllerTest {
 		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
 		Controller controller = new WebhookController(status, request);
-		controller.processRequest();
+		controller.run();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
 		if (responseBody != null) verify(request).writeBody(responseBody);
@@ -29,7 +29,7 @@ class WebhookControllerTest {
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
 		Controller controller = new WebhookController(status, request);
-		controller.processRequest();
+		controller.run();
 
 		verify(request).notAllowed(allowedMethods);
 	}

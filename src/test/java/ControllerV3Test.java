@@ -25,7 +25,7 @@ class ControllerV3Test {
 		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
 		ControllerV3 controller = new ControllerV3(status, request);
-		controller.processRequest();
+		controller.run();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
 		if (responseBody != null) verify(request).writeBody(responseBody);
@@ -36,7 +36,7 @@ class ControllerV3Test {
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
 		ControllerV3 controller = new ControllerV3(status, request);
-		controller.processRequest();
+		controller.run();
 
 		verify(request).notAllowed(allowedMethods);
 	}
