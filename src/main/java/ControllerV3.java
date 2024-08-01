@@ -1,20 +1,8 @@
 import java.io.IOException;
 import java.util.Arrays;
-class ControllerV3 implements Controller {
-	private Status status;
-	private HttpRequest request;
-
+class ControllerV3 extends Controller {
 	public ControllerV3(Status status, HttpRequest request) {
-		this.status = status;
-		this.request = request;
-	}
-	public void run() {
-		try {
-			processRequest();
-		} catch (Exception e) {
-			System.err.println("ERROR: Unknown Error (ControllerV3, host:"+request.getHostName()+"):");
-			e.printStackTrace();
-		}
+		super(status, request);
 	}
 	public void processRequest() throws IOException {
 		String[] pathParts = request.getPath().split("/");

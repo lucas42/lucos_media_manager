@@ -7,26 +7,18 @@ import java.math.BigInteger;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 // Legacy Controller which handles all v2 endpoints
-class ControllerV2 implements Controller {
-	private Status status;
-	private HttpRequest request;
+class ControllerV2 extends Controller {
 	private boolean update_success;
 	private Device device;
 
 	// Constructor
 	public ControllerV2(Status status, HttpRequest request) {
-		this.status = status;
-		this.request = request;
+		super(status, request);
 	}
 
-	// Implement the run() method of the Runnable interface.
+	// Overwrites the standard Controller run method to handle devices afterwards
 	public void run() {
-		try {
-			processRequest();
-		} catch (Exception e) {
-			System.err.println("ERROR: Unknown Error (HttpRequest, host:"+request.getHostName()+"):");
-			e.printStackTrace();
-		}
+		super.run();
 
 		try {
 			// Wait 3 seconds before marking this connection as closed, to give the client time to re-establish a long poll

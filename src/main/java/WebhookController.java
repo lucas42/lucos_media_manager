@@ -7,21 +7,9 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Handles webhook requests which come from loganne
  */
-class WebhookController implements Controller {
-	private Status status;
-	private HttpRequest request;
-
+class WebhookController extends Controller {
 	public WebhookController(Status status, HttpRequest request) {
-		this.status = status;
-		this.request = request;
-	}
-	public void run() {
-		try {
-			processRequest();
-		} catch (Exception e) {
-			System.err.println("ERROR: Unknown Error (ControllerV3, host:"+request.getHostName()+"):");
-			e.printStackTrace();
-		}
+		super(status, request);
 	}
 	public void processRequest() throws IOException {
 		String hookname = request.getPath().replaceFirst("^/webhooks/", "");

@@ -6,21 +6,9 @@ import com.google.gson.Gson;
 /**
  * Handles requests to the /_info endpoint
  */
-class InfoController implements Controller {
-	private Status status;
-	private HttpRequest request;
-
+class InfoController extends Controller {
 	public InfoController(Status status, HttpRequest request) {
-		this.status = status;
-		this.request = request;
-	}
-	public void run() {
-		try {
-			processRequest();
-		} catch (Exception e) {
-			System.err.println("ERROR: Unknown Error (InfoController, host:"+request.getHostName()+"):");
-			e.printStackTrace();
-		}
+		super(status, request);
 	}
 	public void processRequest() throws IOException {
 		Gson gson = CustomGson.get(status);
