@@ -30,6 +30,9 @@ class FrontController implements Controller {
 	// Based on the request, decide which controller to use
 	private Controller chooseController() throws IOException {
 		request.readFromSocket();
+		if (request.getPath().equals("/_info")) {
+			return new InfoController(status, request);
+		}
 		if (request.getPath().startsWith("/webhooks/")) {
 			return new WebhookController(status, request);
 		}
