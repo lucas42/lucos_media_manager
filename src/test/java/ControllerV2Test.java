@@ -12,17 +12,19 @@ import java.io.*;
 import java.util.*;
 class ControllerV2Test {
 
-	void compareRequestResponse(Status status, String request, String responseSnippet) {
+	void compareRequestResponse(Status status, String requestInput, String responseSnippet) {
 		try {
 			Socket socket = mock(Socket.class);
 			InetAddress mockedAddress = mock(InetAddress.class);
 			when(mockedAddress.getHostName()).thenReturn("test.host");
 			when(socket.getInetAddress()).thenReturn(mockedAddress);
-			FrontController controller = new FrontController(status, socket);
-			InputStream input = new StringBufferInputStream(request);
+			HttpRequest request = new HttpRequest(socket);
+			Controller controller = new ControllerV2(status, request);
+			InputStream input = new StringBufferInputStream(requestInput);
 			when(socket.getInputStream()).thenReturn(input);
 			ByteArrayOutputStream output = new ByteArrayOutputStream();
 			when(socket.getOutputStream()).thenReturn(output);
+			request.readFromSocket();
 			controller.processRequest();
 			assertTrue(output.toString().contains(responseSnippet), "response snippet ("+responseSnippet+") not found in response:\n"+output.toString());
 		} catch (Exception e) {
