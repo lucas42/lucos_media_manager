@@ -8,7 +8,7 @@ class FrontController extends Controller {
 		super(status, new HttpRequest(socket));
 	}
 
-	public void processRequest() throws IOException {
+	protected void processRequest() throws IOException {
 		request.readFromSocket();
 		Controller controller = chooseController();
 		controller.run();

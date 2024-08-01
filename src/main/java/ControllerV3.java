@@ -4,7 +4,7 @@ class ControllerV3 extends Controller {
 	public ControllerV3(Status status, HttpRequest request) {
 		super(status, request);
 	}
-	public void processRequest() throws IOException {
+	protected void processRequest() throws IOException {
 		String[] pathParts = request.getPath().split("/");
 		if (request.getPath().equals("/v3/is-playing")) {
 			if (request.getMethod().equals(Method.PUT)) {

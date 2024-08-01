@@ -10,7 +10,7 @@ class InfoController extends Controller {
 	public InfoController(Status status, HttpRequest request) {
 		super(status, request);
 	}
-	public void processRequest() throws IOException {
+	protected void processRequest() throws IOException {
 		Gson gson = CustomGson.get(status);
 		Map<String, Object> output = new HashMap<String, Object>();
 		Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();

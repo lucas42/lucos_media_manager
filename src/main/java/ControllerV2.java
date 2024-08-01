@@ -28,7 +28,7 @@ class ControllerV2 extends Controller {
 
 	}
 
-	public void processRequest() throws IOException, UnsupportedEncodingException, InterruptedException {
+	protected void processRequest() throws IOException, UnsupportedEncodingException, InterruptedException {
 		update_success = updatePlaylist(status.getPlaylist());
 		device = status.getDeviceList().openConnection(request);
 		respond();

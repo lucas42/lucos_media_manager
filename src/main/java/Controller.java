@@ -6,7 +6,7 @@ public abstract class Controller implements Runnable {
 		this.status = status;
 		this.request = request;
 	}
-	abstract void processRequest() throws Exception;
+	abstract protected void processRequest() throws Exception;
 	public void run() {
 		try {
 			processRequest();

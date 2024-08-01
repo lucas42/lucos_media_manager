@@ -11,7 +11,7 @@ class WebhookController extends Controller {
 	public WebhookController(Status status, HttpRequest request) {
 		super(status, request);
 	}
-	public void processRequest() throws IOException {
+	protected void processRequest() throws IOException {
 		String hookname = request.getPath().replaceFirst("^/webhooks/", "");
 		if (request.getMethod() == Method.POST) {
 			Gson gson = CustomGson.get(status);
