@@ -19,6 +19,9 @@ class FrontController extends Controller {
 		if (request.getPath().equals("/_info")) {
 			return new InfoController(status, request);
 		}
+		if (request.getPath().equals("/robots.txt")) {
+			return new RobotsController(status, request);
+		}
 		if (request.getPath().startsWith("/webhooks/")) {
 			return new WebhookController(status, request);
 		}
