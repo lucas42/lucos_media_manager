@@ -25,6 +25,9 @@ class FrontController extends Controller {
 		if (request.getPath().startsWith("/webhooks/")) {
 			return new WebhookController(status, request);
 		}
+		if (request.getPath().equals("/v3/poll")) {
+			return new LongPollControllerV3(status, request, 30, 3);
+		}
 		if (request.getPath().startsWith("/v3/") || request.getPath().equals("/v3")) {
 			return new ControllerV3(status, request);
 		}
