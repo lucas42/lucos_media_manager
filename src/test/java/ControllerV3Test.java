@@ -24,7 +24,7 @@ class ControllerV3Test {
 		when(request.getMethod()).thenReturn(method);
 		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
-		ControllerV3 controller = new ControllerV3(status, request);
+		Controller controller = new FrontController(status, request);
 		controller.run();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
@@ -35,7 +35,7 @@ class ControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
-		ControllerV3 controller = new ControllerV3(status, request);
+		Controller controller = new FrontController(status, request);
 		controller.run();
 
 		verify(request).notAllowed(allowedMethods);
@@ -45,6 +45,7 @@ class ControllerV3Test {
 	void unknownPathReturns404() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
+		compareRequestResponse(status, "/v3", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test

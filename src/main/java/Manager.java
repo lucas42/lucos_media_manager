@@ -45,7 +45,7 @@ public final class Manager {
 
 			Socket clientSocket = serverSocket.accept();
 			// Construct an object to process the HTTP request message.
-			FrontController controller = new FrontController(status, clientSocket);
+			FrontController controller = new FrontController(status, new HttpRequest(clientSocket));
 			// Create a new thread to process the request.
 			Thread thread = new Thread(controller);
 			// Start the thread.

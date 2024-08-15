@@ -12,31 +12,33 @@ class LongPollControllerV3Test {
 
 
 	@Test
-	@Timeout(1)
+	@Timeout(value = 4, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
 	void initialRequest() throws Exception {
 		Status status = mock(Status.class);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 		when(status.summaryHasChanged(0)).thenReturn(true);
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
-		Controller controller = new LongPollControllerV3(status, request, 30, 3);
+		when(request.getPath()).thenReturn("/v3/poll");
+		Controller controller = new FrontController(status, request);
 		controller.processRequest();
 		verify(request).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
 
 	@Test
-	@Timeout(5)
+	@Timeout(value = 3, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
 	void pollUntilStatusChanges() throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
+		when(request.getPath()).thenReturn("/v3/poll");
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 
 		// Run the controller in a separate thread, so can test change of state
-		Controller controller = new LongPollControllerV3(status, request, 30, 3);
+		Controller controller = new FrontController(status, request);
 		Thread thread = new Thread(controller);
 		thread.start();
 		Thread.sleep(500);
@@ -61,7 +63,7 @@ class LongPollControllerV3Test {
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 
 		// Run the controller in a separate thread
-		Controller controller = new LongPollControllerV3(status, request, 2, 30);
+		Controller controller = new LongPollControllerV3(status, request, 2, 30); // Call LongPollControllerV3 directly so timeout value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		Thread.sleep(500);
@@ -88,7 +90,7 @@ class LongPollControllerV3Test {
 		assertFalse(deviceList.isConnected(device1));
 
 		// Run the controller in a separate thread, so can test change of state
-		Controller controller = new LongPollControllerV3(status, request, 30, 1);
+		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
@@ -114,7 +116,7 @@ class LongPollControllerV3Test {
 		assertFalse(deviceList.isConnected(device1));
 
 		// Run the controller in a separate thread, so can test change of state
-		Controller controller = new LongPollControllerV3(status, request, 30, 1);
+		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
@@ -127,11 +129,14 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
+	@Timeout(value = 4, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
 	void unsupportedMethod() throws Exception {
 		Status status = mock(Status.class);
+		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.PUT);
-		Controller controller = new LongPollControllerV3(status, request, 30, 3);
+		when(request.getPath()).thenReturn("/v3/poll");
+		Controller controller = new FrontController(status, request);
 		controller.processRequest();
 
 		verify(request).notAllowed(Arrays.asList(Method.GET));

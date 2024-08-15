@@ -17,7 +17,7 @@ class WebhookControllerTest {
 		when(request.getMethod()).thenReturn(method);
 		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
-		Controller controller = new WebhookController(status, request);
+		Controller controller = new FrontController(status, request);
 		controller.run();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
@@ -28,7 +28,7 @@ class WebhookControllerTest {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
-		Controller controller = new WebhookController(status, request);
+		Controller controller = new FrontController(status, request);
 		controller.run();
 
 		verify(request).notAllowed(allowedMethods);

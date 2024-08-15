@@ -4,8 +4,8 @@ import java.net.Socket;
 class FrontController extends Controller {
 
 	// Constructor
-	public FrontController(Status status, Socket socket) {
-		super(status, new HttpRequest(socket));
+	public FrontController(Status status, HttpRequest request) {
+		super(status, request);
 	}
 
 	protected void processRequest() throws IOException {

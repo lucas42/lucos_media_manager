@@ -7,7 +7,8 @@ class RobotsControllerTest {
 	void disallowAll() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		HttpRequest request = mock(HttpRequest.class);
-		Controller controller = new RobotsController(status, request);
+		when(request.getPath()).thenReturn("/robots.txt");
+		Controller controller = new FrontController(status, request);
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "text/plain");
 		verify(request).writeBody("User-agent: *");
