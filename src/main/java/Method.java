@@ -5,5 +5,6 @@ public enum Method {
 	PUT,
 	DELETE,
 	PATCH,
+	OPTIONS,
 	UNKNOWN,
 }

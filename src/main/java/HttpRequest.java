@@ -78,6 +78,8 @@ class HttpRequest {
 			method = Method.GET;
 		} else if (methodString.equalsIgnoreCase("DELETE")) {
 			method = Method.DELETE;
+		} else if (methodString.equalsIgnoreCase("OPTIONS")) {
+			method = Method.OPTIONS;
 		} else {
 			System.err.println("WARNING: Unrecognised HTTP Method "+methodString);
 			method = Method.UNKNOWN;
@@ -179,7 +181,11 @@ class HttpRequest {
 	// Convenience method for returning a 405 "Method Not Allowed" response including the "Allow" header
 	public void notAllowed(Collection<Method> allowedMethods) throws IOException {
 		String allow = allowedMethods.stream().map( method -> method.name() ).collect(Collectors.joining (", "));
-		this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
+		if (this.getMethod().equals(Method.OPTIONS)) { // Special case for OPTIONS method - treat as CORS-preflight request
+			this.sendHeaders(204, "No Content", Map.of("Access-Control-Allow-Methods", allow));
+		} else {
+			this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
+		}
 		this.close();
 	}
 }

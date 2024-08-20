@@ -154,4 +154,26 @@ class HttpRequestTest {
 		assertEquals("HTTP/1.1 405 Method Not Allowed\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nAllow: PUT, DELETE\r\n\r\n", output.toString());
 
 	}
+	@Test
+	void optionsRequest() throws IOException {
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new StringBufferInputStream("OPTIONS /simple-path HTTP/1.1\n");
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+
+		assertEquals("test.host", request.getHostName());
+		request.readFromSocket();
+		assertEquals("/simple-path", request.getPath());
+		assertEquals(Method.OPTIONS, request.getMethod());
+
+		request.notAllowed(Arrays.asList(Method.PUT, Method.DELETE));
+		assertEquals("HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nAccess-Control-Allow-Methods: PUT, DELETE\r\n\r\n", output.toString());
+
+	}
 }
