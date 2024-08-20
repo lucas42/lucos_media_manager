@@ -79,7 +79,8 @@ class HttpRequest {
 		} else if (methodString.equalsIgnoreCase("DELETE")) {
 			method = Method.DELETE;
 		} else {
-			method = null;
+			System.err.println("WARNING: Unrecognised HTTP Method "+methodString);
+			method = Method.UNKNOWN;
 		}
 		path = tokens.nextToken().trim();
 		
