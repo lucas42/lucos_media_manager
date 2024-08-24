@@ -288,4 +288,31 @@ class PlaylistTest {
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
 	}
+
+	@Test
+	void trackTimesByUuid() {
+		boolean returnVal;
+		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
+		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
+		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
+		Track trackD = new Track(mock(MediaApi.class), "https://example.com/trackD");
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		playlist.queueEnd(trackA);
+		playlist.queueEnd(trackB);
+		playlist.queueEnd(trackC);
+		playlist.queueEnd(trackD);
+
+		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f);
+		assertTrue(returnVal);
+		assertEquals(trackC.getCurrentTime(), 13.7f);
+
+		returnVal = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f);
+		assertTrue(returnVal);
+		assertEquals(trackB.getCurrentTime(), 69f);
+
+		returnVal = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f);
+		assertFalse(returnVal);
+		assertEquals(trackA.getCurrentTime(), 0f);
+		assertEquals(trackD.getCurrentTime(), 0f);
+	}
 }

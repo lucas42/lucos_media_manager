@@ -152,6 +152,12 @@ class Playlist {
 		playlistTrack.setTime(time, timeSet);
 		return true;
 	}
+	public boolean setTrackTimeByUuid(String uuid, float time) {
+		Track track = getTrackByUuid(uuid);
+		if (track == null) return false;
+		track.setTime(time, null);
+		return true;
+	}
 
 	public void updateTracks(String trackid, Track trackUpdate) {
 		for (Track track : tracks) {

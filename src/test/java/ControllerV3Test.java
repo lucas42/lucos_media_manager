@@ -46,6 +46,7 @@ class ControllerV3Test {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 		compareRequestResponse(status, "/v3", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
+		compareRequestResponse(status, "/v3/playlist/slug/uuid/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
 
 	@Test
@@ -362,6 +363,28 @@ class ControllerV3Test {
 
 			checkNotAllowed(status, "/v3/current-collection", Method.POST, null, Arrays.asList(Method.PUT));
 		}
+
+	}
+
+	@Test
+	void updateTrackTime() throws Exception {
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/2456", new HashMap<String, String>(Map.of("title", "Strawberry Fields", "artist", "The Beatles", "trackid", "2456")));
+		playlist.queue(new Track[]{trackA});
+
+		int hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.PUT, null, "13.7", 204, "Changed", null, null);
+		assertEquals(13.7f, trackA.getCurrentTime());
+
+		compareRequestResponse(status, "/v3/playlist/whatever/unknown-uuid/current-time", Method.PUT, null, "24.6", 204, "Not Changed", null, null);
+		assertEquals(13.7f, trackA.getCurrentTime());
+
+		compareRequestResponse(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.PUT, null, "strawberry", 400, "Bad Request", "text/plain", "Invalid time given \"strawberry\".  Must be a number");
+		assertEquals(13.7f, trackA.getCurrentTime());
+
+		checkNotAllowed(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.POST, null, Arrays.asList(Method.PUT));
 
 	}
 }
