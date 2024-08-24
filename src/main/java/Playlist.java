@@ -39,13 +39,23 @@ class Playlist {
 			.findFirst()
 			.orElse(null);
 	}
+	/**
+	 * Removes any track in the playlist with a given uuid
+	 * (Queues additional tracks if necessary)
+	 * @returns boolean Whether or not the track was found in the playlist
+	 */
+	private boolean removeTrackByUuid(String uuid) {
+		boolean trackRemoved = tracks.removeIf(track -> track.getUuid().equals(uuid));
+		topupTracks();
+		return trackRemoved;
+	}
 
 	// Called when a track gets to the end of its playback
 	public boolean completeTrack(Track track) {
 		return removeTrack(track);
 	}
 	public boolean completeTrack(String uuid) {
-		return completeTrack(getTrackByUuid(uuid));
+		return removeTrackByUuid(uuid);
 	}
 
 	// Called when loading or playback of a track encounters an error
@@ -58,7 +68,12 @@ class Playlist {
 		return trackRemoved;
 	}
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
-		return flagTrackAsError(getTrackByUuid(uuid), errorMessage);
+		boolean trackRemoved = removeTrackByUuid(uuid);
+		if (trackRemoved) {
+			System.out.println("NOTICE: Track "+uuid+" flagged with error: "+errorMessage);
+			// TODO: Record the error somewhere more presistent than application log
+		}
+		return trackRemoved;
 	}
 
 	// Called when a track is deliberatly skipped
@@ -66,7 +81,7 @@ class Playlist {
 		return removeTrack(track);
 	}
 	public boolean skipTrack(String uuid) {
-		return skipTrack(getTrackByUuid(uuid));
+		return removeTrackByUuid(uuid);
 	}
 
 

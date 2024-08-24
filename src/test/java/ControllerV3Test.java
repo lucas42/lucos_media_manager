@@ -259,6 +259,32 @@ class ControllerV3Test {
 	}
 
 	@Test
+	void skipLaterInstanceOfDuplicateTrack() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
+
+		// Create playlist with 4 tracks, 2 of which are the same track
+		Playlist playlist = new Playlist(fetcher, null);
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackD = new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
+		playlist.queue(new Track[]{trackA, trackB, trackC, trackD});
+
+		int hashCode = status.hashCode();
+
+		compareRequestResponse(status, "/v3/playlist/special/"+trackC.getUuid(), Method.DELETE, Map.of("action", "skip"), null, 204, "Changed", null, null);  // Removes the second instance of this track
+
+		assertEquals(3, playlist.getLength());
+		assertEquals("Stairway To Heaven", playlist.getCurrentTrack().getMetadata("title"));
+		assertNotEquals("Stairway To Heaven", playlist.getNextTrack().getMetadata("title"));
+		assertNotEquals(hashCode, status.hashCode());
+		hashCode = status.hashCode();
+
+	}
+
+	@Test
 	void queueTrack() throws Exception {
 		Fetcher fetcher = mock(RandomFetcher.class);
 
