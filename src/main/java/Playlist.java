@@ -199,10 +199,8 @@ class Playlist {
 
 	/**
 	 * Returns the slug of the current fetcher
-	 * (`null` if a fetcher isn't set or isn't a type which supports slugs)
 	 */
 	public String getCurrentFetcherSlug() {
-		if (fetcher == null) return null;
 		return fetcher.getSlug();
 	}
 }

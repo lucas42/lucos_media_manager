@@ -55,6 +55,7 @@ class Status {
 		summary.put("isPlaying", this.getPlaying());
 		summary.put("devices", deviceList.getAllDevices());
 		summary.put("collections", collectionList.getAllCollections(getCurrentFetcherSlug()));
+		summary.put("currentCollectionSlug", getCurrentFetcherSlug());
 		if (playlist != null) summary.put("hashcode", this.hashCode());
 		return summary;
 	}
