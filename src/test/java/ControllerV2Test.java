@@ -32,7 +32,7 @@ class ControllerV2Test {
 		}
 	}
 	void compareRequestResponse(String request, String responseSnippet) {
-		compareRequestResponse(new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class)), request, responseSnippet);
+		compareRequestResponse(new Status(mock(Playlist.class), new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class)), request, responseSnippet);
 	}
 
 	@Test
@@ -45,7 +45,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void playPause() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(mock(Playlist.class), new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "POST /pause HTTP/1.0\n", "204");
 		assertFalse(status.getPlaying());
@@ -58,7 +58,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void volume() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(mock(Playlist.class), new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 
 		// The following values should update the volume
 		compareRequestResponse(status, "POST /volume?volume=1.0 HTTP/1.1", "204");
@@ -77,7 +77,7 @@ class ControllerV2Test {
 	}
 	@Test
 	void devices() {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(mock(Playlist.class), new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		status.setPlaying(false);
 		compareRequestResponse(status, "GET /poll/summary HTTP/1.1", "\"devices\":[]");
 		compareRequestResponse(status, "POST /devices?uuid=46eca36b-2e4f-46bd-a756-249c45850cac HTTP/1.1", "204");

@@ -45,7 +45,6 @@ class Status {
 			+ Float.hashCode(volume);
 	}
 	public boolean summaryHasChanged(int oldhashcode) {
-		if (playlist == null) return true;
 		return (this.hashCode() != oldhashcode);
 	}
 	public Map<String, Object> getSummary() {
@@ -56,7 +55,7 @@ class Status {
 		summary.put("devices", deviceList.getAllDevices());
 		summary.put("collections", collectionList.getAllCollections(getCurrentFetcherSlug()));
 		summary.put("currentCollectionSlug", getCurrentFetcherSlug());
-		if (playlist != null) summary.put("hashcode", this.hashCode());
+		summary.put("hashcode", this.hashCode());
 		return summary;
 	}
 	public Playlist getPlaylist() {
@@ -69,7 +68,6 @@ class Status {
 		return collectionList;
 	}
 	private String getCurrentFetcherSlug() {
-		if (playlist == null) return null;
 		return playlist.getCurrentFetcherSlug();
 	}
 	public MediaApi getMediaApi() {
