@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 /**
  * Represents the list of available collections in the media library
  */
@@ -13,10 +15,7 @@ class CollectionList {
 		try {
 			MediaApi api = new MediaApi();
 			this.collections = api.fetchCollections("/v2/collections");
-
-			for (MediaCollection collection: this.collections) {
-				collection.editurl = "https://media-metadata.l42.eu/collections/"+collection.slug;
-			}
+			this.collections = Arrays.stream(this.collections).filter(collection -> collection.isPlayable).toArray(MediaCollection[]::new);
 			System.err.println("DEBUG: New collection list fetched from media api");
 			return true;
 		} catch (Exception e) {
@@ -45,6 +44,6 @@ class MediaCollection {
 	String name;
 	int totalTracks;
 	int totalPages;
-	String editurl;
+	boolean isPlayable;
 	boolean isCurrent;
 }
