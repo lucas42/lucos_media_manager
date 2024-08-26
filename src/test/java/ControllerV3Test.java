@@ -356,14 +356,40 @@ class ControllerV3Test {
 
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Changed", null, null);
 			assertEquals("robots", playlist.getCurrentFetcherSlug());
-			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Changed", null, null);
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Not Changed", null, null);
 			assertEquals("robots", playlist.getCurrentFetcherSlug());
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Changed", null, null);
 			assertEquals("all", playlist.getCurrentFetcherSlug());
 
 			checkNotAllowed(status, "/v3/current-collection", Method.POST, null, Arrays.asList(Method.PUT));
 		}
+	}
 
+	@Test
+	void setCollectionToCurrentHasNoImpact() throws Exception {
+		try (MockedStatic mockedAbstractFetcher = mockStatic(Fetcher.class)) {
+			Fetcher relaxFetcher = mock(CollectionFetcher.class);
+			when(relaxFetcher.getSlug()).thenReturn("relax");
+			Fetcher allFetcher = mock(RandomFetcher.class);
+			when(allFetcher.getSlug()).thenReturn("all");
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug("relax")).thenReturn(relaxFetcher);
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug("all")).thenReturn(allFetcher);
+			Playlist playlist = new Playlist(allFetcher, null);
+			Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Not Changed", null, null);
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("relax"), times(0));
+			assertEquals("all", playlist.getCurrentFetcherSlug());
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Changed", null, null);
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("relax"), times(1));
+			assertEquals("relax", playlist.getCurrentFetcherSlug());
+			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Not Changed", null, null);
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug("relax"), times(1));
+			assertEquals("relax", playlist.getCurrentFetcherSlug());
+		}
 	}
 
 	@Test

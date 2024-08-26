@@ -185,10 +185,15 @@ class ControllerV3 extends Controller {
 			}
 		} else if (request.getPath().equals("/v3/current-collection")) {
 			if (request.getMethod().equals(Method.PUT)) {
-				Fetcher fetcher = Fetcher.createFromSlug(request.getData());
-				status.getPlaylist().setFetcher(fetcher);
-				request.sendHeaders(204, "Changed");
-				request.close();
+				if (request.getData().equals(status.getPlaylist().getCurrentFetcherSlug())) {
+					request.sendHeaders(204, "Not Changed");
+					request.close();
+				} else {
+					Fetcher fetcher = Fetcher.createFromSlug(request.getData());
+					status.getPlaylist().setFetcher(fetcher);
+					request.sendHeaders(204, "Changed");
+					request.close();
+				}
 			} else {
 				request.notAllowed(Arrays.asList(Method.PUT));
 			}
