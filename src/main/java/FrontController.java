@@ -31,6 +31,6 @@ class FrontController extends Controller {
 		if (request.getPath().startsWith("/v3/") || request.getPath().equals("/v3")) {
 			return new ControllerV3(status, request);
 		}
-		return new ControllerV2(status, request);
+		return new FallbackController(status, request);
 	}
 }
