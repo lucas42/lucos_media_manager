@@ -33,11 +33,11 @@ class ControllerV3Test {
 		if (responseBody != null) verify(request).writeBody(responseBody);
 		verify(request).close();
 	}
-	void checkNotAllowed(Status status, String path, Method method, Map<String, String> getParameters, Collection<Method> allowedMethods) throws Exception {
+	void checkNotAllowed(Status status, String path, Method method, Map<String, String> getParameters, Collection<Method> allowedMethods, boolean isAuthorised) throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
-		when(request.isAuthorised()).thenReturn(true);
+		when(request.isAuthorised()).thenReturn(isAuthorised);
 		Controller controller = new FrontController(status, request);
 		controller.run();
 
@@ -68,7 +68,7 @@ class ControllerV3Test {
 		assertTrue(status.getPlaying());
 		compareRequestResponse(status, "/v3/is-playing", Method.PUT, null, "fAlSe", 204, "Changed", null, null); // Test case insensitive
 		assertFalse(status.getPlaying());
-		checkNotAllowed(status, "/v3/is-playing", Method.POST, null, Arrays.asList(Method.PUT));
+		checkNotAllowed(status, "/v3/is-playing", Method.POST, null, Arrays.asList(Method.PUT), true);
 		assertFalse(status.getPlaying());
 	}
 
@@ -90,7 +90,7 @@ class ControllerV3Test {
 		compareRequestResponse(status, "/v3/volume", Method.PUT, null, "NaN", 400, "Not Changed", "text/plain", "Volume must not be greater than 1.0");
 		compareRequestResponse(status, "/v3/volume", Method.PUT, null, "-1", 400, "Not Changed", "text/plain", "Volume must not be less than 0.0");
 		compareRequestResponse(status, "/v3/volume", Method.PUT, null, "1.3", 400, "Not Changed", "text/plain", "Volume must not be greater than 1.0");
-		checkNotAllowed(status, "/v3/volume", Method.POST, null, Arrays.asList(Method.PUT));
+		checkNotAllowed(status, "/v3/volume", Method.POST, null, Arrays.asList(Method.PUT), true);
 		assertEquals(0.7, status.getVolume(), 0.0002);
 	}
 
@@ -108,7 +108,7 @@ class ControllerV3Test {
 		assertEquals("Personal Laptop", status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").getName()); // Existing device's name updated
 		assertEquals("Phone", status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").getName()); // Existing divec unnafected
 
-		checkNotAllowed(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.POST, null, Arrays.asList(Method.PUT));
+		checkNotAllowed(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.POST, null, Arrays.asList(Method.PUT), true);
 	}
 
 	@Test
@@ -129,7 +129,7 @@ class ControllerV3Test {
 		assertFalse(status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").isCurrent()); // Existing device marked as not current
 		verify(loganne).post("deviceSwitch", "Moving music to play on Device 1");
 
-		checkNotAllowed(status, "/v3/current-device", Method.POST, null, Arrays.asList(Method.PUT));
+		checkNotAllowed(status, "/v3/current-device", Method.POST, null, Arrays.asList(Method.PUT), true);
 
 	}
 
@@ -174,7 +174,7 @@ class ControllerV3Test {
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "complete"), Arrays.asList(Method.DELETE));
+		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "complete"), Arrays.asList(Method.DELETE), true);
 
 		compareRequestResponse(status, "/v3/playlist/special/", Method.DELETE, null, null, 404, "Not Found", "text/plain", "File Not Found");
 	}
@@ -216,7 +216,7 @@ class ControllerV3Test {
 		assertEquals(2, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "error"), Arrays.asList(Method.DELETE));
+		checkNotAllowed(status, "/v3/playlist/special/"+trackD.getUuid(), Method.PUT, Map.of("action", "error"), Arrays.asList(Method.DELETE), true);
 
 	}
 
@@ -258,7 +258,7 @@ class ControllerV3Test {
 		assertEquals(1, playlist.getLength());
 		assertNotEquals(hashCode, status.hashCode());
 
-		checkNotAllowed(status, "/v3/skip-track", Method.PUT, null, Arrays.asList(Method.POST));
+		checkNotAllowed(status, "/v3/skip-track", Method.PUT, null, Arrays.asList(Method.POST), true);
 
 	}
 
@@ -342,7 +342,7 @@ class ControllerV3Test {
 		assertEquals(6, playlist.getLength());
 		assertEquals(hashCode, status.hashCode());
 
-		checkNotAllowed(status, "/v3/queue-track", Method.PUT, null, Arrays.asList(Method.POST));
+		checkNotAllowed(status, "/v3/queue-track", Method.PUT, null, Arrays.asList(Method.POST), true);
 	}
 
 	@Test
@@ -364,7 +364,7 @@ class ControllerV3Test {
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Changed", null, null);
 			assertEquals("all", playlist.getCurrentFetcherSlug());
 
-			checkNotAllowed(status, "/v3/current-collection", Method.POST, null, Arrays.asList(Method.PUT));
+			checkNotAllowed(status, "/v3/current-collection", Method.POST, null, Arrays.asList(Method.PUT), true);
 		}
 	}
 
@@ -413,7 +413,7 @@ class ControllerV3Test {
 		compareRequestResponse(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.PUT, null, "strawberry", 400, "Bad Request", "text/plain", "Invalid time given \"strawberry\".  Must be a number");
 		assertEquals(13.7f, trackA.getCurrentTime());
 
-		checkNotAllowed(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.POST, null, Arrays.asList(Method.PUT));
+		checkNotAllowed(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.POST, null, Arrays.asList(Method.PUT), true);
 
 	}
 
@@ -421,6 +421,7 @@ class ControllerV3Test {
 	void checkUnauthorisedResponse() throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/v3/current-collection");
+		when(request.getMethod()).thenReturn(Method.PUT);
 		when(request.isAuthorised()).thenReturn(false);
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
 		Controller controller = new FrontController(status, request);
@@ -429,5 +430,11 @@ class ControllerV3Test {
 		verify(request).sendHeaders(401, "Unauthorized",  Map.of("Content-Type","text/plain","WWW-Authenticate","key"));
 		verify(request).writeBody("Invalid API Key");
 		verify(request).close();
+	}
+
+	@Test
+	void corsPreflightWithoutAuth() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		checkNotAllowed(status, "/v3/volume", Method.OPTIONS, null, Arrays.asList(Method.PUT), false);
 	}
 }

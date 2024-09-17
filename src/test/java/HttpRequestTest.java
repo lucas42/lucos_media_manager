@@ -174,7 +174,7 @@ class HttpRequestTest {
 		assertEquals(Method.OPTIONS, request.getMethod());
 
 		request.notAllowed(Arrays.asList(Method.PUT, Method.DELETE));
-		assertEquals("HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nAccess-Control-Allow-Methods: PUT, DELETE\r\n\r\n", output.toString());
+		assertEquals("HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nAccess-Control-Allow-Headers: Authorization\r\nAccess-Control-Allow-Methods: PUT, DELETE\r\n\r\n", output.toString());
 
 	}
 

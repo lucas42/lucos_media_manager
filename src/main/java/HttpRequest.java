@@ -195,7 +195,10 @@ class HttpRequest {
 	public void notAllowed(Collection<Method> allowedMethods) throws IOException {
 		String allow = allowedMethods.stream().map( method -> method.name() ).collect(Collectors.joining (", "));
 		if (this.getMethod().equals(Method.OPTIONS)) { // Special case for OPTIONS method - treat as CORS-preflight request
-			this.sendHeaders(204, "No Content", Map.of("Access-Control-Allow-Methods", allow));
+			this.sendHeaders(204, "No Content", Map.of(
+				"Access-Control-Allow-Methods", allow,
+				"Access-Control-Allow-Headers", "Authorization"
+			));
 		} else {
 			this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
 		}

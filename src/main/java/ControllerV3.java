@@ -6,7 +6,7 @@ class ControllerV3 extends Controller {
 		super(status, request);
 	}
 	protected void processRequest() throws IOException {
-		if (request.isAuthorised()) {
+		if (request.isAuthorised() || request.getMethod().equals(Method.OPTIONS)) {
 			String[] pathParts = request.getPath().split("/");
 			if (request.getPath().equals("/v3/is-playing")) {
 				if (request.getMethod().equals(Method.PUT)) {
