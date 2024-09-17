@@ -22,10 +22,12 @@ class ControllerV3Test {
 		}
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		when(request.isAuthorised()).thenReturn(true);
 		if (requestBody == null) requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
 		Controller controller = new FrontController(status, request);
 		controller.run();
+		verify(request).isAuthorised();
 		if (contentType != null) verify(request).sendHeaders(responseStatus, responseString, contentType);
 		else verify(request).sendHeaders(responseStatus, responseString);
 		if (responseBody != null) verify(request).writeBody(responseBody);
@@ -35,6 +37,7 @@ class ControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		when(request.isAuthorised()).thenReturn(true);
 		Controller controller = new FrontController(status, request);
 		controller.run();
 
@@ -412,5 +415,19 @@ class ControllerV3Test {
 
 		checkNotAllowed(status, "/v3/playlist/whatever/"+trackA.getUuid()+"/current-time", Method.POST, null, Arrays.asList(Method.PUT));
 
+	}
+
+	@Test
+	void checkUnauthorisedResponse() throws Exception {
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getPath()).thenReturn("/v3/current-collection");
+		when(request.isAuthorised()).thenReturn(false);
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		verify(request).isAuthorised();
+		verify(request).sendHeaders(401, "Unauthorized",  Map.of("Content-Type","text/plain","WWW-Authenticate","key"));
+		verify(request).writeBody("Invalid API Key");
+		verify(request).close();
 	}
 }

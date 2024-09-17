@@ -148,6 +148,10 @@ class HttpRequest {
 	public Method getMethod() {
 		return method;
 	}
+	// Checks whether the request has an API key matching one listed in the CLIENT_KEYS environment variable
+	public boolean isAuthorised() {
+		return true; // TODO: For now, all requests are authorised
+	}
 
 	public void sendHeaders(int status, String statusstring, Map<String, String> extraheaders) throws IOException {
 		os.writeBytes("HTTP/1.1 "+ status +" "+ statusstring + CRLF);

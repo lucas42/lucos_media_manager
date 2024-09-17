@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Timeout.ThreadMode.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Arrays;
+import java.util.Map;
 
 class LongPollControllerV3Test {
 
@@ -20,6 +21,7 @@ class LongPollControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getPath()).thenReturn("/v3/poll");
+		when(request.isAuthorised()).thenReturn(true);
 		Controller controller = new FrontController(status, request);
 		controller.processRequest();
 		verify(request).sendHeaders(200, "Long Poll", "application/json");
@@ -33,6 +35,7 @@ class LongPollControllerV3Test {
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.getPath()).thenReturn("/v3/poll");
+		when(request.isAuthorised()).thenReturn(true);
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -58,6 +61,7 @@ class LongPollControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
+		when(request.isAuthorised()).thenReturn(true);
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -84,6 +88,7 @@ class LongPollControllerV3Test {
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.removeParam("device")).thenReturn("device1");
+		when(request.isAuthorised()).thenReturn(true);
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(true);
 		when(status.getDeviceList()).thenReturn(deviceList);
@@ -110,6 +115,7 @@ class LongPollControllerV3Test {
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.removeParam("device")).thenReturn("device1");
+		when(request.isAuthorised()).thenReturn(true);
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(true);
 		when(status.getDeviceList()).thenReturn(deviceList);
@@ -136,9 +142,26 @@ class LongPollControllerV3Test {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.PUT);
 		when(request.getPath()).thenReturn("/v3/poll");
+		when(request.isAuthorised()).thenReturn(true);
 		Controller controller = new FrontController(status, request);
 		controller.processRequest();
 
 		verify(request).notAllowed(Arrays.asList(Method.GET));
+	}
+
+	@Test
+	void checkUnauthorisedResponse() throws Exception {
+		Status status = mock(Status.class);
+		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getMethod()).thenReturn(Method.GET);
+		when(request.getPath()).thenReturn("/v3/poll");
+		when(request.isAuthorised()).thenReturn(false);
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		verify(request).isAuthorised();
+		verify(request).sendHeaders(401, "Unauthorized",  Map.of("Content-Type","text/plain","WWW-Authenticate","key"));
+		verify(request).writeBody("Invalid API Key");
+		verify(request).close();
 	}
 }

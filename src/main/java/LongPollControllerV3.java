@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 /**
@@ -27,24 +28,33 @@ class LongPollControllerV3 extends Controller {
 
 	protected void processRequest() throws IOException, InterruptedException {
 		if (request.getMethod().equals(Method.GET)) {
-			status.getDeviceList().openConnection(request);
-			long startTime = System.nanoTime();
-			int hashcode;
-			try {
-				hashcode = Integer.parseInt(request.getParam("hashcode"));
-			} catch (NumberFormatException e) {
-				hashcode = 0;
-			}
-			while (true) {
-				// Only respond when a change has occurred, or the request has taken over 30 seconds
-				if (status.summaryHasChanged(hashcode) || (System.nanoTime() - startTime) > (POLL_TIMEOUT * 1000000000L)) {
-					request.sendHeaders(200, "Long Poll", "application/json");
-					Gson gson = CustomGson.get(status);
-					request.writeBody(gson.toJson(status.getSummary()));
-					request.close();
-					return;
+			if (request.isAuthorised()) {
+				status.getDeviceList().openConnection(request);
+				long startTime = System.nanoTime();
+				int hashcode;
+				try {
+					hashcode = Integer.parseInt(request.getParam("hashcode"));
+				} catch (NumberFormatException e) {
+					hashcode = 0;
 				}
-				Thread.sleep(1);
+				while (true) {
+					// Only respond when a change has occurred, or the request has taken over 30 seconds
+					if (status.summaryHasChanged(hashcode) || (System.nanoTime() - startTime) > (POLL_TIMEOUT * 1000000000L)) {
+						request.sendHeaders(200, "Long Poll", "application/json");
+						Gson gson = CustomGson.get(status);
+						request.writeBody(gson.toJson(status.getSummary()));
+						request.close();
+						return;
+					}
+					Thread.sleep(1);
+				}
+			} else {
+				request.sendHeaders(401, "Unauthorized",  Map.of(
+					"Content-Type", "text/plain",
+					"WWW-Authenticate", "key"
+				));
+				request.writeBody("Invalid API Key");
+				request.close();
 			}
 		} else {
 			request.notAllowed(Arrays.asList(Method.GET));
