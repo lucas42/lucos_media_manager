@@ -54,7 +54,7 @@ class HttpRequest {
 
 		// Get the header lines.
 		String headerLine = null;
-		Map<String, String> header = new HashMap<String, String>();
+		Map<String, String> headers = new HashMap<String, String>();
 		while (br.ready()) {
 			headerLine = br.readLine();
 			if (headerLine.length() < 1) break;
@@ -66,7 +66,7 @@ class HttpRequest {
 			} else {
 				field = "true";
 			}
-			header.put(headerLine, field);
+			headers.put(headerLine.toLowerCase(), field.trim());
 		}
 		
 		// Extract the filename from the request line.
@@ -91,9 +91,9 @@ class HttpRequest {
 		path = tokens.nextToken().trim();
 		
 		data = "";
-		if (header.containsKey("Content-Length")) {
+		if (headers.containsKey("content-length")) {
 			try {
-				int length = Integer.parseInt(header.get("Content-Length").trim());
+				int length = Integer.parseInt(headers.get("content-length"));
 				char[] cbuf = new char[length];
 				br.read(cbuf, 0, length);
 				data = new String(cbuf);
@@ -102,7 +102,7 @@ class HttpRequest {
 				e.printStackTrace(System.err);
 			}
 		}
-		authorizationHeader = header.getOrDefault("Authorization", "").trim();
+		authorizationHeader = headers.get("authorization");
 		String fullpath = path;
 		int ii = path.indexOf('?');
 		if (ii > -1) {
@@ -122,8 +122,6 @@ class HttpRequest {
 			}
 			path = path.substring(0, ii);
 		}
-
-
 	}
 
 
@@ -155,7 +153,7 @@ class HttpRequest {
 	}
 	// Checks whether the request has an API key matching one listed in the CLIENT_KEYS environment variable
 	public boolean isAuthorised() {
-		if (authorizationHeader.equals("") || !authorizationHeader.startsWith("Key ")) {
+		if (authorizationHeader == null || !authorizationHeader.startsWith("Key ")) {
 			return false;
 		}
 		String apiKey = authorizationHeader.replaceFirst("Key ", "");
