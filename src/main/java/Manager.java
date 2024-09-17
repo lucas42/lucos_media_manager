@@ -9,6 +9,10 @@ public final class Manager {
 			System.err.println("FATAL: No PORT environment variable specified");
 			System.exit(1);
 		}
+		if (System.getenv("CLIENT_KEYS") == null) {
+			System.err.println("FATAL: No CLIENT_KEYS environment variable specified");
+			System.exit(1);
+		}
 		
 		// Set the port number.
 		int port;
@@ -19,6 +23,8 @@ public final class Manager {
 			System.exit(2);
 			return;
 		}
+
+		HttpRequest.setClientKeys(System.getenv("CLIENT_KEYS"));
 
 		// TODO: Don't post to production loganne host when running locally
 		Loganne loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");

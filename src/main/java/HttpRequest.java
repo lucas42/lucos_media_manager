@@ -10,6 +10,8 @@ import java.net.Socket;
 import java.net.URLDecoder;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 import java.util.Collection;
@@ -24,6 +26,8 @@ class HttpRequest {
 	private String path;
 	private String data;
 	private Method method;
+	private String authorizationHeader;
+	static private Collection<String> validApiKeys = new HashSet<String>();
 	
 	// Constructor
 	public HttpRequest(Socket socket) {
@@ -98,6 +102,7 @@ class HttpRequest {
 				e.printStackTrace(System.err);
 			}
 		}
+		authorizationHeader = header.getOrDefault("Authorization", "").trim();
 		String fullpath = path;
 		int ii = path.indexOf('?');
 		if (ii > -1) {
@@ -150,7 +155,11 @@ class HttpRequest {
 	}
 	// Checks whether the request has an API key matching one listed in the CLIENT_KEYS environment variable
 	public boolean isAuthorised() {
-		return true; // TODO: For now, all requests are authorised
+		if (authorizationHeader.equals("") || !authorizationHeader.startsWith("Key ")) {
+			return false;
+		}
+		String apiKey = authorizationHeader.replaceFirst("Key ", "");
+		return validApiKeys.contains(apiKey);
 	}
 
 	public void sendHeaders(int status, String statusstring, Map<String, String> extraheaders) throws IOException {
@@ -191,5 +200,9 @@ class HttpRequest {
 			this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
 		}
 		this.close();
+	}
+
+	static public void setClientKeys(String rawClientKeys) {
+		validApiKeys = Arrays.asList(rawClientKeys.split(";")).stream().map(client -> client.replaceFirst("^.*=","")).collect(Collectors.toList());
 	}
 }

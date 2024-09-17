@@ -10,3 +10,4 @@ services:
     environment:
       - KEY_LUCOS_MEDIA_METADATA_API
       - MEDIA_API=https://media-api.l42.eu
+      - CLIENT_KEYS

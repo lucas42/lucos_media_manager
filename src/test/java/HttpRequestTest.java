@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import static org.mockito.Mockito.*;
+import org.mockito.MockedStatic;
 import org.junit.jupiter.api.Test;
 
 import java.net.*;
@@ -175,5 +176,73 @@ class HttpRequestTest {
 		request.notAllowed(Arrays.asList(Method.PUT, Method.DELETE));
 		assertEquals("HTTP/1.1 204 No Content\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nAccess-Control-Allow-Methods: PUT, DELETE\r\n\r\n", output.toString());
 
+	}
+
+	@Test
+	void authenticatedRequest() throws IOException {
+		HttpRequest.setClientKeys("apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new StringBufferInputStream("POST /authenticatedPath HTTP/1.1\r\nAuthorization: Key L37sXhRBod7u5uxSFkUH\n\r\n");
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		request.readFromSocket();
+		assertTrue(request.isAuthorised());
+	}
+
+	@Test
+	void missingAuthorisation() throws IOException {
+		HttpRequest.setClientKeys("apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new StringBufferInputStream("POST /authenticatedPath HTTP/1.1\r\n");
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		request.readFromSocket();
+		assertFalse(request.isAuthorised());
+	}
+
+	@Test
+	void unrecognisedAuthorisationScheme() throws IOException {
+		HttpRequest.setClientKeys("apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new StringBufferInputStream("POST /authenticatedPath HTTP/1.1\r\nAuthorization: SpecialSchemer\n\r\n");
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		request.readFromSocket();
+		assertFalse(request.isAuthorised());
+	}
+
+	@Test
+	void unauthenticatedRequest() throws IOException {
+		HttpRequest.setClientKeys("apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new StringBufferInputStream("POST /authenticatedPath HTTP/1.1\r\nAuthorization: Key TX9nfU85CnZAlzDfmt3Qr\n\r\n");
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		request.readFromSocket();
+		assertFalse(request.isAuthorised());
 	}
 }
