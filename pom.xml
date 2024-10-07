@@ -58,7 +58,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>3.5.1</version>
         <configuration>
           <!-- Allows mockito to use byte-buddy-agent without warnings -->
           <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
