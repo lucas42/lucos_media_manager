@@ -13,6 +13,10 @@ public final class Manager {
 			System.err.println("FATAL: No CLIENT_KEYS environment variable specified");
 			System.exit(1);
 		}
+		if (System.getenv("STATE_DIR") == null) {
+			System.err.println("FATAL: No STATE_DIR environment variable specified");
+			System.exit(1);
+		}
 		
 		// Set the port number.
 		int port;
@@ -26,20 +30,13 @@ public final class Manager {
 
 		HttpRequest.setClientKeys(System.getenv("CLIENT_KEYS"));
 
+
 		// TODO: Don't post to production loganne host when running locally
 		Loganne loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
+		MediaApi mediaApi = new MediaApi();
 
-
-		Playlist playlist = new Playlist(new RandomFetcher(), loganne);
-
-		// TODO: Keep state of device list between restarts
-		DeviceList deviceList = new DeviceList(loganne);
-
-		CollectionList collectionList = new CollectionList();
-
-		MediaApi mediaApi= new MediaApi();
-		
-		Status status = new Status(playlist, deviceList, collectionList, mediaApi);
+		FileSystemSync fsSync = new FileSystemSync(System.getenv("STATE_DIR"));
+		Status status = fsSync.readStatus(loganne, mediaApi);
 
 		// Establish the listen socket.
 		ServerSocket serverSocket = new ServerSocket(port);

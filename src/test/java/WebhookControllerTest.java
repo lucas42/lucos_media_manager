@@ -36,7 +36,7 @@ class WebhookControllerTest {
 
 	@Test
 	void unknownPathReturns404() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		compareRequestResponse(status, "/webhooks/unknown", Method.POST, null, 404, "Not Found", "text/plain", "Can't find webhook \"unknown\"");
 	}
 
@@ -45,7 +45,7 @@ class WebhookControllerTest {
 		Fetcher fetcher = mock(RandomFetcher.class);
 		Loganne loganne = mock(Loganne.class);
 		Playlist playlist = new Playlist(fetcher, loganne);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Map<String, String> initialMetadata = new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"));
 		Map<String, String> noChangeMetadata = new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"));
 		Track trackToChange = new Track(status.getMediaApi(), "http://example.com/track/1337",initialMetadata);
@@ -84,7 +84,7 @@ class WebhookControllerTest {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, loganne);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
 		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
 		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
@@ -113,7 +113,7 @@ class WebhookControllerTest {
 		CollectionList collectionList = mock(CollectionList.class);
 		when(collectionList.refreshList()).thenReturn(true);
 
-		Status status = new Status(new Playlist(mock(RandomFetcher.class), mock(Loganne.class)), new DeviceList(null), collectionList, mock(MediaApi.class));
+		Status status = new Status(new Playlist(mock(RandomFetcher.class), mock(Loganne.class)), new DeviceList(null), collectionList, mock(MediaApi.class), mock(FileSystemSync.class));
 
 		compareRequestResponse(status, "/webhooks/collectionCreated", Method.POST, "{\"humanReadable\":\"New Collection Created\",\"source\":\"test_updater\",\"date\":\"2024-07-27T16:18:47.676Z\"}", 204, "No Content", null, null);
 		verify(collectionList, times(1)).refreshList();

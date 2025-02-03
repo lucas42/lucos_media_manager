@@ -5,7 +5,7 @@ class RobotsControllerTest {
 
 	@Test
 	void disallowAll() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/robots.txt");
 		Controller controller = new FrontController(status, request);

@@ -5,7 +5,9 @@ import java.util.Arrays;
  */
 class CollectionList {
 	private MediaCollection[] collections;
-	public CollectionList() {
+	private MediaApi api;
+	public CollectionList(MediaApi api) {
+		this.api = api;
 		this.refreshList();
 	}
 
@@ -13,7 +15,6 @@ class CollectionList {
 	// Returns a boolean of whether the fetch was successful
 	public boolean refreshList() {
 		try {
-			MediaApi api = new MediaApi();
 			this.collections = api.fetchCollections("/v2/collections");
 			this.collections = Arrays.stream(this.collections).filter(collection -> collection.isPlayable).toArray(MediaCollection[]::new);
 			System.err.println("DEBUG: New collection list fetched from media api");

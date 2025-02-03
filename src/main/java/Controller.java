@@ -10,6 +10,9 @@ public abstract class Controller implements Runnable {
 	public void run() {
 		try {
 			processRequest();
+
+			// If the request could've altered state, then sync the latest status to the file system
+			if (request.alteredState()) status.syncToFileSystem();
 		} catch (Exception e) {
 			System.err.println("ERROR: Unknown Error (Class:"+this.getClass().getSimpleName()+", Host:"+request.getHostName()+"):");
 			e.printStackTrace();

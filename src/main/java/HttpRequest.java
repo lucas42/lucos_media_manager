@@ -11,6 +11,7 @@ import java.net.URLDecoder;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Iterator;
@@ -27,6 +28,7 @@ class HttpRequest {
 	private String data;
 	private Method method;
 	private String authorizationHeader;
+	private int responseCode;
 	static private Collection<String> validApiKeys = new HashSet<String>();
 	
 	// Constructor
@@ -170,6 +172,7 @@ class HttpRequest {
 			os.writeBytes(header.getKey()+": "+header.getValue() + CRLF);
 		}
 		os.writeBytes(CRLF);
+		responseCode = status;
 	}
 	public void sendHeaders(int status, String statusstring, String contentType) throws IOException {
 		HashMap<String, String> headers =  new HashMap<String, String>();
@@ -201,6 +204,22 @@ class HttpRequest {
 			this.sendHeaders(405, "Method Not Allowed", Map.of("Allow", allow));
 		}
 		this.close();
+	}
+
+	/**
+	 * Checks whether this request _could_ have altered state
+	 * based on HTTP method and resonse code
+	 **/
+	public boolean alteredState() {
+
+		// If the HTTP Method is Safe, then state shouldn't have changed
+		if (Set.of(Method.HEAD, Method.GET, Method.OPTIONS, Method.UNKNOWN).contains(this.getMethod())) return false;
+
+		// If the response is a redirect or error, then state shouldn't have changed
+		if (responseCode >= 300) return false;
+
+		// Otherwise, the state could have changed
+		return true;
 	}
 
 	static public void setClientKeys(String rawClientKeys) {

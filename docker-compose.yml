@@ -10,3 +10,9 @@ services:
       - KEY_LUCOS_MEDIA_METADATA_API
       - MEDIA_API=https://media-api.l42.eu
       - CLIENT_KEYS
+      - STATE_DIR=/web/state
+    volumes:
+      - stateFile:/web/state
+
+volumes:
+  stateFile:

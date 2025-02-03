@@ -8,11 +8,13 @@ class Status {
 	private DeviceList deviceList;
 	private CollectionList collectionList;
 	private MediaApi mediaApi;
-	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList, MediaApi mediaApi) {
+	private FileSystemSync fsSync;
+	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList, MediaApi mediaApi, FileSystemSync fsSync) {
 		this.playlist = playlist;
 		this.deviceList = deviceList;
 		this.collectionList = collectionList;
 		this.mediaApi = mediaApi;
+		this.fsSync = fsSync;
 		volume = (float)0.5;
 		isPlaying = true;
 	}
@@ -72,5 +74,8 @@ class Status {
 	}
 	public MediaApi getMediaApi() {
 		return mediaApi;
+	}
+	public void syncToFileSystem() {
+		fsSync.writeStatus(this);
 	}
 }

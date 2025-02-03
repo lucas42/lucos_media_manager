@@ -16,7 +16,7 @@ class InfoControllerTest {
 	void infoReturnedOK() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(7);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/_info");
 		Controller controller = new FrontController(status, request);
@@ -29,7 +29,7 @@ class InfoControllerTest {
 	void playlistLowOnTracks() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(2);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/_info");
 		Controller controller = new FrontController(status, request);
@@ -42,7 +42,7 @@ class InfoControllerTest {
 	void PlaylistEmpty() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(0);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class));
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/_info");
 		Controller controller = new FrontController(status, request);

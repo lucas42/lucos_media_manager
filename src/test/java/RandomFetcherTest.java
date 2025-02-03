@@ -11,7 +11,7 @@ class RandomFetcherTest {
 
 	@Test
 	void tooManyPlaylists() {
-		RandomFetcher fetcher = new RandomFetcher();
+		RandomFetcher fetcher = new RandomFetcher(mock(MediaApi.class));
 		Playlist playlistA = mock(Playlist.class);
 		Playlist playlistB = mock(Playlist.class);
 		fetcher.setPlaylist(playlistA);
