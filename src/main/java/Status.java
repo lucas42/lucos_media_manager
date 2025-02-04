@@ -26,7 +26,7 @@ class Status {
 		this.isPlaying = isPlaying;
 		
 		// If unpausing, then update timeset in the current track, so nothing is missed
-		if (isPlaying && !wasPlaying && playlist != null) {
+		if (isPlaying && !wasPlaying) {
 			Track now = playlist.getCurrentTrack();
 			if (now != null) now.timeSetNow();
 		}

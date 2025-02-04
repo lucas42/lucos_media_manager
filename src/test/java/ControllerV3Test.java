@@ -46,7 +46,7 @@ class ControllerV3Test {
 
 	@Test
 	void unknownPathReturns404() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 		compareRequestResponse(status, "/v3", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
 		compareRequestResponse(status, "/v3/playlist/slug/uuid/unknown", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
@@ -54,7 +54,7 @@ class ControllerV3Test {
 
 	@Test
 	void playingPause() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		status.setPlaying(true);
 		compareRequestResponse(status, "/v3/is-playing", Method.PUT, null, "False", 204, "Changed", null, null);
 		assertFalse(status.getPlaying());
@@ -74,7 +74,7 @@ class ControllerV3Test {
 
 	@Test
 	void volume() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 
 		// The following values should update the volume
 		compareRequestResponse(status, "/v3/volume", Method.PUT, null, "1.0", 204, "Changed", null, null);
@@ -96,7 +96,7 @@ class ControllerV3Test {
 
 	@Test
 	void setDeviceName() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), new DeviceList(mock(Loganne.class)), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 
 		// Create a device if none exists, and set its name
 		compareRequestResponse(status, "/v3/device-names/47d9cba3-fd9f-445d-b984-072e4f75732c", Method.PUT, null, "Home Laptop", 204, "Changed", null, null);
@@ -114,7 +114,7 @@ class ControllerV3Test {
 	@Test
 	void setCurrentDevice() throws Exception {
 		Loganne loganne = mock(Loganne.class);
-		Status status = new Status(null, new DeviceList(loganne), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), new DeviceList(loganne), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 
 		// Create a device if none exists, and set its name
 		compareRequestResponse(status, "/v3/current-device", Method.PUT, null, "47d9cba3-fd9f-445d-b984-072e4f75732c", 204, "Changed", null, null);
@@ -140,7 +140,7 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, null);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
 		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
 		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
@@ -186,7 +186,7 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, null);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
 		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
 		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
@@ -228,7 +228,7 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, null);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
 		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
 		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
@@ -269,7 +269,7 @@ class ControllerV3Test {
 
 		// Create playlist with 4 tracks, 2 of which are the same track
 		Playlist playlist = new Playlist(fetcher, null);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
 		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
 		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
@@ -294,7 +294,7 @@ class ControllerV3Test {
 
 		Playlist playlist = new Playlist(fetcher, null);
 		MediaApi mediaApi = mock(MediaApi.class);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mediaApi, mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mediaApi, mock(FileSystemSync.class));
 		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"))));
 		playlist.queueNext(new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"))));
 
@@ -356,7 +356,7 @@ class ControllerV3Test {
 			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "robots")).thenReturn(robotFetcher);
 			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "all")).thenReturn(allFetcher);
 			Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
-			Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), api, mock(FileSystemSync.class));
+			Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), api, mock(FileSystemSync.class));
 
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "robots", 204, "Changed", null, null);
 			assertEquals("robots", playlist.getCurrentFetcherSlug());
@@ -380,7 +380,7 @@ class ControllerV3Test {
 			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "relax")).thenReturn(relaxFetcher);
 			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "all")).thenReturn(allFetcher);
 			Playlist playlist = new Playlist(allFetcher, null);
-			Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), api, mock(FileSystemSync.class));
+			Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), api, mock(FileSystemSync.class));
 
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Not Changed", null, null);
 			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "all"), times(0));
@@ -400,7 +400,7 @@ class ControllerV3Test {
 	@Test
 	void updateTrackTime() throws Exception {
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/2456", new HashMap<String, String>(Map.of("title", "Strawberry Fields", "artist", "The Beatles", "trackid", "2456")));
 		playlist.queue(new Track[]{trackA});
 
@@ -425,7 +425,7 @@ class ControllerV3Test {
 		when(request.getPath()).thenReturn("/v3/current-collection");
 		when(request.getMethod()).thenReturn(Method.PUT);
 		when(request.isAuthorised()).thenReturn(false);
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		Controller controller = new FrontController(status, request);
 		controller.run();
 		verify(request).isAuthorised();
@@ -436,7 +436,7 @@ class ControllerV3Test {
 
 	@Test
 	void corsPreflightWithoutAuth() throws Exception {
-		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
+		Status status = new Status(mock(Playlist.class), mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class), mock(FileSystemSync.class));
 		checkNotAllowed(status, "/v3/volume", Method.OPTIONS, null, Arrays.asList(Method.PUT), false);
 	}
 }
