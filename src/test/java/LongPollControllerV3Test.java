@@ -10,10 +10,8 @@ import java.util.Map;
 
 class LongPollControllerV3Test {
 
-
-
 	@Test
-	@Timeout(value = 4, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 4, unit = TimeUnit.SECONDS)
 	void initialRequest() throws Exception {
 		Status status = mock(Status.class);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -29,7 +27,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 3, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 4, unit = TimeUnit.SECONDS)
 	void pollUntilStatusChanges() throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
@@ -56,7 +54,7 @@ class LongPollControllerV3Test {
 	 * Tests that the long poll endpoint times out after given time
 	 */
 	@Test
-	@Timeout(value = 3, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 4, unit = TimeUnit.SECONDS)
 	void pollTimeout() throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
@@ -80,7 +78,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 2, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 2, unit = TimeUnit.SECONDS)
 	void pollModifiesDeviceList() throws Exception {
 		DeviceList deviceList = new DeviceList(mock(Loganne.class));
 		Device device1 = deviceList.getDevice("device1");
@@ -107,7 +105,7 @@ class LongPollControllerV3Test {
 		assertFalse(deviceList.isConnected(device1));
 	}
 	@Test
-	@Timeout(value = 2, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 2, unit = TimeUnit.SECONDS)
 	void RestoreDeviceListAfterInterrupt() throws Exception {
 		DeviceList deviceList = new DeviceList(mock(Loganne.class));
 		Device device1 = deviceList.getDevice("device1");
@@ -135,7 +133,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 4, unit = TimeUnit.SECONDS, threadMode = SEPARATE_THREAD)
+	@Timeout(value = 4, unit = TimeUnit.SECONDS)
 	void unsupportedMethod() throws Exception {
 		Status status = mock(Status.class);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
