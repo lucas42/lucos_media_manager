@@ -12,11 +12,8 @@ class Playlist {
 	static final int TOPUP_LIMIT = 10;
 
 	public Playlist(Fetcher fetcher, Loganne loganne) {
-		this(fetcher, true, loganne);
-	}
-	public Playlist(Fetcher fetcher, boolean prepopulateTracks, Loganne loganne) {
 		this.loganne = loganne;
-		setFetcher(fetcher, prepopulateTracks);
+		setFetcher(fetcher);
 	}
 
 	/**
@@ -106,15 +103,6 @@ class Playlist {
 		topupTracks();
 	}
 
-	/**
-	 * Removes all the tracks from the playlist
-	 * Optionally, queues additional ones
-	 */
-	private void removeAllTracks(boolean topup) {
-		tracks = new LinkedList<Track>();
-		if (topup) topupTracks();
-	}
-
 	public void queue(Track[] tracks) {
 		this.tracks.addAll(Arrays.asList(tracks));
 	}
@@ -192,20 +180,13 @@ class Playlist {
 
 	/**
 	 * Sets the fetcher for this playlist
-	 * Also, clears all the current tracks and queues fresh ones from the new fetcher
+	 * Also, clears all the current tracks
+	 * To populate the playlist using the new fetcher, call topupTracks() after
 	 */
 	public void setFetcher(Fetcher fetcher) {
-		setFetcher(fetcher, true);
-	}
-
-	/**
-	 * Sets the fetcher for this playlist
-	 * Also, clears all the current tracks and optionally queues fresh ones from the new fetcher
-	 */
-	public void setFetcher(Fetcher fetcher, boolean refreshTracks) {
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
-		removeAllTracks(refreshTracks);
+		tracks = new LinkedList<Track>();
 	}
 
 	/**

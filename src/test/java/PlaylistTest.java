@@ -42,6 +42,8 @@ class PlaylistTest {
 
 		Playlist playlist = new Playlist(fetcher, loganne);
 		verify(fetcher).setPlaylist(playlist);
+
+		playlist.topupTracks();
 		verify(loganne).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		boolean ended = initialFetch.await(10, TimeUnit.SECONDS);

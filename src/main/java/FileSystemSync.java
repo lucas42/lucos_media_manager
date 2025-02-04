@@ -16,7 +16,7 @@ public final class FileSystemSync {
 	 */
 	public Status readStatus(Loganne loganne, MediaApi mediaApi) throws MalformedURLException {
 
-		Playlist playlist = new Playlist(new RandomFetcher(mediaApi), false, loganne);
+		Playlist playlist = new Playlist(new RandomFetcher(mediaApi), loganne);
 		DeviceList deviceList = new DeviceList(loganne);
 		CollectionList collectionList = new CollectionList(mediaApi);
 		Status status = new Status(playlist, deviceList, collectionList, mediaApi, this);
@@ -37,7 +37,7 @@ public final class FileSystemSync {
 				}
 			}
 			Fetcher fetcher = Fetcher.createFromSlug(mediaApi, (String) map.get("currentCollectionSlug"));
-			playlist.setFetcher(fetcher, false);
+			playlist.setFetcher(fetcher);
 
 			ArrayList<Map> tracks = (ArrayList<Map>) map.get("tracks");
 			for (Map trackData: tracks) {
