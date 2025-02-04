@@ -30,9 +30,7 @@ public final class Manager {
 
 		HttpRequest.setClientKeys(System.getenv("CLIENT_KEYS"));
 
-
-		// TODO: Don't post to production loganne host when running locally
-		Loganne loganne = new Loganne("lucos_media_manager", "https://loganne.l42.eu");
+		Loganne loganne = new Loganne("lucos_media_manager", System.getenv("LOGANNE_URL"));
 		MediaApi mediaApi = new MediaApi();
 
 		FileSystemSync fsSync = new FileSystemSync(System.getenv("STATE_DIR"));

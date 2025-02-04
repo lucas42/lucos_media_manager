@@ -11,6 +11,7 @@ services:
       - MEDIA_API=https://media-api.l42.eu
       - CLIENT_KEYS
       - STATE_DIR=/web/state
+      - LOGANNE_URL
     volumes:
       - stateFile:/web/state
 
