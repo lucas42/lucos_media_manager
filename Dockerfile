@@ -1,4 +1,4 @@
-FROM maven:3.9.11 as build
+FROM maven:3.9.11 AS build
 
 COPY pom.xml ./
 COPY src ./src
@@ -9,7 +9,7 @@ RUN mvn clean package -Dmaven.test.skip=true
 FROM alpine:3.22
 WORKDIR /web/lucos/lucos_media_manager
 
-RUN apk add openjdk11
+RUN apk add openjdk21
 COPY --from=build target/manager-latest.jar manager.jar
 
 ENV PORT 8001
