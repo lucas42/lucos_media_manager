@@ -12,7 +12,7 @@ class LoganneTest {
 
 		ServerSocket serverSocket = new ServerSocket(7999);
 
-		Loganne loganne = new Loganne("lucos_media_test", "http://localhost:7999");
+		Loganne loganne = new Loganne("lucos_media_test", "http://localhost:7999/events");
 		loganne.post("TestType", "A little message");
 
 		// Accept and ignore the first connection - it's a dud

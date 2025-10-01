@@ -6,9 +6,9 @@ class Loganne {
 	private String source;
 	private URL url;
 	static Gson gson = new Gson();
-	public Loganne(String sourceService, String host) throws MalformedURLException {
+	public Loganne(String sourceService, String endpoint) throws MalformedURLException {
 		source = sourceService;
-		url = new URL (host+"/events");
+		url = new URL(endpoint);
 	}
 
 	/**
