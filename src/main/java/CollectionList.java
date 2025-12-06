@@ -43,6 +43,7 @@ class CollectionList {
 class MediaCollection {
 	String slug;
 	String name;
+	String icon;
 	int totalTracks;
 	int totalPages;
 	boolean isPlayable;
