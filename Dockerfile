@@ -12,7 +12,4 @@ WORKDIR /web/lucos/lucos_media_manager
 RUN apk add openjdk21
 COPY --from=build target/manager-latest.jar manager.jar
 
-ENV PORT 8001
-EXPOSE $PORT
-
 CMD [ "java", "-cp", "manager.jar", "Manager"]

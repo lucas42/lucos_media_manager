@@ -3,7 +3,7 @@ services:
     build: .
     container_name: media_manager
     ports:
-      - "8001:8001"
+      - $PORT:$PORT
     image: lucas42/lucos_media_manager
     restart: always
     environment:
@@ -12,6 +12,7 @@ services:
       - CLIENT_KEYS
       - STATE_DIR=/web/state
       - LOGANNE_ENDPOINT
+      - PORT
     volumes:
       - stateFile:/web/state
 
