@@ -10,16 +10,17 @@ class DeviceTest {
 		Loganne mockLoganne = mock(Loganne.class);
 		DeviceList deviceList = new DeviceList(mockLoganne);
 		Device deviceA = deviceList.getDevice("uuid-A");
-		Device deviceB = deviceList.getDevice("uuid-B");
+		deviceList.getDevice("uuid-B");
 		Device deviceA2 = deviceList.getDevice("uuid-A");
 		assertEquals(deviceA, deviceA2);
-		Device deviceC = deviceList.getDevice("uuid-C");
+		deviceList.getDevice("uuid-C");
 		Device[] devices = deviceList.getAllDevices();
 		assertEquals(3, devices.length);
 		assertEquals("Device 1", devices[0].getName());
 		assertEquals("Device 2", devices[1].getName());
 		assertEquals("Device 3", devices[2].getName());
 	}
+
 	@Test
 	void customNames() {
 		Loganne mockLoganne = mock(Loganne.class);
@@ -38,7 +39,6 @@ class DeviceTest {
 	void trackCurrentDevice() {
 		Loganne mockLoganne = mock(Loganne.class);
 		DeviceList deviceList = new DeviceList(mockLoganne);
-		String latestLogannePost;
 
 		// Should default to the first device being current
 		deviceList.getDevice("uuid-A").setName("Aardvark");
@@ -49,7 +49,7 @@ class DeviceTest {
 		assertEquals(true, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
-		verify(mockLoganne).post("deviceSwitch","Playing music on first device connected");
+		verify(mockLoganne).post("deviceSwitch", "Playing music on first device connected");
 
 		deviceList.setCurrent("uuid-C");
 		devices = deviceList.getAllDevices();
@@ -58,7 +58,7 @@ class DeviceTest {
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(true, devices[2].isCurrent());
-		verify(mockLoganne).post("deviceSwitch","Moving music to play on Cardiff Castle");
+		verify(mockLoganne).post("deviceSwitch", "Moving music to play on Cardiff Castle");
 
 		deviceList.setCurrent("uuid-B");
 		devices = deviceList.getAllDevices();
@@ -66,7 +66,7 @@ class DeviceTest {
 		assertEquals(false, devices[0].isCurrent());
 		assertEquals(true, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
-		verify(mockLoganne).post("deviceSwitch","Moving music to play on Device 2");
+		verify(mockLoganne).post("deviceSwitch", "Moving music to play on Device 2");
 
 		// Setting the current device to be current again should have no effect
 		deviceList.setCurrent("uuid-B");
@@ -85,7 +85,7 @@ class DeviceTest {
 		assertEquals(false, devices[1].isCurrent());
 		assertEquals(false, devices[2].isCurrent());
 		assertEquals(true, devices[3].isCurrent());
-		verify(mockLoganne).post("deviceSwitch","Moving music to play on Device 4");
+		verify(mockLoganne).post("deviceSwitch", "Moving music to play on Device 4");
 	}
 
 	@Test

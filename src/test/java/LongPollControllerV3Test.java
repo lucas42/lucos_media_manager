@@ -2,7 +2,6 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import java.util.concurrent.TimeUnit;
-import static org.junit.jupiter.api.Timeout.ThreadMode.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Arrays;
@@ -65,7 +64,9 @@ class LongPollControllerV3Test {
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 
 		// Run the controller in a separate thread
-		Controller controller = new LongPollControllerV3(status, request, 2, 30); // Call LongPollControllerV3 directly so timeout value can be configured
+		Controller controller = new LongPollControllerV3(status, request, 2, 30); // Call LongPollControllerV3 directly
+																					// so timeout value can be
+																					// configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		Thread.sleep(500);
@@ -93,7 +94,8 @@ class LongPollControllerV3Test {
 		assertFalse(deviceList.isConnected(device1));
 
 		// Run the controller in a separate thread, so can test change of state
-		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly so tidyup value can be configured
+		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly
+																					// so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
@@ -104,6 +106,7 @@ class LongPollControllerV3Test {
 		Thread.sleep(1000);
 		assertFalse(deviceList.isConnected(device1));
 	}
+
 	@Test
 	@Timeout(value = 2, unit = TimeUnit.SECONDS)
 	void RestoreDeviceListAfterInterrupt() throws Exception {
@@ -120,7 +123,8 @@ class LongPollControllerV3Test {
 		assertFalse(deviceList.isConnected(device1));
 
 		// Run the controller in a separate thread, so can test change of state
-		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly so tidyup value can be configured
+		Controller controller = new LongPollControllerV3(status, request, 30, 1); // Call LongPollControllerV3 directly
+																					// so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
 		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
@@ -158,7 +162,8 @@ class LongPollControllerV3Test {
 		Controller controller = new FrontController(status, request);
 		controller.run();
 		verify(request).isAuthorised();
-		verify(request).sendHeaders(401, "Unauthorized",  Map.of("Content-Type","text/plain","WWW-Authenticate","key"));
+		verify(request).sendHeaders(401, "Unauthorized",
+				Map.of("Content-Type", "text/plain", "WWW-Authenticate", "key"));
 		verify(request).writeBody("Invalid API Key");
 		verify(request).close();
 	}

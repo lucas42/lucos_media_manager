@@ -1,7 +1,6 @@
-import java.io.* ;
-import java.net.* ;
-import java.util.* ;
-import java.math.BigInteger;
+import java.net.ServerSocket;
+import java.net.Socket;
+
 public final class Manager {
 	public static void main(String argv[]) throws Exception {
 
@@ -17,10 +16,10 @@ public final class Manager {
 			System.err.println("FATAL: No STATE_DIR environment variable specified");
 			System.exit(1);
 		}
-		
+
 		// Set the port number.
 		int port;
-		try{
+		try {
 			port = Integer.parseInt(System.getenv("PORT"));
 		} catch (NumberFormatException e) {
 			System.err.println("FATAL: Port must be a number");
@@ -37,22 +36,23 @@ public final class Manager {
 		Status status = fsSync.readStatus(loganne, mediaApi);
 
 		// Establish the listen socket.
-		ServerSocket serverSocket = new ServerSocket(port);
-		System.out.println("INFO: outgoing data server ready on port "+port);
-    
-		// Process HTTP service requests in an infinite loop.
-		while (true) {
-			// Listen for a TCP connection request.
+		try (ServerSocket serverSocket = new ServerSocket(port)) {
+			System.out.println("INFO: outgoing data server ready on port " + port);
 
-			Socket clientSocket = serverSocket.accept();
-			// Construct an object to process the HTTP request message.
-			FrontController controller = new FrontController(status, new HttpRequest(clientSocket));
-			// Create a new thread to process the request.
-			Thread thread = new Thread(controller);
-			// Start the thread.
-			thread.start();
+			// Process HTTP service requests in an infinite loop.
+			while (true) {
+				// Listen for a TCP connection request.
 
+				Socket clientSocket = serverSocket.accept();
+				// Construct an object to process the HTTP request message.
+				FrontController controller = new FrontController(status, new HttpRequest(clientSocket));
+				// Create a new thread to process the request.
+				Thread thread = new Thread(controller);
+				// Start the thread.
+				thread.start();
+
+			}
 		}
-	
+
 	}
 }

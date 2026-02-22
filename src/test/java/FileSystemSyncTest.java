@@ -1,16 +1,14 @@
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
-import java.net.*;
 import java.io.*;
 import java.util.*;
+
 class FileSystemSyncTest {
 
 	@AfterEach
@@ -44,10 +42,12 @@ class FileSystemSyncTest {
 		when(playlist.getCurrentFetcherSlug()).thenReturn("pears");
 		List<Track> inputTracks = new ArrayList<Track>();
 		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-1.mp3"));
-		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "Old Name"))));
+		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-2.mp3",
+				new HashMap<>(Map.of("title", "Old Name"))));
 		when(playlist.getTracks()).thenReturn(inputTracks);
 
-		Status inputStatus = new Status(playlist, inputDeviceList, mock(CollectionList.class), mock(MediaApi.class), fsSync);
+		Status inputStatus = new Status(playlist, inputDeviceList, mock(CollectionList.class), mock(MediaApi.class),
+				fsSync);
 		inputStatus.setPlaying(false);
 		inputStatus.setVolume(0.7f);
 
@@ -56,11 +56,14 @@ class FileSystemSyncTest {
 		MediaApi api = mock(MediaApi.class);
 		when(api.fetchCollections("/v2/collections")).thenReturn(new MediaCollection[0]);
 		MediaApiResult topupResult = new MediaApiResult();
-		Track[] topupTracks = {new Track(api, "https://example.com/track-3.mp3", new HashMap<>(Map.of("title", "Top-up Track")))};
+		Track[] topupTracks = {
+				new Track(api, "https://example.com/track-3.mp3", new HashMap<>(Map.of("title", "Top-up Track"))) };
 		topupResult.tracks = topupTracks;
 		when(api.fetchTracks("/v2/collections/pears/random")).thenReturn(topupResult);
-		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-1.mp3")).thenReturn(new Track(api, "https://example.com/track-1.mp3", new HashMap<>()));
-		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-2.mp3")).thenReturn(new Track(api, "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "New Name"))));
+		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-1.mp3"))
+				.thenReturn(new Track(api, "https://example.com/track-1.mp3", new HashMap<>()));
+		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-2.mp3")).thenReturn(
+				new Track(api, "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "New Name"))));
 
 		Status outputStatus = fsSync.readStatus(mock(Loganne.class), api);
 		Thread.sleep(100); // HACK: Some playlist fetching happens asynchronously, so wait for that

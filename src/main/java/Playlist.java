@@ -1,5 +1,4 @@
 import java.util.*;
-import java.lang.reflect.Constructor;
 import java.math.BigInteger;
 
 class Playlist {
@@ -19,6 +18,7 @@ class Playlist {
 	/**
 	 * Removes the first instance of a given track from the playlist
 	 * (Queues additional tracks if necessary)
+	 * 
 	 * @returns boolean Whether or not the track was found in the playlist
 	 */
 	private boolean removeTrack(Track track) {
@@ -29,19 +29,22 @@ class Playlist {
 
 	/**
 	 * Finds the first track in the playlist which matches the given uuid
-	 * (There should only ever be one track which matches a given uuid, but this method doesn't enforce that)
+	 * (There should only ever be one track which matches a given uuid, but this
+	 * method doesn't enforce that)
 	 *
 	 * @returns Track The matched track, or null if none is found
 	 */
 	private Track getTrackByUuid(String uuid) {
 		return tracks.stream()
-			.filter(track -> track.getUuid().equals(uuid))
-			.findFirst()
-			.orElse(null);
+				.filter(track -> track.getUuid().equals(uuid))
+				.findFirst()
+				.orElse(null);
 	}
+
 	/**
 	 * Removes any track in the playlist with a given uuid
 	 * (Queues additional tracks if necessary)
+	 * 
 	 * @returns boolean Whether or not the track was found in the playlist
 	 */
 	private boolean removeTrackByUuid(String uuid) {
@@ -54,6 +57,7 @@ class Playlist {
 	public boolean completeTrack(Track track) {
 		return removeTrack(track);
 	}
+
 	public boolean completeTrack(String uuid) {
 		return removeTrackByUuid(uuid);
 	}
@@ -62,15 +66,16 @@ class Playlist {
 	public boolean flagTrackAsError(Track track, String errorMessage) {
 		boolean trackRemoved = removeTrack(track);
 		if (trackRemoved) {
-			System.out.println("NOTICE: Track "+track.getUrl()+" flagged with error: "+errorMessage);
+			System.out.println("NOTICE: Track " + track.getUrl() + " flagged with error: " + errorMessage);
 			// TODO: Record the error somewhere more presistent than application log
 		}
 		return trackRemoved;
 	}
+
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {
-			System.out.println("NOTICE: Track "+uuid+" flagged with error: "+errorMessage);
+			System.out.println("NOTICE: Track " + uuid + " flagged with error: " + errorMessage);
 			// TODO: Record the error somewhere more presistent than application log
 		}
 		return trackRemoved;
@@ -80,17 +85,18 @@ class Playlist {
 	public boolean skipTrack(Track track) {
 		return removeTrack(track);
 	}
+
 	public boolean skipTrack(String uuid) {
 		return removeTrackByUuid(uuid);
 	}
-
 
 	/**
 	 * Removes the first track from the playlist
 	 * (Queues additional tracks if necessary)
 	 */
 	public void skipTrack() {
-		if (tracks.size() > 0) tracks.removeFirst();
+		if (tracks.size() > 0)
+			tracks.removeFirst();
 		topupTracks();
 	}
 
@@ -99,20 +105,26 @@ class Playlist {
 	 * Removes all instances of it from the playlist
 	 */
 	public void deleteTrack(Track track) {
-		while (tracks.remove(track)) {}
+		while (tracks.remove(track)) {
+		}
 		topupTracks();
 	}
 
 	public void queue(Track[] tracks) {
 		this.tracks.addAll(Arrays.asList(tracks));
 	}
+
 	public void queueNow(Track track) {
 		this.tracks.addFirst(track);
 	}
+
 	public void queueNext(Track track) {
-		if (tracks.size() == 0) queueNow(track);
-		else this.tracks.add(1, track);
+		if (tracks.size() == 0)
+			queueNow(track);
+		else
+			this.tracks.add(1, track);
 	}
+
 	public void queueEnd(Track track) {
 		this.tracks.add(track);
 	}
@@ -124,28 +136,37 @@ class Playlist {
 	public List<Track> getTracks() {
 		return tracks;
 	}
+
 	public Track getCurrentTrack() {
-		if (tracks.size() == 0) return null;
+		if (tracks.size() == 0)
+			return null;
 		return tracks.getFirst();
 	}
+
 	public Track getNextTrack() {
-		if (tracks.size() <= 1) return null;
+		if (tracks.size() <= 1)
+			return null;
 		return tracks.get(1);
 	}
 
 	public boolean setTrackTime(Track track, float time, BigInteger timeSet) {
-		// Searches through the tracks for one which matches (ie has same URL) as one passed in
+		// Searches through the tracks for one which matches (ie has same URL) as one
+		// passed in
 		int index = tracks.indexOf(track);
-		if (index == -1) return false;
+		if (index == -1)
+			return false;
 
-		// Update the exact instance of the track in the playlist (rather than just an equivalent one)
+		// Update the exact instance of the track in the playlist (rather than just an
+		// equivalent one)
 		Track playlistTrack = tracks.get(index);
 		playlistTrack.setTime(time, timeSet);
 		return true;
 	}
+
 	public boolean setTrackTimeByUuid(String uuid, float time) {
 		Track track = getTrackByUuid(uuid);
-		if (track == null) return false;
+		if (track == null)
+			return false;
 		track.setTime(time, null);
 		return true;
 	}
@@ -160,18 +181,22 @@ class Playlist {
 
 	@Override
 	public int hashCode() {
-		if (getCurrentFetcherSlug() == null) return tracks.hashCode();
+		if (getCurrentFetcherSlug() == null)
+			return tracks.hashCode();
 		return tracks.hashCode() + getCurrentFetcherSlug().hashCode();
 	}
 
 	public void topupTracks() {
 
 		// Don't do anything if there's already enough tracks
-		if (tracks.size() >= TOPUP_LIMIT) return;
+		if (tracks.size() >= TOPUP_LIMIT)
+			return;
 
 		// Don't do anything if there's already a fetcher thread running
-		if (currentFetcherThread != null && currentFetcherThread.isAlive()) return;
-		if (loganne != null) loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
+		if (currentFetcherThread != null && currentFetcherThread.isAlive())
+			return;
+		if (loganne != null)
+			loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		currentFetcherThread = new Thread(fetcher);
 

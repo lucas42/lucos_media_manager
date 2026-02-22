@@ -1,5 +1,3 @@
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Represents devices which play the media
@@ -10,29 +8,36 @@ import java.util.HashMap;
 class Device {
 	private String uuid;
 	private String name;
+	@SuppressWarnings("unused")
 	private boolean isDefaultName;
 	protected boolean isCurrent = false;
 
 	/**
-	 * Don't construct devices to be constructed directly - use DeviceList.getDevice instead
+	 * Don't construct devices to be constructed directly - use DeviceList.getDevice
+	 * instead
 	 * Uses a count of existing devices to default to naming devices numerically
 	 */
 	protected Device(DeviceList list, String uuid) {
 		this.uuid = uuid;
-		this.name = "Device "+(list.size()+1);
+		this.name = "Device " + (list.size() + 1);
 		this.isDefaultName = true;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
-		if (this.name == name) return;
+		if (this.name == name)
+			return;
 		this.name = name;
 		this.isDefaultName = false;
 	}
+
 	public boolean isCurrent() {
 		return isCurrent;
 	}
+
 	public int hashCode(ConnectionTracker connections) {
 		int currentCode = isCurrent ? uuid.hashCode() : 0;
 		int connectedCode = connections.isConnected(this) ? uuid.hashCode() * 2 : 0;

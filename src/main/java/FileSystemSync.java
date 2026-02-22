@@ -4,12 +4,15 @@ import com.google.gson.Gson;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+
 public final class FileSystemSync {
 	public static final String FILE_NAME = "manager-status.json";
 	private String filePath;
+
 	public FileSystemSync(String directoryPath) {
-		filePath = directoryPath+"/"+FILE_NAME;
+		filePath = directoryPath + "/" + FILE_NAME;
 	}
+
 	/**
 	 * Reads the state from the file system, if found
 	 * Otherwise, returns a blank status object
@@ -23,11 +26,13 @@ public final class FileSystemSync {
 		try {
 			FileReader reader = new FileReader(filePath);
 			Gson gson = new Gson();
+			@SuppressWarnings("unchecked")
 			Map<String, Object> map = gson.fromJson(reader, HashMap.class);
 			status.setVolume(((Double) map.get("volume")).floatValue());
 			status.setPlaying((boolean) map.get("isPlaying"));
-			ArrayList<Map> devices = (ArrayList<Map>) map.get("devices");
-			for (Map device: devices) {
+			@SuppressWarnings("unchecked")
+			ArrayList<Map<String, Object>> devices = (ArrayList<Map<String, Object>>) map.get("devices");
+			for (Map<String, Object> device : devices) {
 				if ((boolean) device.get("isDefaultName")) {
 					device.put("name", null);
 				}
@@ -39,10 +44,12 @@ public final class FileSystemSync {
 			Fetcher fetcher = Fetcher.createFromSlug(mediaApi, (String) map.get("currentCollectionSlug"));
 			playlist.setFetcher(fetcher);
 
-			ArrayList<Map> tracks = (ArrayList<Map>) map.get("tracks");
-			for (Map trackData: tracks) {
+			@SuppressWarnings("unchecked")
+			ArrayList<Map<String, Object>> tracks = (ArrayList<Map<String, Object>>) map.get("tracks");
+			for (Map<String, Object> trackData : tracks) {
 
-				// Only copy the url from the stored data, then refresh it to ensure latest metadata for track is used
+				// Only copy the url from the stored data, then refresh it to ensure latest
+				// metadata for track is used
 				Track track = new Track(mediaApi, (String) trackData.get("url"));
 				track.refreshMetadata();
 				playlist.queueEnd(track);
@@ -55,6 +62,7 @@ public final class FileSystemSync {
 		playlist.topupTracks();
 		return status;
 	}
+
 	public void writeStatus(Status status) {
 		try {
 			FileWriter writer = new FileWriter(filePath);
