@@ -1,4 +1,4 @@
-FROM maven:3.9.12 AS build
+FROM maven:3.9.9-eclipse-temurin-25 AS build
 
 COPY pom.xml ./
 COPY src ./src
@@ -9,7 +9,7 @@ RUN mvn clean package -Dmaven.test.skip=true
 FROM alpine:3.23
 WORKDIR /web/lucos/lucos_media_manager
 
-RUN apk add openjdk21
+RUN apk add openjdk25
 COPY --from=build target/manager-latest.jar manager.jar
 
 CMD [ "java", "-cp", "manager.jar", "Manager"]
