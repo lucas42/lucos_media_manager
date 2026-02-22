@@ -3,7 +3,7 @@ A java service for keeping track of which music is currently playing.
 
 ## Dependencies
 * docker
-* docker-compose
+* docker compose
 
 ## Build-time Dependencies
 * Java
