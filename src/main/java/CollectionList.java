@@ -4,7 +4,7 @@ import java.util.Arrays;
  * Represents the list of available collections in the media library
  */
 class CollectionList {
-	private MediaCollection[] collections;
+	private volatile MediaCollection[] collections;
 	private MediaApi api;
 	private transient Thread retryThread;
 	static long RETRY_INTERVAL_MS = 30_000;
@@ -20,6 +20,7 @@ class CollectionList {
 		if (retryThread != null && retryThread.isAlive()) return;
 		retryThread = new Thread(() -> {
 			while (collections == null) {
+				System.err.println("INFO: Retrying collection list fetch after startup failure");
 				try {
 					Thread.sleep(RETRY_INTERVAL_MS);
 				} catch (InterruptedException e) {
