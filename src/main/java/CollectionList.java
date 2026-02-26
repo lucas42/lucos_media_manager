@@ -4,11 +4,34 @@ import java.util.Arrays;
  * Represents the list of available collections in the media library
  */
 class CollectionList {
-	private MediaCollection[] collections;
+	private volatile MediaCollection[] collections;
 	private MediaApi api;
+	private transient Thread retryThread;
+	static long RETRY_INTERVAL_MS = 30_000;
+
 	public CollectionList(MediaApi api) {
 		this.api = api;
-		this.refreshList();
+		if (!this.refreshList()) {
+			startRetryThread();
+		}
+	}
+
+	private void startRetryThread() {
+		if (retryThread != null && retryThread.isAlive()) return;
+		retryThread = new Thread(() -> {
+			while (collections == null) {
+				System.err.println("INFO: Retrying collection list fetch after startup failure");
+				try {
+					Thread.sleep(RETRY_INTERVAL_MS);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return;
+				}
+				refreshList();
+			}
+		});
+		retryThread.setDaemon(true);
+		retryThread.start();
 	}
 
 	// Pulls down a fresh list of collections from the media library
