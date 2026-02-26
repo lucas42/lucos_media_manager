@@ -36,6 +36,7 @@ class CollectionList {
 
 	@Override
 	public int hashCode() {
+		if (collections == null) return 0;
 		return collections.hashCode();
 	}
 }
