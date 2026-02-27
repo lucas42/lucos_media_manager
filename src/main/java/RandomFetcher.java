@@ -18,13 +18,16 @@ public class RandomFetcher extends Fetcher {
 			e.printStackTrace(System.err);
 		}
 	}
-	private void fetchList() throws Exception{
-		System.out.print("CALLING /v2/tracks/random");
+
+	private void fetchList() throws Exception {
+		System.out.println("CALLING /v2/tracks/random");
 		MediaApiResult result = api.fetchTracks("/v2/tracks/random");
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist");
 	}
+
 	public String getSlug() {
-		return "all"; // The metadata API treats this is a reserved slug, so it should never clash with a collection
+		return "all"; // The metadata API treats this is a reserved slug, so it should never clash
+						// with a collection
 	}
 }
