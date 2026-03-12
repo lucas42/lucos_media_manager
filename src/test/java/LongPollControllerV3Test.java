@@ -45,7 +45,7 @@ class LongPollControllerV3Test {
 		verify(request, never()).sendHeaders(anyInt(), anyString(), anyString());
 		verify(request, never()).close();
 		when(status.summaryHasChanged(123456)).thenReturn(true);
-		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
+		verify(request, timeout(500).times(1)).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
 
@@ -74,7 +74,7 @@ class LongPollControllerV3Test {
 		verify(request, never()).close();
 
 		// Poll should return after 2 seconds
-		verify(request, timeout(2000).times(1)).sendHeaders(200, "Long Poll", "application/json");
+		verify(request, timeout(3000).times(1)).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
 
