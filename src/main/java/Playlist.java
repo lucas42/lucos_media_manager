@@ -1,8 +1,9 @@
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.math.BigInteger;
 
 class Playlist {
-	private LinkedList<Track> tracks = new LinkedList<Track>();
+	private CopyOnWriteArrayList<Track> tracks = new CopyOnWriteArrayList<Track>();
 	private transient Fetcher fetcher;
 	private transient Thread currentFetcherThread;
 	private transient Loganne loganne;
@@ -96,7 +97,7 @@ class Playlist {
 	 */
 	public void skipTrack() {
 		if (tracks.size() > 0)
-			tracks.removeFirst();
+			tracks.remove(0);
 		topupTracks();
 	}
 
@@ -105,8 +106,7 @@ class Playlist {
 	 * Removes all instances of it from the playlist
 	 */
 	public void deleteTrack(Track track) {
-		while (tracks.remove(track)) {
-		}
+		tracks.removeIf(t -> t.equals(track));
 		topupTracks();
 	}
 
@@ -115,7 +115,7 @@ class Playlist {
 	}
 
 	public void queueNow(Track track) {
-		this.tracks.addFirst(track);
+		this.tracks.add(0, track);
 	}
 
 	public void queueNext(Track track) {
@@ -140,7 +140,7 @@ class Playlist {
 	public Track getCurrentTrack() {
 		if (tracks.size() == 0)
 			return null;
-		return tracks.getFirst();
+		return tracks.get(0);
 	}
 
 	public Track getNextTrack() {
@@ -211,7 +211,7 @@ class Playlist {
 	public void setFetcher(Fetcher fetcher) {
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
-		tracks = new LinkedList<Track>();
+		tracks = new CopyOnWriteArrayList<Track>();
 	}
 
 	/**
