@@ -6,6 +6,12 @@ services:
       - $PORT:$PORT
     image: lucas42/lucos_media_manager
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${PORT}/_info"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     environment:
       - KEY_LUCOS_MEDIA_METADATA_API
       - MEDIA_API=https://media-api.l42.eu
