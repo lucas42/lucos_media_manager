@@ -36,7 +36,7 @@ class LongPollControllerV3Test {
 		when(request.getPath()).thenReturn("/v3/poll");
 		when(request.isAuthorised()).thenReturn(true);
 		doAnswer(inv -> { responded.complete(null); return null; })
-			.when(request).sendHeaders(200, "Long Poll", "application/json");
+			.when(request).close();
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -68,7 +68,7 @@ class LongPollControllerV3Test {
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.isAuthorised()).thenReturn(true);
 		doAnswer(inv -> { responded.complete(null); return null; })
-			.when(request).sendHeaders(200, "Long Poll", "application/json");
+			.when(request).close();
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
