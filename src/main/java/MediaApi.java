@@ -11,9 +11,14 @@ public class MediaApi {
 		gson = CustomGson.get(this);
 	}
 
+	static final int CONNECT_TIMEOUT_MS = 5_000;
+	static final int READ_TIMEOUT_MS = 30_000;
+
 	private InputStreamReader fetch(String path) throws MalformedURLException, IOException {
 		URL url = URI.create(apiUrl + path).toURL();
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
 		connection.setRequestProperty("Authorization", "key " + apiKey);
 		int responseCode = connection.getResponseCode();
 		if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
