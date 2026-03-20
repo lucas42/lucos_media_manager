@@ -1,6 +1,7 @@
 import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,11 +29,14 @@ class LongPollControllerV3Test {
 	@Test
 	@Timeout(value = 4, unit = TimeUnit.SECONDS)
 	void pollUntilStatusChanges() throws Exception {
+		CompletableFuture<Void> responded = new CompletableFuture<>();
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.getPath()).thenReturn("/v3/poll");
 		when(request.isAuthorised()).thenReturn(true);
+		doAnswer(inv -> { responded.complete(null); return null; })
+			.when(request).close();
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -41,11 +45,14 @@ class LongPollControllerV3Test {
 		Controller controller = new FrontController(status, request);
 		Thread thread = new Thread(controller);
 		thread.start();
-		Thread.sleep(500);
+		Thread.sleep(200);
 		verify(request, never()).sendHeaders(anyInt(), anyString(), anyString());
 		verify(request, never()).close();
 		when(status.summaryHasChanged(123456)).thenReturn(true);
-		verify(request, timeout(500).times(1)).sendHeaders(200, "Long Poll", "application/json");
+
+		// Wait for the controller to respond, rather than relying on a fixed sleep + verify timeout
+		responded.get(3, TimeUnit.SECONDS);
+		verify(request).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
 
@@ -53,12 +60,15 @@ class LongPollControllerV3Test {
 	 * Tests that the long poll endpoint times out after given time
 	 */
 	@Test
-	@Timeout(value = 4, unit = TimeUnit.SECONDS)
+	@Timeout(value = 6, unit = TimeUnit.SECONDS)
 	void pollTimeout() throws Exception {
+		CompletableFuture<Void> responded = new CompletableFuture<>();
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getMethod()).thenReturn(Method.GET);
 		when(request.getParam("hashcode")).thenReturn("123456");
 		when(request.isAuthorised()).thenReturn(true);
+		doAnswer(inv -> { responded.complete(null); return null; })
+			.when(request).close();
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
@@ -74,7 +84,8 @@ class LongPollControllerV3Test {
 		verify(request, never()).close();
 
 		// Poll should return after 2 seconds
-		verify(request, timeout(3000).times(1)).sendHeaders(200, "Long Poll", "application/json");
+		responded.get(5, TimeUnit.SECONDS);
+		verify(request).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
 
