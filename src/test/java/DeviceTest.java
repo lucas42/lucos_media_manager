@@ -152,7 +152,11 @@ class DeviceTest {
 		when(mockRequest.removeParam("device")).thenReturn("uuid-B");
 		deviceList.openConnection(mockRequest);
 
-		// Now deviceB should appear even though it was stale
+		// Reset lastSeen back to stale after openConnection (which calls markSeen)
+		// so the test truly exercises the connected-device exemption
+		deviceB.setLastSeen(tenMinutesAgo);
+
+		// Now deviceB should appear because it's connected, even though stale
 		active = deviceList.getActiveDevices();
 		assertEquals(2, active.length);
 	}
