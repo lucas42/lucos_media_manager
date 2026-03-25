@@ -54,7 +54,7 @@ class Status {
 		summary.put("tracks", playlist);
 		summary.put("volume", this.getVolume());
 		summary.put("isPlaying", this.getPlaying());
-		summary.put("devices", deviceList.getAllDevices());
+		summary.put("devices", deviceList.getActiveDevices());
 		summary.put("collections", collectionList.getAllCollections(getCurrentFetcherSlug()));
 		summary.put("currentCollectionSlug", getCurrentFetcherSlug());
 		summary.put("hashcode", this.hashCode());

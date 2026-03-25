@@ -1,7 +1,9 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
+import java.util.Arrays;
 
 class DeviceTest {
 
@@ -86,6 +88,107 @@ class DeviceTest {
 		assertEquals(false, devices[2].isCurrent());
 		assertEquals(true, devices[3].isCurrent());
 		verify(mockLoganne).post("deviceSwitch", "Moving music to play on Device 4");
+	}
+
+	@Test
+	void staleDevicesFilteredFromActiveList() {
+		Loganne mockLoganne = mock(Loganne.class);
+		DeviceList deviceList = new DeviceList(mockLoganne);
+
+		Device deviceA = deviceList.getDevice("uuid-A"); // current (first device)
+		Device deviceB = deviceList.getDevice("uuid-B");
+		Device deviceC = deviceList.getDevice("uuid-C");
+
+		// All devices are fresh — all should appear in active list
+		Device[] active = deviceList.getActiveDevices();
+		assertEquals(3, active.length);
+
+		// Make deviceB and deviceC stale (last seen 10 minutes ago)
+		long tenMinutesAgo = System.currentTimeMillis() - (10 * 60 * 1000);
+		deviceB.setLastSeen(tenMinutesAgo);
+		deviceC.setLastSeen(tenMinutesAgo);
+
+		active = deviceList.getActiveDevices();
+		// Only deviceA (current) should remain
+		assertEquals(1, active.length);
+		assertTrue(active[0].isCurrent());
+
+		// All devices still in internal map
+		assertEquals(3, deviceList.getAllDevices().length);
+	}
+
+	@Test
+	void currentDeviceAlwaysShownEvenIfStale() {
+		Loganne mockLoganne = mock(Loganne.class);
+		DeviceList deviceList = new DeviceList(mockLoganne);
+
+		Device deviceA = deviceList.getDevice("uuid-A"); // current
+		long tenMinutesAgo = System.currentTimeMillis() - (10 * 60 * 1000);
+		deviceA.setLastSeen(tenMinutesAgo);
+
+		Device[] active = deviceList.getActiveDevices();
+		assertEquals(1, active.length);
+		assertTrue(active[0].isCurrent());
+	}
+
+	@Test
+	void connectedDeviceAlwaysShownEvenIfStale() {
+		Loganne mockLoganne = mock(Loganne.class);
+		DeviceList deviceList = new DeviceList(mockLoganne);
+
+		deviceList.getDevice("uuid-A"); // current
+		Device deviceB = deviceList.getDevice("uuid-B");
+
+		// Make deviceB stale
+		long tenMinutesAgo = System.currentTimeMillis() - (10 * 60 * 1000);
+		deviceB.setLastSeen(tenMinutesAgo);
+
+		// Without connection, deviceB is filtered out
+		Device[] active = deviceList.getActiveDevices();
+		assertEquals(1, active.length);
+
+		// Open a connection for deviceB
+		HttpRequest mockRequest = mock(HttpRequest.class);
+		when(mockRequest.removeParam("device")).thenReturn("uuid-B");
+		deviceList.openConnection(mockRequest);
+
+		// Reset lastSeen back to stale after openConnection (which calls markSeen)
+		// so the test truly exercises the connected-device exemption
+		deviceB.setLastSeen(tenMinutesAgo);
+
+		// Now deviceB should appear because it's connected, even though stale
+		active = deviceList.getActiveDevices();
+		assertEquals(2, active.length);
+	}
+
+	@Test
+	void recentlySeenDeviceShown() {
+		Loganne mockLoganne = mock(Loganne.class);
+		DeviceList deviceList = new DeviceList(mockLoganne);
+
+		deviceList.getDevice("uuid-A"); // current
+		Device deviceB = deviceList.getDevice("uuid-B");
+
+		// deviceB seen 2 minutes ago — within 5-minute threshold
+		long twoMinutesAgo = System.currentTimeMillis() - (2 * 60 * 1000);
+		deviceB.setLastSeen(twoMinutesAgo);
+
+		Device[] active = deviceList.getActiveDevices();
+		assertEquals(2, active.length);
+	}
+
+	@Test
+	void markSeenUpdatesTimestamp() {
+		Loganne mockLoganne = mock(Loganne.class);
+		DeviceList deviceList = new DeviceList(mockLoganne);
+		Device deviceA = deviceList.getDevice("uuid-A");
+
+		long tenMinutesAgo = System.currentTimeMillis() - (10 * 60 * 1000);
+		deviceA.setLastSeen(tenMinutesAgo);
+		assertTrue(deviceA.getLastSeen() <= tenMinutesAgo);
+
+		deviceA.markSeen();
+		assertTrue(deviceA.getLastSeen() > tenMinutesAgo);
 	}
 
 	@Test

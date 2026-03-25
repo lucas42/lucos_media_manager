@@ -11,6 +11,7 @@ class Device {
 	@SuppressWarnings("unused")
 	private boolean isDefaultName;
 	protected boolean isCurrent = false;
+	private transient long lastSeen;
 
 	/**
 	 * Don't construct devices to be constructed directly - use DeviceList.getDevice
@@ -21,6 +22,7 @@ class Device {
 		this.uuid = uuid;
 		this.name = "Device " + (list.size() + 1);
 		this.isDefaultName = true;
+		this.lastSeen = System.currentTimeMillis();
 	}
 
 	public String getName() {
@@ -36,6 +38,19 @@ class Device {
 
 	public boolean isCurrent() {
 		return isCurrent;
+	}
+
+	public void markSeen() {
+		this.lastSeen = System.currentTimeMillis();
+	}
+
+	public long getLastSeen() {
+		return lastSeen;
+	}
+
+	// Package-private for testing
+	void setLastSeen(long lastSeen) {
+		this.lastSeen = lastSeen;
 	}
 
 	public int hashCode(ConnectionTracker connections) {

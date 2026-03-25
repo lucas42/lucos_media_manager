@@ -1,5 +1,6 @@
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 /**
  * Represents a group of Devices
@@ -31,11 +32,31 @@ class DeviceList {
 		return instance;
 	}
 
+	private static final long STALE_THRESHOLD_MS = 5 * 60 * 1000;
+
 	/**
 	 * Returns an array of all devices
 	 */
 	public Device[] getAllDevices() {
 		return devices.values().toArray(new Device[0]);
+	}
+
+	/**
+	 * Returns an array of active devices, filtering out stale ones.
+	 * A device is considered active if it is:
+	 * - the current device, or
+	 * - currently connected, or
+	 * - was last seen within the threshold
+	 */
+	public Device[] getActiveDevices() {
+		long now = System.currentTimeMillis();
+		ArrayList<Device> active = new ArrayList<>();
+		for (Device device : devices.values()) {
+			if (device.isCurrent() || connections.isConnected(device) || (now - device.getLastSeen()) <= STALE_THRESHOLD_MS) {
+				active.add(device);
+			}
+		}
+		return active.toArray(new Device[0]);
 	}
 
 	/**
@@ -65,7 +86,7 @@ class DeviceList {
 	@Override
 	public int hashCode() {
 		int sumHashCodes = 0;
-		for (Device device : devices.values()) {
+		for (Device device : getActiveDevices()) {
 			sumHashCodes += device.hashCode(connections);
 		}
 		return sumHashCodes;
@@ -74,6 +95,7 @@ class DeviceList {
 		String device_uuid = request.removeParam("device");
 		if (device_uuid == null) return null;
 		Device device = this.getDevice(device_uuid);
+		device.markSeen();
 		connections.open(device, request);
 		return device;
 	}
