@@ -1,7 +1,7 @@
 services:
   media_manager:
     build: .
-    container_name: media_manager
+    container_name: lucos_media_manager
     ports:
       - $PORT:$PORT
     image: lucas42/lucos_media_manager
