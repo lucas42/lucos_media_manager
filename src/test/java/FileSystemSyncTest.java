@@ -60,9 +60,9 @@ class FileSystemSyncTest {
 				new Track(api, "https://example.com/track-3.mp3", new HashMap<>(Map.of("title", "Top-up Track"))) };
 		topupResult.tracks = topupTracks;
 		when(api.fetchTracks("/v2/collections/pears/random")).thenReturn(topupResult);
-		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-1.mp3"))
+		when(api.fetchTrack("/v3/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-1.mp3"))
 				.thenReturn(new Track(api, "https://example.com/track-1.mp3", new HashMap<>()));
-		when(api.fetchTrack("/v2/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-2.mp3")).thenReturn(
+		when(api.fetchTrack("/v3/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-2.mp3")).thenReturn(
 				new Track(api, "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "New Name"))));
 
 		Status outputStatus = fsSync.readStatus(mock(Loganne.class), api);
@@ -95,7 +95,7 @@ class FileSystemSyncTest {
 		assertEquals("New Name", outputTracks.get(1).getMetadata("title"));
 		assertEquals("Top-up Track", outputTracks.get(2).getMetadata("title"));
 
-		verify(api, never()).fetchTracks("/v2/tracks/random");
+		verify(api, never()).fetchTracks("/v3/tracks/random");
 
 	}
 }

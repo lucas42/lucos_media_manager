@@ -19,7 +19,7 @@ public class MediaApi {
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
 		connection.setReadTimeout(READ_TIMEOUT_MS);
-		connection.setRequestProperty("Authorization", "key " + apiKey);
+		connection.setRequestProperty("Authorization", "Bearer " + apiKey);
 		int responseCode = connection.getResponseCode();
 		if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
 			throw new IOException("Not Found");

@@ -139,7 +139,7 @@ class Track {
 
 	public void refreshMetadata() throws MalformedURLException, IOException {
 		Track latestTrack = this.mediaApi
-				.fetchTrack("/v2/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
+				.fetchTrack("/v3/tracks?url=" + URLEncoder.encode(url, StandardCharsets.UTF_8));
 		this.update(latestTrack.getUrl(), latestTrack.getMetadata());
 	}
 
