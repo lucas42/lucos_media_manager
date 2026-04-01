@@ -3,7 +3,6 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.StringJoiner;
 
 class CustomGson {
 
@@ -21,15 +20,22 @@ class CustomGson {
 					JsonObject obj = json.getAsJsonObject();
 					String url = obj.get("url").getAsString();
 
-					// Handle both V3 (structured tags) and V2 (flat tags) formats
-					Map<String, String> metadata = normalizeTagsToFlat(obj.get("tags"));
-
-					// V3 uses "id", V2 uses "trackid"
-					if (obj.has("id")) {
-						metadata.put("trackid", obj.get("id").getAsString());
-					} else if (obj.has("trackid")) {
-						metadata.put("trackid", obj.get("trackid").getAsString());
+					// Parse V3 structured tags: each predicate maps to an array of {"name": ..., "uri": ...}
+					Map<String, String> metadata = new HashMap<>();
+					JsonElement tagsElement = obj.get("tags");
+					if (tagsElement != null && tagsElement.isJsonObject()) {
+						for (Map.Entry<String, JsonElement> entry : tagsElement.getAsJsonObject().entrySet()) {
+							JsonArray arr = entry.getValue().getAsJsonArray();
+							if (arr.size() > 0 && arr.get(0).isJsonObject()) {
+								JsonObject first = arr.get(0).getAsJsonObject();
+								if (first.has("name")) {
+									metadata.put(entry.getKey(), first.get("name").getAsString());
+								}
+							}
+						}
 					}
+
+					metadata.put("trackid", obj.get("id").getAsString());
 
 					/** The following tag is only for debugging purposes **/
 					if (obj.has("weighting")) {
@@ -67,41 +73,6 @@ class CustomGson {
 	}
 	public static Gson get(MediaApi mediaApi) {
 		return get(null, mediaApi);
-	}
-
-	/**
-	 * Converts tags to flat string map, handling both V3 structured format
-	 * (arrays of {"name": ..., "uri": ...} objects) and V2 flat format (plain strings).
-	 */
-	private static Map<String, String> normalizeTagsToFlat(JsonElement tagsElement) {
-		Map<String, String> result = new HashMap<>();
-		if (tagsElement == null || !tagsElement.isJsonObject()) {
-			return result;
-		}
-		for (Map.Entry<String, JsonElement> entry : tagsElement.getAsJsonObject().entrySet()) {
-			JsonElement value = entry.getValue();
-			if (value.isJsonArray()) {
-				// V3 format: arrays of {"name": ..., "uri": ...} objects
-				JsonArray arr = value.getAsJsonArray();
-				StringJoiner joiner = new StringJoiner(",");
-				for (JsonElement elem : arr) {
-					if (elem.isJsonObject() && elem.getAsJsonObject().has("name")) {
-						String name = elem.getAsJsonObject().get("name").getAsString();
-						if (!name.isEmpty()) {
-							joiner.add(name);
-						}
-					}
-				}
-				String joined = joiner.toString();
-				if (!joined.isEmpty()) {
-					result.put(entry.getKey(), joined);
-				}
-			} else if (value.isJsonPrimitive()) {
-				// V2 format: plain strings
-				result.put(entry.getKey(), value.getAsString());
-			}
-		}
-		return result;
 	}
 }
 
