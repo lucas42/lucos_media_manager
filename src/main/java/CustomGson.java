@@ -20,22 +20,33 @@ class CustomGson {
 					JsonObject obj = json.getAsJsonObject();
 					String url = obj.get("url").getAsString();
 
-					// Parse V3 structured tags: each predicate maps to an array of {"name": ..., "uri": ...}
 					Map<String, String> metadata = new HashMap<>();
 					JsonElement tagsElement = obj.get("tags");
 					if (tagsElement != null && tagsElement.isJsonObject()) {
 						for (Map.Entry<String, JsonElement> entry : tagsElement.getAsJsonObject().entrySet()) {
-							JsonArray arr = entry.getValue().getAsJsonArray();
-							if (arr.size() > 0 && arr.get(0).isJsonObject()) {
-								JsonObject first = arr.get(0).getAsJsonObject();
-								if (first.has("name")) {
-									metadata.put(entry.getKey(), first.get("name").getAsString());
+							JsonElement value = entry.getValue();
+							if (value.isJsonArray()) {
+								// V3 structured tags: each predicate maps to an array of {"name": ..., "uri": ...}
+								JsonArray arr = value.getAsJsonArray();
+								if (arr.size() > 0 && arr.get(0).isJsonObject()) {
+									JsonObject first = arr.get(0).getAsJsonObject();
+									if (first.has("name")) {
+										metadata.put(entry.getKey(), first.get("name").getAsString());
+									}
 								}
+							} else if (value.isJsonPrimitive()) {
+								// V2 flat tags: each predicate maps directly to a string value
+								metadata.put(entry.getKey(), value.getAsString());
 							}
 						}
 					}
 
-					metadata.put("trackid", obj.get("id").getAsString());
+					// V3 uses "id", V2 uses "trackid"
+					if (obj.has("id")) {
+						metadata.put("trackid", obj.get("id").getAsString());
+					} else if (obj.has("trackid")) {
+						metadata.put("trackid", obj.get("trackid").getAsString());
+					}
 
 					/** The following tag is only for debugging purposes **/
 					if (obj.has("weighting")) {
