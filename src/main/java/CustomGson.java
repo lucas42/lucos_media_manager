@@ -1,6 +1,7 @@
 import com.google.gson.*;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 class CustomGson {
@@ -16,19 +17,40 @@ class CustomGson {
 				@Override
 				public Track deserialize(JsonElement json, Type typeOfSrc, JsonDeserializationContext context) {
 
-					String url = json.getAsJsonObject().get("url").getAsString();
-					Map<String, String> metadata = context.deserialize(json.getAsJsonObject().get("tags"), Map.class);
-					metadata.put("trackid", json.getAsJsonObject().get("trackid").getAsString());
+					JsonObject obj = json.getAsJsonObject();
+					String url = obj.get("url").getAsString();
 
-					/** The following tags are only for debugging purposes **/
-					if (json.getAsJsonObject().has("weighting")) {
-						metadata.put("_track_weighting", json.getAsJsonObject().get("weighting").getAsString());
+					Map<String, String> metadata = new HashMap<>();
+					JsonElement tagsElement = obj.get("tags");
+					if (tagsElement != null && tagsElement.isJsonObject()) {
+						for (Map.Entry<String, JsonElement> entry : tagsElement.getAsJsonObject().entrySet()) {
+							JsonElement value = entry.getValue();
+							if (value.isJsonArray()) {
+								// V3 structured tags: each predicate maps to an array of {"name": ..., "uri": ...}
+								JsonArray arr = value.getAsJsonArray();
+								if (arr.size() > 0 && arr.get(0).isJsonObject()) {
+									JsonObject first = arr.get(0).getAsJsonObject();
+									if (first.has("name")) {
+										metadata.put(entry.getKey(), first.get("name").getAsString());
+									}
+								}
+							} else if (value.isJsonPrimitive()) {
+								// V2 flat tags: each predicate maps directly to a string value
+								metadata.put(entry.getKey(), value.getAsString());
+							}
+						}
 					}
-					if (json.getAsJsonObject().has("_random_weighting")) {
-						metadata.put("_random_weighting", json.getAsJsonObject().get("_random_weighting").getAsString());
+
+					// V3 uses "id", V2 uses "trackid"
+					if (obj.has("id")) {
+						metadata.put("trackid", obj.get("id").getAsString());
+					} else if (obj.has("trackid")) {
+						metadata.put("trackid", obj.get("trackid").getAsString());
 					}
-					if (json.getAsJsonObject().has("_cum_weighting")) {
-						metadata.put("_cum_weighting", json.getAsJsonObject().get("_cum_weighting").getAsString());
+
+					/** The following tag is only for debugging purposes **/
+					if (obj.has("weighting")) {
+						metadata.put("_track_weighting", obj.get("weighting").getAsString());
 					}
 					return new Track(mediaApi, url, metadata);
 				}

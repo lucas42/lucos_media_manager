@@ -20,8 +20,8 @@ public class RandomFetcher extends Fetcher {
 	}
 
 	private void fetchList() throws Exception {
-		System.out.println("CALLING /v2/tracks/random");
-		MediaApiResult result = api.fetchTracks("/v2/tracks/random");
+		System.out.println("CALLING /v3/tracks/random");
+		MediaApiResult result = api.fetchTracks("/v3/tracks/random");
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist");
 	}

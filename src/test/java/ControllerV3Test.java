@@ -448,7 +448,7 @@ class ControllerV3Test {
 		status.setPlaying(false);
 		int hashCode = status.hashCode();
 
-		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234"))
+		when(mediaApi.fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234"))
 				.thenReturn(new Track(status.getMediaApi(), "http://example.com/track/1234",
 						new HashMap<String, String>(Map.of("title", "One Two Three Four", "trackid", "1234"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "now"),
@@ -460,9 +460,9 @@ class ControllerV3Test {
 		assertNotEquals(hashCode, status.hashCode());
 		assertTrue(status.getPlaying()); // Queuing a track now, should start playing automatically
 		hashCode = status.hashCode();
-		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234");
+		verify(mediaApi).fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F1234");
 
-		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468"))
+		when(mediaApi.fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468"))
 				.thenReturn(new Track(status.getMediaApi(), "http://example.com/track/2468",
 						new HashMap<String, String>(Map.of("title", "Evens", "trackid", "2468"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "next"),
@@ -473,9 +473,9 @@ class ControllerV3Test {
 		assertEquals("Evens", playlist.getNextTrack().getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
-		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468");
+		verify(mediaApi).fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F2468");
 
-		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579"))
+		when(mediaApi.fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579"))
 				.thenReturn(new Track(status.getMediaApi(), "http://example.com/track/3579",
 						new HashMap<String, String>(Map.of("title", "Oddz", "trackid", "3579"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", "end"),
@@ -485,9 +485,9 @@ class ControllerV3Test {
 		assertEquals("Oddz", playlist.getTracks().get(playlist.getLength() - 1).getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
-		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579");
+		verify(mediaApi).fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F3579");
 
-		when(mediaApi.fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876"))
+		when(mediaApi.fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876"))
 				.thenReturn(new Track(status.getMediaApi(), "http://example.com/track/9876",
 						new HashMap<String, String>(Map.of("title", "Downwards", "trackid", "9876"))));
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, Map.of("position", ""),
@@ -497,7 +497,7 @@ class ControllerV3Test {
 		assertEquals("Downwards", playlist.getTracks().get(playlist.getLength() - 1).getMetadata("title"));
 		assertNotEquals(hashCode, status.hashCode());
 		hashCode = status.hashCode();
-		verify(mediaApi).fetchTrack("/v2/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876");
+		verify(mediaApi).fetchTrack("/v3/tracks?url=http%3A%2F%2Fexample.com%2Ftrack%2F9876");
 
 		compareRequestResponse(status, "/v3/queue-track", Method.POST, null, null, 400, "Bad Request", "text/plain",
 				"Missing track url from request body"); // No track specified - no-op
