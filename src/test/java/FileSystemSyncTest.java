@@ -54,12 +54,12 @@ class FileSystemSyncTest {
 		inputStatus.syncToFileSystem();
 
 		MediaApi api = mock(MediaApi.class);
-		when(api.fetchCollections("/v2/collections")).thenReturn(new MediaCollection[0]);
+		when(api.fetchCollections("/v3/collections")).thenReturn(new MediaCollection[0]);
 		MediaApiResult topupResult = new MediaApiResult();
 		Track[] topupTracks = {
 				new Track(api, "https://example.com/track-3.mp3", new HashMap<>(Map.of("title", "Top-up Track"))) };
 		topupResult.tracks = topupTracks;
-		when(api.fetchTracks("/v2/collections/pears/random")).thenReturn(topupResult);
+		when(api.fetchTracks("/v3/collections/pears/random")).thenReturn(topupResult);
 		when(api.fetchTrack("/v3/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-1.mp3"))
 				.thenReturn(new Track(api, "https://example.com/track-1.mp3", new HashMap<>()));
 		when(api.fetchTrack("/v3/tracks?url=https%3A%2F%2Fexample.com%2Ftrack-2.mp3")).thenReturn(
