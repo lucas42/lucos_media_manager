@@ -15,7 +15,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":true},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":true}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":true},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":true}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -31,7 +31,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":true},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":true},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -47,7 +47,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":false},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks\",\"ok\":false},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
