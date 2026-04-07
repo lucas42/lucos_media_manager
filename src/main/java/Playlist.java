@@ -163,6 +163,26 @@ class Playlist {
 		return true;
 	}
 
+	/**
+	 * Moves a track to a specific position in the playlist
+	 *
+	 * @returns boolean Whether or not the track was found in the playlist
+	 * @throws IllegalArgumentException if targetIndex is negative
+	 */
+	public boolean moveTrack(String uuid, int targetIndex) {
+		if (targetIndex < 0) {
+			throw new IllegalArgumentException("targetIndex must not be negative");
+		}
+		Track track = getTrackByUuid(uuid);
+		if (track == null) {
+			return false;
+		}
+		tracks.removeIf(t -> t.getUuid().equals(uuid));
+		int insertAt = Math.min(targetIndex, tracks.size());
+		tracks.add(insertAt, track);
+		return true;
+	}
+
 	public boolean setTrackTimeByUuid(String uuid, float time) {
 		Track track = getTrackByUuid(uuid);
 		if (track == null)

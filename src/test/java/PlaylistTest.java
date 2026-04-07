@@ -267,6 +267,47 @@ class PlaylistTest {
 	}
 
 	@Test
+	void moveTrack() {
+		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
+		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
+		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
+		Track trackD = new Track(mock(MediaApi.class), "https://example.com/trackD");
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		playlist.queue(new Track[] { trackA, trackB, trackC, trackD });
+
+		// Move trackD (index 3) to index 1
+		assertTrue(playlist.moveTrack(trackD.getUuid(), 1));
+		Track[] tracks = playlist.getTracks().toArray(new Track[4]);
+		assertEquals(trackA, tracks[0]);
+		assertEquals(trackD, tracks[1]);
+		assertEquals(trackB, tracks[2]);
+		assertEquals(trackC, tracks[3]);
+
+		// Move trackA (index 0) to end (index 10, clamped to 3)
+		assertTrue(playlist.moveTrack(trackA.getUuid(), 10));
+		tracks = playlist.getTracks().toArray(new Track[4]);
+		assertEquals(trackD, tracks[0]);
+		assertEquals(trackB, tracks[1]);
+		assertEquals(trackC, tracks[2]);
+		assertEquals(trackA, tracks[3]);
+
+		// Move to same position (index 0 -> 0)
+		assertTrue(playlist.moveTrack(trackD.getUuid(), 0));
+		tracks = playlist.getTracks().toArray(new Track[4]);
+		assertEquals(trackD, tracks[0]);
+
+		// UUID not found returns false
+		assertFalse(playlist.moveTrack("unknown-uuid", 0));
+		assertEquals(4, playlist.getLength());
+
+		// Negative index throws
+		org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> {
+			playlist.moveTrack(trackD.getUuid(), -1);
+		});
+		assertEquals(4, playlist.getLength());
+	}
+
+	@Test
 	void trackTimes() {
 		boolean returnVal;
 		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");

@@ -125,6 +125,29 @@ class ControllerV3 extends Controller {
 					} else {
 						request.notAllowed(Arrays.asList(Method.DELETE));
 					}
+				} else if (trackAspect.equals("position")) {
+					if (request.getMethod().equals(Method.PUT)) {
+						try {
+							int targetIndex = Integer.parseInt(request.getData());
+							if (status.getPlaylist().moveTrack(trackUuid, targetIndex)) {
+								request.sendHeaders(204, "Changed");
+								request.close();
+							} else {
+								request.sendHeaders(204, "Not Changed");
+								request.close();
+							}
+						} catch (NumberFormatException e) {
+							request.sendHeaders(400, "Bad Request", "text/plain");
+							request.writeBody("Invalid position given \""+request.getData()+"\".  Must be an integer");
+							request.close();
+						} catch (IllegalArgumentException e) {
+							request.sendHeaders(400, "Bad Request", "text/plain");
+							request.writeBody(e.getMessage());
+							request.close();
+						}
+					} else {
+						request.notAllowed(Arrays.asList(Method.PUT));
+					}
 				} else if (trackAspect.equals("current-time")) {
 					if (request.getMethod().equals(Method.PUT)) {
 						try{
