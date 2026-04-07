@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import com.google.gson.Gson;
 
 /**
@@ -12,7 +13,7 @@ class InfoController extends Controller {
 	}
 	protected void processRequest() throws IOException {
 		Gson gson = CustomGson.get(status);
-		Map<String, Object> output = new HashMap<String, Object>();
+		Map<String, Object> output = new LinkedHashMap<String, Object>();
 		Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();
 		Map<String, Map<String, Object>> metrics = new HashMap<String, Map<String, Object>>();
 		Map<String, Object> queueCheck = new HashMap<String, Object>();
@@ -30,6 +31,7 @@ class InfoController extends Controller {
 		Map<String, String> ci = new HashMap<String, String>();
 		ci.put("circle", "gh/lucas42/lucos_media_manager");
 		output.put("system", "lucos_media_manager");
+		output.put("title", "Ceol");
 		output.put("checks", checks);
 		output.put("metrics", metrics);
 		output.put("ci", ci);
