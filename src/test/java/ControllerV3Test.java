@@ -594,6 +594,55 @@ class ControllerV3Test {
 	}
 
 	@Test
+	void reorderTrack() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
+
+		Playlist playlist = new Playlist(fetcher, null);
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(
+				Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(
+				Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(
+				Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
+		playlist.queue(new Track[] { trackA, trackB, trackC });
+
+		// Move trackC to index 1
+		compareRequestResponse(status, "/v3/playlist/special/" + trackC.getUuid() + "/position", Method.PUT, null, "1",
+				204, "Changed", null, null);
+		assertEquals(trackA, playlist.getTracks().get(0));
+		assertEquals(trackC, playlist.getTracks().get(1));
+		assertEquals(trackB, playlist.getTracks().get(2));
+
+		// Move to out-of-bounds index — clamps to end
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid() + "/position", Method.PUT, null, "99",
+				204, "Changed", null, null);
+		assertEquals(trackC, playlist.getTracks().get(0));
+		assertEquals(trackB, playlist.getTracks().get(1));
+		assertEquals(trackA, playlist.getTracks().get(2));
+
+		// Missing UUID returns 204 Not Changed
+		compareRequestResponse(status, "/v3/playlist/special/unknown-uuid/position", Method.PUT, null, "0",
+				204, "Not Changed", null, null);
+		assertEquals(3, playlist.getLength());
+
+		// Negative index returns 400
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid() + "/position", Method.PUT, null, "-1",
+				400, "Bad Request", "text/plain", "targetIndex must not be negative");
+		assertEquals(3, playlist.getLength());
+
+		// Non-integer returns 400
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid() + "/position", Method.PUT, null, "abc",
+				400, "Bad Request", "text/plain", "Invalid position given \"abc\".  Must be an integer");
+		assertEquals(3, playlist.getLength());
+
+		checkNotAllowed(status, "/v3/playlist/special/" + trackA.getUuid() + "/position", Method.POST, null,
+				Arrays.asList(Method.PUT), true);
+	}
+
+	@Test
 	void checkUnauthorisedResponse() throws Exception {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/v3/current-collection");
