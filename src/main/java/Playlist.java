@@ -177,7 +177,7 @@ class Playlist {
 		if (track == null) {
 			return false;
 		}
-		tracks.remove(track);
+		tracks.removeIf(t -> t.getUuid().equals(uuid));
 		int insertAt = Math.min(targetIndex, tracks.size());
 		tracks.add(insertAt, track);
 		return true;

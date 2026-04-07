@@ -605,7 +605,7 @@ class ControllerV3Test {
 				Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
 		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532", new HashMap<String, String>(
 				Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
-		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/1347", new HashMap<String, String>(
+		Track trackC = new Track(status.getMediaApi(), "http://example.com/track/8533", new HashMap<String, String>(
 				Map.of("title", "Old Red Eyes Is Back", "artist", "Beautiful South", "trackid", "8533")));
 		playlist.queue(new Track[] { trackA, trackB, trackC });
 
