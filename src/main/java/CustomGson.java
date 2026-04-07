@@ -34,18 +34,12 @@ class CustomGson {
 										metadata.put(entry.getKey(), first.get("name").getAsString());
 									}
 								}
-							} else if (value.isJsonPrimitive()) {
-								// V2 flat tags: each predicate maps directly to a string value
-								metadata.put(entry.getKey(), value.getAsString());
 							}
 						}
 					}
 
-					// V3 uses "id", V2 uses "trackid"
 					if (obj.has("id")) {
 						metadata.put("trackid", obj.get("id").getAsString());
-					} else if (obj.has("trackid")) {
-						metadata.put("trackid", obj.get("trackid").getAsString());
 					}
 
 					/** The following tag is only for debugging purposes **/
