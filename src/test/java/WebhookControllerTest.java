@@ -63,7 +63,7 @@ class WebhookControllerTest {
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/webhooks/trackUpdated", Method.POST,
-				"{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		trackid: 1347,\n		tags: {\n			artist: \"Dolly Parton\",\n			title: \"Stairway To Heaven\"\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}",
+				"{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		id: 1347,\n		tags: {\n			artist: [{\"name\": \"Dolly Parton\"}],\n			title: [{\"name\": \"Stairway To Heaven\"}]\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}",
 				204, "No Content", null, null);
 
 		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
@@ -108,7 +108,7 @@ class WebhookControllerTest {
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/webhooks/trackDeleted", Method.POST,
-				"{\"humanReadable\":\"Track #1347 deleted\",\"source\":\"test_updater\",\"track\":{\"fingerprint\":\"abcfxx\",\"duration\":73,\"url\":\"http://example.com/track/1347\",\"trackid\":1347,\"tags\":{\"title\":\"Stairway to Heaven\"},\"weighting\":0,\"collections\":[]},\"type\":\"trackDeleted\",\"date\":\"2024-01-27T16:18:47.676Z\"}",
+				"{\"humanReadable\":\"Track #1347 deleted\",\"source\":\"test_updater\",\"track\":{\"fingerprint\":\"abcfxx\",\"duration\":73,\"url\":\"http://example.com/track/1347\",\"id\":1347,\"tags\":{\"title\":[{\"name\":\"Stairway to Heaven\"}]},\"weighting\":0,\"collections\":[]},\"type\":\"trackDeleted\",\"date\":\"2024-01-27T16:18:47.676Z\"}",
 				204, "No Content", null, null);
 
 		assertEquals(2, playlist.getLength());
