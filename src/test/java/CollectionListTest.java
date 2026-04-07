@@ -25,7 +25,7 @@ class CollectionListTest {
 	@Test
 	void successfulStartupDoesNotRetry() throws Exception {
 		MediaApi api = mock(MediaApi.class);
-		when(api.fetchCollections("/v2/collections")).thenReturn(new MediaCollection[]{});
+		when(api.fetchCollections("/v3/collections")).thenReturn(new MediaCollection[]{});
 
 		CollectionList.RETRY_INTERVAL_MS = 50;
 		new CollectionList(api);
@@ -33,7 +33,7 @@ class CollectionListTest {
 		// Wait briefly to confirm no retry fires
 		Thread.sleep(200);
 
-		verify(api, times(1)).fetchCollections("/v2/collections");
+		verify(api, times(1)).fetchCollections("/v3/collections");
 	}
 
 	@Test
@@ -41,7 +41,7 @@ class CollectionListTest {
 		MediaApi api = mock(MediaApi.class);
 		CountDownLatch retried = new CountDownLatch(1);
 
-		when(api.fetchCollections("/v2/collections"))
+		when(api.fetchCollections("/v3/collections"))
 			.thenThrow(new RuntimeException("Connection refused"))
 			.thenAnswer(invocation -> {
 				retried.countDown();
@@ -52,7 +52,7 @@ class CollectionListTest {
 		new CollectionList(api);
 
 		assertTrue(retried.await(2, TimeUnit.SECONDS), "Retry should have fired within 2 seconds");
-		verify(api, times(2)).fetchCollections("/v2/collections");
+		verify(api, times(2)).fetchCollections("/v3/collections");
 	}
 
 	@Test
@@ -60,7 +60,7 @@ class CollectionListTest {
 		MediaApi api = mock(MediaApi.class);
 		CountDownLatch succeeded = new CountDownLatch(1);
 
-		when(api.fetchCollections("/v2/collections"))
+		when(api.fetchCollections("/v3/collections"))
 			.thenThrow(new RuntimeException("Connection refused"))
 			.thenAnswer(invocation -> {
 				succeeded.countDown();
@@ -76,6 +76,6 @@ class CollectionListTest {
 		Thread.sleep(200);
 
 		// Should have been called exactly twice: once at startup (failed), once in retry (succeeded)
-		verify(api, times(2)).fetchCollections("/v2/collections");
+		verify(api, times(2)).fetchCollections("/v3/collections");
 	}
 }

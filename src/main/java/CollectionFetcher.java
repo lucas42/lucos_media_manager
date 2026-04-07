@@ -21,7 +21,7 @@ public class CollectionFetcher extends Fetcher {
 		}
 	}
 	private void fetchList() throws Exception{
-		MediaApiResult result = api.fetchTracks("/v2/collections/" + slug + "/random");
+		MediaApiResult result = api.fetchTracks("/v3/collections/" + slug + "/random");
 		playlist.queue(result.tracks);
 		System.err.println("DEBUG: New tracks added to playlist from " + slug);
 	}
