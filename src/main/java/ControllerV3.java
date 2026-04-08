@@ -233,7 +233,7 @@ class ControllerV3 extends Controller {
 		} else {
 			request.sendHeaders(401, "Unauthorized",  Map.of(
 				"Content-Type", "text/plain",
-				"WWW-Authenticate", "key"
+				"WWW-Authenticate", "Bearer"
 			));
 			request.writeBody("Invalid API Key");
 			request.close();
