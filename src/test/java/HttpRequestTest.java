@@ -263,6 +263,26 @@ class HttpRequestTest {
 	}
 
 	@Test
+	void bearerAuthorisedRequest() throws IOException {
+		HttpRequest.setClientKeys(
+				"apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		InputStream input = new ByteArrayInputStream(
+				"POST /authenticatedPath HTTP/1.1\r\nAuthorization: Bearer L37sXhRBod7u5uxSFkUH\n\r\n"
+						.getBytes(StandardCharsets.UTF_8));
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		request.readFromSocket();
+		assertTrue(request.isAuthorised());
+	}
+
+	@Test
 	void unauthenticatedRequest() throws IOException {
 		HttpRequest.setClientKeys(
 				"apikeys:lucos_test:production=L37sXhRBod7u5uxSFkUH;lucos_test2:development=JXfLoaaFX349FU8RYZgL");

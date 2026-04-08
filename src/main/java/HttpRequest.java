@@ -160,10 +160,17 @@ class HttpRequest {
 	// Checks whether the request has an API key matching one listed in the
 	// CLIENT_KEYS environment variable
 	public boolean isAuthorised() {
-		if (authorizationHeader == null || !authorizationHeader.startsWith("Key ")) {
+		if (authorizationHeader == null) {
 			return false;
 		}
-		String apiKey = authorizationHeader.replaceFirst("Key ", "");
+		String apiKey;
+		if (authorizationHeader.startsWith("Bearer ")) {
+			apiKey = authorizationHeader.replaceFirst("Bearer ", "");
+		} else if (authorizationHeader.startsWith("Key ")) {
+			apiKey = authorizationHeader.replaceFirst("Key ", "");
+		} else {
+			return false;
+		}
 		return validApiKeys.contains(apiKey);
 	}
 

@@ -174,7 +174,7 @@ class LongPollControllerV3Test {
 		controller.run();
 		verify(request).isAuthorised();
 		verify(request).sendHeaders(401, "Unauthorized",
-				Map.of("Content-Type", "text/plain", "WWW-Authenticate", "key"));
+				Map.of("Content-Type", "text/plain", "WWW-Authenticate", "Bearer"));
 		verify(request).writeBody("Invalid API Key");
 		verify(request).close();
 	}
