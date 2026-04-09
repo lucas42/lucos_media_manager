@@ -157,6 +157,11 @@ class HttpRequest {
 		return method;
 	}
 
+	// Returns true if the request includes an Authorization header (regardless of validity)
+	public boolean hasAuthorizationHeader() {
+		return authorizationHeader != null;
+	}
+
 	// Checks whether the request has an API key matching one listed in the
 	// CLIENT_KEYS environment variable
 	public boolean isAuthorised() {

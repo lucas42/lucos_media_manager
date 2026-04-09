@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -12,6 +13,16 @@ class WebhookController extends Controller {
 		super(status, request);
 	}
 	protected void processRequest() throws IOException {
+		// Phase 1: validate token if present; accept unauthenticated during migration window
+		if (request.hasAuthorizationHeader() && !request.isAuthorised()) {
+			request.sendHeaders(401, "Unauthorized", Map.of(
+				"Content-Type", "text/plain",
+				"WWW-Authenticate", "Bearer"
+			));
+			request.writeBody("Invalid API Key");
+			request.close();
+			return;
+		}
 		String hookname = request.getPath().replaceFirst("^/webhooks/", "");
 		if (request.getMethod() == Method.POST) {
 			Gson gson = CustomGson.get(status);
