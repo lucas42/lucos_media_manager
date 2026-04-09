@@ -28,7 +28,7 @@ class ControllerV3 extends Controller {
 				}
 			} else if (request.getPath().equals("/v3/volume")) {
 				if (request.getMethod().equals(Method.PUT)) {
-					if (request.getData() == "") {
+					if (request.getData().isEmpty()) {
 						request.sendHeaders(400, "Not Changed", "text/plain");
 						request.writeBody("Request body must be set to value for volume");
 						request.close();
@@ -183,7 +183,7 @@ class ControllerV3 extends Controller {
 				}
 			} else if (request.getPath().equals("/v3/queue-track")) {
 				if (request.getMethod().equals(Method.POST)) {
-					if (request.getData() == "") {
+					if (request.getData().isEmpty()) {
 						request.sendHeaders(400, "Bad Request", "text/plain");
 						request.writeBody("Missing track url from request body");
 						request.close();
