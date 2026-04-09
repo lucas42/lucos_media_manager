@@ -55,6 +55,23 @@ class WebhookControllerTest {
 	}
 
 	@Test
+	void validTokenProceeds() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getPath()).thenReturn("/webhooks/unknown");
+		when(request.getMethod()).thenReturn(Method.POST);
+		when(request.hasAuthorizationHeader()).thenReturn(true);
+		when(request.isAuthorised()).thenReturn(true);
+		when(request.getData()).thenReturn("");
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		// Auth check passes — request proceeds to routing, not rejected as 401
+		verify(request).sendHeaders(404, "Not Found", "text/plain");
+		verify(request).close();
+	}
+
+	@Test
 	void unknownPathReturns404() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
