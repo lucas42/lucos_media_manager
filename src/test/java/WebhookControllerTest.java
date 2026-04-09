@@ -55,6 +55,23 @@ class WebhookControllerTest {
 	}
 
 	@Test
+	void noAuthHeaderReturns401() throws Exception {
+		// isAuthorised() returns false when no Authorization header is present;
+		// verify the controller rejects the request with 401.
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getPath()).thenReturn("/webhooks/trackUpdated");
+		when(request.getMethod()).thenReturn(Method.POST);
+		// isAuthorised() not mocked — defaults to false (no Authorization header)
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		verify(request).sendHeaders(401, "Unauthorized", Map.of("Content-Type", "text/plain", "WWW-Authenticate", "Bearer"));
+		verify(request).writeBody("Invalid API Key");
+		verify(request).close();
+	}
+
+	@Test
 	void unknownPathReturns404() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
