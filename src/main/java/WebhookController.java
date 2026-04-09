@@ -13,8 +13,7 @@ class WebhookController extends Controller {
 		super(status, request);
 	}
 	protected void processRequest() throws IOException {
-		// Phase 1: validate token if present; accept unauthenticated during migration window
-		if (request.hasAuthorizationHeader() && !request.isAuthorised()) {
+		if (!request.isAuthorised()) {
 			request.sendHeaders(401, "Unauthorized", Map.of(
 				"Content-Type", "text/plain",
 				"WWW-Authenticate", "Bearer"

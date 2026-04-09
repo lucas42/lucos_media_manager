@@ -12,7 +12,7 @@ class WebhookControllerTest {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
-		when(request.hasAuthorizationHeader()).thenReturn(false);
+		when(request.isAuthorised()).thenReturn(true);
 		if (requestBody == null)
 			requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
@@ -32,6 +32,7 @@ class WebhookControllerTest {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		when(request.isAuthorised()).thenReturn(true);
 		Controller controller = new FrontController(status, request);
 		controller.run();
 
@@ -39,13 +40,12 @@ class WebhookControllerTest {
 	}
 
 	@Test
-	void invalidTokenReturns401() throws Exception {
+	void unauthenticatedRequestReturns401() throws Exception {
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn("/webhooks/trackUpdated");
 		when(request.getMethod()).thenReturn(Method.POST);
-		when(request.hasAuthorizationHeader()).thenReturn(true);
 		when(request.isAuthorised()).thenReturn(false);
 		Controller controller = new FrontController(status, request);
 		controller.run();
@@ -55,19 +55,19 @@ class WebhookControllerTest {
 	}
 
 	@Test
-	void validTokenProceeds() throws Exception {
+	void noAuthHeaderReturns401() throws Exception {
+		// isAuthorised() returns false when no Authorization header is present;
+		// verify the controller rejects the request with 401.
 		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
-		when(request.getPath()).thenReturn("/webhooks/unknown");
+		when(request.getPath()).thenReturn("/webhooks/trackUpdated");
 		when(request.getMethod()).thenReturn(Method.POST);
-		when(request.hasAuthorizationHeader()).thenReturn(true);
-		when(request.isAuthorised()).thenReturn(true);
-		when(request.getData()).thenReturn("");
+		// isAuthorised() not mocked — defaults to false (no Authorization header)
 		Controller controller = new FrontController(status, request);
 		controller.run();
-		// Auth check passes — request proceeds to routing, not rejected as 401
-		verify(request).sendHeaders(404, "Not Found", "text/plain");
+		verify(request).sendHeaders(401, "Unauthorized", Map.of("Content-Type", "text/plain", "WWW-Authenticate", "Bearer"));
+		verify(request).writeBody("Invalid API Key");
 		verify(request).close();
 	}
 
