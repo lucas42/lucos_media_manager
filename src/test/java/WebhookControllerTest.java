@@ -12,6 +12,7 @@ class WebhookControllerTest {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		when(request.hasAuthorizationHeader()).thenReturn(false);
 		if (requestBody == null)
 			requestBody = "";
 		when(request.getData()).thenReturn(requestBody);
@@ -35,6 +36,39 @@ class WebhookControllerTest {
 		controller.run();
 
 		verify(request).notAllowed(allowedMethods);
+	}
+
+	@Test
+	void invalidTokenReturns401() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getPath()).thenReturn("/webhooks/trackUpdated");
+		when(request.getMethod()).thenReturn(Method.POST);
+		when(request.hasAuthorizationHeader()).thenReturn(true);
+		when(request.isAuthorised()).thenReturn(false);
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		verify(request).sendHeaders(401, "Unauthorized", Map.of("Content-Type", "text/plain", "WWW-Authenticate", "Bearer"));
+		verify(request).writeBody("Invalid API Key");
+		verify(request).close();
+	}
+
+	@Test
+	void validTokenProceeds() throws Exception {
+		Status status = new Status(null, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		HttpRequest request = mock(HttpRequest.class);
+		when(request.getPath()).thenReturn("/webhooks/unknown");
+		when(request.getMethod()).thenReturn(Method.POST);
+		when(request.hasAuthorizationHeader()).thenReturn(true);
+		when(request.isAuthorised()).thenReturn(true);
+		when(request.getData()).thenReturn("");
+		Controller controller = new FrontController(status, request);
+		controller.run();
+		// Auth check passes — request proceeds to routing, not rejected as 401
+		verify(request).sendHeaders(404, "Not Found", "text/plain");
+		verify(request).close();
 	}
 
 	@Test
