@@ -32,6 +32,7 @@ class WebhookControllerTest {
 		HttpRequest request = mock(HttpRequest.class);
 		when(request.getPath()).thenReturn(path);
 		when(request.getMethod()).thenReturn(method);
+		when(request.isAuthorised()).thenReturn(true);
 		Controller controller = new FrontController(status, request);
 		controller.run();
 
