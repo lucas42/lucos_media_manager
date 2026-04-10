@@ -1,6 +1,7 @@
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.Test;
@@ -145,6 +146,22 @@ class HttpRequestTest {
 				"HTTP/1.1 302 Redirect\r\nAccess-Control-Allow-Origin: *\r\nServer: lucos\r\nLocation: /newpage\r\n\r\n",
 				output.toString());
 
+	}
+
+	@Test
+	void malformedRequestLineNoPath() throws IOException {
+		Socket socket = mock(Socket.class);
+		InetAddress mockedAddress = mock(InetAddress.class);
+		when(mockedAddress.getHostName()).thenReturn("test.host");
+		when(socket.getInetAddress()).thenReturn(mockedAddress);
+		// Simulates a bot/scanner sending a bare method with no URL (e.g. "STATS\n")
+		InputStream input = new ByteArrayInputStream("STATS\n".getBytes(StandardCharsets.UTF_8));
+		when(socket.getInputStream()).thenReturn(input);
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		when(socket.getOutputStream()).thenReturn(output);
+
+		HttpRequest request = new HttpRequest(socket);
+		assertThrows(IOException.class, () -> request.readFromSocket());
 	}
 
 	@Test
