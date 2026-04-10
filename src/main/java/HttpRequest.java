@@ -90,6 +90,9 @@ class HttpRequest {
 			System.err.println("WARNING: Unrecognised HTTP Method " + methodString);
 			method = Method.UNKNOWN;
 		}
+		if (!tokens.hasMoreTokens()) {
+			throw new IOException("Malformed HTTP request: no path in request line: " + requestLine);
+		}
 		path = tokens.nextToken().trim();
 
 		data = "";
