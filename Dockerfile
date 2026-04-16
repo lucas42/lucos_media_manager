@@ -7,6 +7,8 @@ RUN mvn clean package -Dmaven.test.skip=true
 
 
 FROM alpine:3.23
+ARG VERSION
+ENV VERSION=$VERSION
 WORKDIR /web/lucos/lucos_media_manager
 
 RUN apk add openjdk25
