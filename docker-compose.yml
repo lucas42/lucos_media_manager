@@ -4,7 +4,7 @@ services:
     container_name: lucos_media_manager
     ports:
       - $PORT:$PORT
-    image: lucas42/lucos_media_manager
+    image: lucas42/lucos_media_manager:${VERSION:-latest}
     restart: always
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${PORT}/_info"]
