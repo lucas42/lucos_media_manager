@@ -133,6 +133,16 @@ class Playlist {
 		return tracks.size();
 	}
 
+	/**
+	 * Returns true if the fetcher thread is currently running (i.e. the queue is
+	 * actively being repopulated). Used by the /_info empty-queue check to
+	 * distinguish "briefly empty during a deliberate collection switch" from
+	 * "stuck with no active fetcher".
+	 */
+	public boolean isFetcherRunning() {
+		return currentFetcherThread != null && currentFetcherThread.isAlive();
+	}
+
 	public List<Track> getTracks() {
 		return tracks;
 	}
