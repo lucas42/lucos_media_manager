@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.math.BigInteger;
+import java.util.Map;
 
 class PlaylistTest {
 
@@ -362,5 +364,54 @@ class PlaylistTest {
 		assertFalse(returnVal);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
+	}
+
+	@Test
+	void collectionSwitch() throws InterruptedException {
+		Fetcher oldFetcher = mock(RandomFetcher.class);
+		when(oldFetcher.getSlug()).thenReturn("all");
+		when(oldFetcher.getName()).thenReturn("All Music");
+
+		Fetcher newFetcher = mock(CollectionFetcher.class);
+		when(newFetcher.getSlug()).thenReturn("robots");
+		when(newFetcher.getName()).thenReturn("Robots");
+
+		Loganne loganne = mock(Loganne.class);
+		Track[] newTracks = new Track[]{ new Track(mock(MediaApi.class), "https://example.com/1") };
+
+		Playlist playlist = new Playlist(oldFetcher, loganne);
+
+		// Mock newFetcher.run() to add tracks to the playlist (simulating a real fetch)
+		doAnswer(invocation -> {
+			playlist.queue(newTracks);
+			return null;
+		}).when(newFetcher).run();
+
+		// Use a latch to detect when the collectionSwitch event fires
+		CountDownLatch eventFired = new CountDownLatch(1);
+		doAnswer(invocation -> {
+			eventFired.countDown();
+			return null;
+		}).when(loganne).post(eq("collectionSwitch"), anyString(), any(Map.class));
+
+		playlist.setFetcher(newFetcher, true);
+		playlist.topupTracks();
+
+		assertTrue(eventFired.await(10, TimeUnit.SECONDS), "collectionSwitch event should fire after first batch");
+
+		// Verify the event was posted with correct fields
+		verify(loganne).post(eq("collectionSwitch"), eq("Switched to collection Robots"), argThat(rawFields -> {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> fields = (Map<String, Object>) rawFields;
+			return "robots".equals(fields.get("slug"))
+				&& "Robots".equals(fields.get("name"))
+				&& "all".equals(fields.get("previousSlug"))
+				&& "All Music".equals(fields.get("previousName"))
+				&& fields.containsKey("firstBatchLatencyMs")
+				&& Integer.valueOf(1).equals(fields.get("collectionSize"));
+		}));
+
+		// fetchTracks must NOT be emitted during a collection switch
+		verify(loganne, never()).post(eq("fetchTracks"), anyString());
 	}
 }

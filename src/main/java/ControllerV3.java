@@ -214,9 +214,11 @@ class ControllerV3 extends Controller {
 						request.sendHeaders(204, "Not Changed");
 						request.close();
 					} else {
-						Fetcher fetcher = Fetcher.createFromSlug(status.getMediaApi(), request.getData());
+						String slug = request.getData();
+						String name = status.getCollectionList().getNameForSlug(slug);
+						Fetcher fetcher = Fetcher.createFromSlug(status.getMediaApi(), slug, name);
 						fetcher.setPostFetchFunction(status::syncToFileSystem);
-						status.getPlaylist().setFetcher(fetcher);
+						status.getPlaylist().setFetcher(fetcher, true);
 						status.getPlaylist().topupTracks();
 						request.sendHeaders(204, "Changed");
 						request.close();

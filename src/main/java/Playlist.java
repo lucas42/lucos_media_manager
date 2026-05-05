@@ -8,6 +8,11 @@ class Playlist {
 	private transient Thread currentFetcherThread;
 	private transient Loganne loganne;
 
+	// State for collectionSwitch event emission
+	private volatile boolean pendingCollectionSwitch = false;
+	private volatile Fetcher previousFetcher = null;
+	private volatile long switchStartTimeMs = 0;
+
 	// Dropping below this number of tracks triggers a topup
 	static final int TOPUP_LIMIT = 10;
 
@@ -215,20 +220,60 @@ class Playlist {
 		// Don't do anything if there's already a fetcher thread running
 		if (currentFetcherThread != null && currentFetcherThread.isAlive())
 			return;
-		if (loganne != null)
+
+		// Capture switch state before starting the thread
+		final Fetcher currentFetcher = fetcher;
+		final boolean shouldEmitSwitch = pendingCollectionSwitch;
+		final Fetcher capturedPreviousFetcher = previousFetcher;
+		final long capturedSwitchStartTime = switchStartTimeMs;
+		pendingCollectionSwitch = false;
+
+		if (loganne != null && !shouldEmitSwitch)
 			loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
-		currentFetcherThread = new Thread(fetcher);
+		currentFetcherThread = new Thread(() -> {
+			currentFetcher.run();
+			if (shouldEmitSwitch && loganne != null) {
+				long latencyMs = System.currentTimeMillis() - capturedSwitchStartTime;
+				int collectionSize = tracks.size();
+				Map<String, Object> fields = new HashMap<>();
+				fields.put("slug", currentFetcher.getSlug());
+				fields.put("name", currentFetcher.getName());
+				if (capturedPreviousFetcher != null) {
+					fields.put("previousSlug", capturedPreviousFetcher.getSlug());
+					fields.put("previousName", capturedPreviousFetcher.getName());
+				}
+				fields.put("firstBatchLatencyMs", latencyMs);
+				fields.put("collectionSize", collectionSize);
+				loganne.post("collectionSwitch", "Switched to collection " + currentFetcher.getName(), fields);
+			}
+		});
 
 		currentFetcherThread.start();
 	}
 
 	/**
-	 * Sets the fetcher for this playlist
-	 * Also, clears all the current tracks
-	 * To populate the playlist using the new fetcher, call topupTracks() after
+	 * Sets the fetcher for this playlist.
+	 * Also clears all current tracks.
+	 * To populate the playlist using the new fetcher, call topupTracks() after.
 	 */
 	public void setFetcher(Fetcher fetcher) {
+		setFetcher(fetcher, false);
+	}
+
+	/**
+	 * Sets the fetcher for this playlist.
+	 * Also clears all current tracks.
+	 * To populate the playlist using the new fetcher, call topupTracks() after.
+	 * If emitCollectionSwitch is true, a collectionSwitch Loganne event will be emitted
+	 * once the new fetcher's first batch has populated the queue.
+	 */
+	public void setFetcher(Fetcher fetcher, boolean emitCollectionSwitch) {
+		if (emitCollectionSwitch) {
+			this.previousFetcher = this.fetcher;
+			this.switchStartTimeMs = System.currentTimeMillis();
+			this.pendingCollectionSwitch = true;
+		}
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
 		tracks = new CopyOnWriteArrayList<Track>();
