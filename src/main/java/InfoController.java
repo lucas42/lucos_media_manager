@@ -22,8 +22,8 @@ class InfoController extends Controller {
 		queueCheck.put("failThreshold", 3);
 		checks.put("queue", queueCheck);
 		Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
-		emptyQueueCheck.put("techDetail", "Queue has any tracks");
-		emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0);
+		emptyQueueCheck.put("techDetail", "Queue has any tracks, or is being actively repopulated");
+		emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0 || status.getPlaylist().isFetcherRunning());
 		emptyQueueCheck.put("failThreshold", 2);
 		checks.put("empty-queue", emptyQueueCheck);
 		Map<String, Object> queueMetric = new HashMap<String, Object>();
