@@ -129,7 +129,11 @@ class ControllerV3 extends Controller {
 						// No playlist state is mutated — the track stays in the queue.
 						String action = request.getParam("action");
 						if ("started".equals(action)) {
-							System.out.println("INFO: track started: {\"playlistSlug\":\"" + playlistSlug + "\",\"trackUuid\":\"" + trackUuid + "\",\"serverTimestamp\":\"" + Instant.now() + "\"}");
+							Map<String, Object> logData = new java.util.LinkedHashMap<>();
+							logData.put("playlistSlug", playlistSlug);
+							logData.put("trackUuid", trackUuid);
+							logData.put("serverTimestamp", Instant.now().toString());
+							System.out.println("INFO: track started: " + new com.google.gson.Gson().toJson(logData));
 							request.sendHeaders(204, "Received");
 							request.close();
 						} else if (action == null) {
