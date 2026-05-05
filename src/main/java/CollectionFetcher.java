@@ -1,10 +1,16 @@
 public class CollectionFetcher extends Fetcher {
 	private String slug;
+	private String name;
 	private MediaApi api;
 
 	// Constructor
 	public CollectionFetcher(MediaApi api, String slug) {
+		this(api, slug, null);
+	}
+
+	public CollectionFetcher(MediaApi api, String slug, String name) {
 		this.slug = slug;
+		this.name = (name != null) ? name : slug;
 		this.api = api;
 	}
 	
@@ -28,6 +34,10 @@ public class CollectionFetcher extends Fetcher {
 
 	public String getSlug() {
 		return slug;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 }
