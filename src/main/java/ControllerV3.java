@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 class ControllerV3 extends Controller {
@@ -122,8 +123,30 @@ class ControllerV3 extends Controller {
 							request.writeBody("Unknown `action` GET parameter \""+action+"\".  Must be one of: complete, error, skip");
 							request.close();
 						}
+					} else if (request.getMethod().equals(Method.POST)) {
+						// Instrumentation hook for lucos#126 (T4 — server-receive timestamp).
+						// Records when the manager receives a "track started" beacon from the client.
+						// No playlist state is mutated — the track stays in the queue.
+						String action = request.getParam("action");
+						if ("started".equals(action)) {
+							Map<String, Object> logData = new java.util.LinkedHashMap<>();
+							logData.put("playlistSlug", playlistSlug);
+							logData.put("trackUuid", trackUuid);
+							logData.put("serverTimestamp", Instant.now().toString());
+							System.out.println("INFO: track started: " + new com.google.gson.Gson().toJson(logData));
+							request.sendHeaders(204, "Received");
+							request.close();
+						} else if (action == null) {
+							request.sendHeaders(400, "Bad Request", "text/plain");
+							request.writeBody("Missing required `action` GET parameter.  Must be one of: started");
+							request.close();
+						} else {
+							request.sendHeaders(400, "Bad Request", "text/plain");
+							request.writeBody("Unknown `action` GET parameter \""+action+"\".  Must be one of: started");
+							request.close();
+						}
 					} else {
-						request.notAllowed(Arrays.asList(Method.DELETE));
+						request.notAllowed(Arrays.asList(Method.DELETE, Method.POST));
 					}
 				} else if (trackAspect.equals("position")) {
 					if (request.getMethod().equals(Method.PUT)) {
