@@ -281,7 +281,7 @@ class ControllerV3Test {
 		assertEquals(hashCode, status.hashCode());
 
 		checkNotAllowed(status, "/v3/playlist/special/" + trackD.getUuid(), Method.PUT, Map.of("action", "complete"),
-				Arrays.asList(Method.DELETE), true);
+				Arrays.asList(Method.DELETE, Method.POST), true);
 
 		compareRequestResponse(status, "/v3/playlist/special/", Method.DELETE, null, null, 404, "Not Found",
 				"text/plain", "File Not Found");
@@ -340,7 +340,7 @@ class ControllerV3Test {
 		assertEquals(hashCode, status.hashCode());
 
 		checkNotAllowed(status, "/v3/playlist/special/" + trackD.getUuid(), Method.PUT, Map.of("action", "error"),
-				Arrays.asList(Method.DELETE), true);
+				Arrays.asList(Method.DELETE, Method.POST), true);
 
 	}
 
@@ -397,6 +397,43 @@ class ControllerV3Test {
 
 		checkNotAllowed(status, "/v3/skip-track", Method.PUT, null, Arrays.asList(Method.POST), true);
 
+	}
+
+	@Test
+	void trackStarted() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
+
+		Playlist playlist = new Playlist(fetcher, null);
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/1347");
+		Track trackB = new Track(status.getMediaApi(), "http://example.com/track/8532");
+		playlist.queue(new Track[] { trackA, trackB });
+
+		int hashCode = status.hashCode();
+
+		// POST ?action=started logs receipt and returns 204, track stays in playlist
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid(), Method.POST,
+				Map.of("action", "started"), null, 204, "Received", null, null);
+		assertEquals(2, playlist.getLength()); // track NOT removed
+		assertEquals(hashCode, status.hashCode()); // no state change
+
+		// Unknown action value returns 400
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid(), Method.POST,
+				Map.of("action", "complete"), null, 400, "Bad Request", "text/plain",
+				"Unknown `action` GET parameter \"complete\".  Must be one of: started");
+		assertEquals(2, playlist.getLength());
+
+		// Missing action returns 400
+		compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid(), Method.POST,
+				null, null, 400, "Bad Request", "text/plain",
+				"Missing required `action` GET parameter.  Must be one of: started");
+		assertEquals(2, playlist.getLength());
+
+		// GET is not allowed; DELETE and POST are
+		checkNotAllowed(status, "/v3/playlist/special/" + trackA.getUuid(), Method.GET, null,
+				Arrays.asList(Method.DELETE, Method.POST), true);
 	}
 
 	@Test
