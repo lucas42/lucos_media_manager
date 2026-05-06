@@ -207,6 +207,17 @@ class Playlist {
 	}
 
 	public void topupTracks() {
+		topupTracks(() -> {
+			if (loganne != null)
+				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist");
+		});
+	}
+
+	/**
+	 * Fetches more tracks using the current fetcher, running the given callback
+	 * inside the fetch thread once the fetch completes.
+	 */
+	private void topupTracks(Runnable afterFetch) {
 
 		// Don't do anything if there's already enough tracks
 		if (tracks.size() >= TOPUP_LIMIT)
@@ -219,8 +230,7 @@ class Playlist {
 		final Fetcher currentFetcher = fetcher;
 		currentFetcherThread = new Thread(() -> {
 			currentFetcher.run();
-			if (loganne != null)
-				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist");
+			afterFetch.run();
 		});
 
 		currentFetcherThread.start();
@@ -235,25 +245,8 @@ class Playlist {
 		final Fetcher prevFetcher = this.fetcher;
 		final long startTimeMs = System.currentTimeMillis();
 		setFetcher(newFetcher);
-		topupTracksAfterSwitch(prevFetcher, startTimeMs);
-	}
-
-	/**
-	 * Starts a fetch thread for a collection switch, emitting a collectionSwitch
-	 * Loganne event once the first batch has populated the queue.
-	 */
-	private void topupTracksAfterSwitch(Fetcher prevFetcher, long startTimeMs) {
-		// Don't do anything if there's already enough tracks
-		if (tracks.size() >= TOPUP_LIMIT)
-			return;
-
-		// Don't do anything if there's already a fetcher thread running
-		if (currentFetcherThread != null && currentFetcherThread.isAlive())
-			return;
-
 		final Fetcher currentFetcher = fetcher;
-		currentFetcherThread = new Thread(() -> {
-			currentFetcher.run();
+		topupTracks(() -> {
 			if (loganne != null) {
 				long latencyMs = System.currentTimeMillis() - startTimeMs;
 				int collectionSize = tracks.size();
@@ -269,8 +262,6 @@ class Playlist {
 				loganne.post("collectionSwitch", "Switched to collection " + currentFetcher.getName(), fields);
 			}
 		});
-
-		currentFetcherThread.start();
 	}
 
 	/**

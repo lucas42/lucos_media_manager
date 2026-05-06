@@ -3,11 +3,6 @@ public class CollectionFetcher extends Fetcher {
 	private CollectionList collectionList;
 	private MediaApi api;
 
-	// Constructor (without CollectionList — getName() falls back to slug)
-	public CollectionFetcher(MediaApi api, String slug) {
-		this(api, slug, null);
-	}
-
 	public CollectionFetcher(MediaApi api, String slug, CollectionList collectionList) {
 		this.slug = slug;
 		this.collectionList = collectionList;
@@ -37,8 +32,7 @@ public class CollectionFetcher extends Fetcher {
 	}
 
 	public String getName() {
-		if (collectionList != null) return collectionList.getNameForSlug(slug);
-		return slug;
+		return collectionList.getNameForSlug(slug);
 	}
 
 }

@@ -61,7 +61,6 @@ class CollectionList {
 	 * or the slug itself if not found (e.g. collection list not yet loaded).
 	 */
 	public String getNameForSlug(String slug) {
-		if (slug.equals("all")) return "All Music";
 		if (collections == null) return slug;
 		for (MediaCollection collection : collections) {
 			if (collection.slug.equals(slug)) return collection.name;

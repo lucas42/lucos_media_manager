@@ -96,8 +96,9 @@ class CollectionListTest {
 
 		assertEquals("Christmas Music", collectionList.getNameForSlug("christmas"));
 		assertEquals("Jazz & Blues", collectionList.getNameForSlug("jazz"));
-		// "all" is a special case handled directly
-		assertEquals("All Music", collectionList.getNameForSlug("all"));
+		// "all" is handled by RandomFetcher and never appears in the collections list,
+		// so it falls back to the slug itself
+		assertEquals("all", collectionList.getNameForSlug("all"));
 		// Unknown slug falls back to the slug itself
 		assertEquals("unknown-slug", collectionList.getNameForSlug("unknown-slug"));
 	}
