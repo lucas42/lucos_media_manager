@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.math.BigInteger;
+import java.util.Map;
 
 class PlaylistTest {
 
@@ -45,11 +47,12 @@ class PlaylistTest {
 		verify(fetcher).setPlaylist(playlist);
 
 		playlist.topupTracks();
-		verify(loganne).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		boolean ended = initialFetch.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher).run();
+		// fetchTracks fires inside the thread after run() completes
+		verify(loganne, timeout(1000)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
 		playlist.queue(tracks);
 
 		assertEquals(15, playlist.getLength());
@@ -72,10 +75,9 @@ class PlaylistTest {
 		}).when(fetcher).run();
 
 		// When calling skipTrack() results in the number of tracks being below 10
-		// the fetcher should be called
+		// the fetcher should be called (but fetchTracks won't fire until run() completes)
 		playlist.skipTrack();
 		assertEquals(9, playlist.getLength());
-		verify(loganne, times(2)).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		// Shouldn't trigger another fetch when a previous one is still in flight
 		for (int ii = 0; ii < 5; ii++) {
@@ -87,7 +89,8 @@ class PlaylistTest {
 		ended = fetching.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher, times(2)).run();
-		verifyNoMoreInteractions(loganne);
+		// fetchTracks should now have fired twice (once per completed run)
+		verify(loganne, timeout(1000).times(2)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
 		assertEquals(4, playlist.getLength());
 	}
 
@@ -362,5 +365,53 @@ class PlaylistTest {
 		assertFalse(returnVal);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
+	}
+
+	@Test
+	void collectionSwitch() throws InterruptedException {
+		Fetcher oldFetcher = mock(RandomFetcher.class);
+		when(oldFetcher.getSlug()).thenReturn("all");
+		when(oldFetcher.getName()).thenReturn("All Music");
+
+		Fetcher newFetcher = mock(CollectionFetcher.class);
+		when(newFetcher.getSlug()).thenReturn("robots");
+		when(newFetcher.getName()).thenReturn("Robots");
+
+		Loganne loganne = mock(Loganne.class);
+		Track[] newTracks = new Track[]{ new Track(mock(MediaApi.class), "https://example.com/1") };
+
+		Playlist playlist = new Playlist(oldFetcher, loganne);
+
+		// Mock newFetcher.run() to add tracks to the playlist (simulating a real fetch)
+		doAnswer(invocation -> {
+			playlist.queue(newTracks);
+			return null;
+		}).when(newFetcher).run();
+
+		// Use a latch to detect when the collectionSwitch event fires
+		CountDownLatch eventFired = new CountDownLatch(1);
+		doAnswer(invocation -> {
+			eventFired.countDown();
+			return null;
+		}).when(loganne).post(eq("collectionSwitch"), anyString(), any(Map.class));
+
+		playlist.switchFetcher(newFetcher);
+
+		assertTrue(eventFired.await(10, TimeUnit.SECONDS), "collectionSwitch event should fire after first batch");
+
+		// Verify the event was posted with correct fields
+		verify(loganne).post(eq("collectionSwitch"), eq("Switched to collection Robots"), argThat(rawFields -> {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> fields = (Map<String, Object>) rawFields;
+			return "robots".equals(fields.get("slug"))
+				&& "Robots".equals(fields.get("name"))
+				&& "all".equals(fields.get("previousSlug"))
+				&& "All Music".equals(fields.get("previousName"))
+				&& fields.containsKey("firstBatchLatencyMs")
+				&& Integer.valueOf(1).equals(fields.get("collectionSize"));
+		}));
+
+		// fetchTracks must NOT be emitted during a collection switch
+		verify(loganne, never()).post(eq("fetchTracks"), anyString());
 	}
 }

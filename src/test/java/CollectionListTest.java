@@ -78,4 +78,28 @@ class CollectionListTest {
 		// Should have been called exactly twice: once at startup (failed), once in retry (succeeded)
 		verify(api, times(2)).fetchCollections("/v3/collections");
 	}
+
+	@Test
+	void getNameForSlug() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		MediaCollection christmas = new MediaCollection();
+		christmas.slug = "christmas";
+		christmas.name = "Christmas Music";
+		christmas.isPlayable = true;
+		MediaCollection jazz = new MediaCollection();
+		jazz.slug = "jazz";
+		jazz.name = "Jazz & Blues";
+		jazz.isPlayable = true;
+		when(api.fetchCollections("/v3/collections")).thenReturn(new MediaCollection[]{ christmas, jazz });
+
+		CollectionList collectionList = new CollectionList(api);
+
+		assertEquals("Christmas Music", collectionList.getNameForSlug("christmas"));
+		assertEquals("Jazz & Blues", collectionList.getNameForSlug("jazz"));
+		// "all" is handled by RandomFetcher and never appears in the collections list,
+		// so it falls back to the slug itself
+		assertEquals("all", collectionList.getNameForSlug("all"));
+		// Unknown slug falls back to the slug itself
+		assertEquals("unknown-slug", collectionList.getNameForSlug("unknown-slug"));
+	}
 }

@@ -17,10 +17,17 @@ class Loganne {
 	 * Asynchronously sends an event to the loganne service
 	 */
 	public void post(String type, String humanReadable) {
+		post(type, humanReadable, null);
+	}
+
+	/**
+	 * Asynchronously sends an event to the loganne service with additional structured fields
+	 */
+	public void post(String type, String humanReadable, Map<String, Object> extraFields) {
 		Thread thread = new Thread() {
 			public void run() {
 				try {
-					rawPost(type, humanReadable);
+					rawPost(type, humanReadable, extraFields);
 				} catch (Exception e) {
 					System.err.println("Can't post to Loganne");
 					e.printStackTrace();
@@ -31,11 +38,14 @@ class Loganne {
 		thread.start();
 	}
 
-	private void rawPost(String type, String humanReadable) throws IOException {
+	private void rawPost(String type, String humanReadable, Map<String, Object> extraFields) throws IOException {
 		Map<String, Object> postData = new HashMap<String, Object>();
 		postData.put("source", source);
 		postData.put("type", type);
 		postData.put("humanReadable", humanReadable);
+		if (extraFields != null) {
+			postData.putAll(extraFields);
+		}
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
 		con.setRequestMethod("POST");
 		con.setRequestProperty("Content-Type", "application/json");

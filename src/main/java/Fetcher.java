@@ -12,11 +12,9 @@ public abstract class Fetcher implements Runnable {
 		if (this.postFetch != null) this.postFetch.run();
 	}
 	abstract String getSlug();
-	static Fetcher createFromSlug(MediaApi mediaApi, String slug) {
-		if (slug.equals("all")) {
-			return new RandomFetcher(mediaApi);
-		} else {
-			return new CollectionFetcher(mediaApi, slug);
-		}
+	abstract String getName();
+	static Fetcher createFromSlug(MediaApi mediaApi, CollectionList collectionList, String slug) {
+		if (slug.equals("all")) return new RandomFetcher(mediaApi);
+		else return new CollectionFetcher(mediaApi, slug, collectionList);
 	}
 }

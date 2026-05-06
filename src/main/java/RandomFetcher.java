@@ -30,4 +30,8 @@ public class RandomFetcher extends Fetcher {
 		return "all"; // The metadata API treats this is a reserved slug, so it should never clash
 						// with a collection
 	}
+
+	public String getName() {
+		return "All Music";
+	}
 }

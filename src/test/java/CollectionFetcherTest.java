@@ -8,7 +8,7 @@ class CollectionFetcherTest {
 
 	@Test
 	void tooManyPlaylists() {
-		CollectionFetcher fetcher = new CollectionFetcher(mock(MediaApi.class), "christmas");
+		CollectionFetcher fetcher = new CollectionFetcher(mock(MediaApi.class), "christmas", mock(CollectionList.class));
 		Playlist playlistA = mock(Playlist.class);
 		Playlist playlistB = mock(Playlist.class);
 		fetcher.setPlaylist(playlistA);

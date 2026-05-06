@@ -41,7 +41,7 @@ public final class FileSystemSync {
 					deviceList.setCurrent((String) device.get("uuid"));
 				}
 			}
-			Fetcher fetcher = Fetcher.createFromSlug(mediaApi, (String) map.get("currentCollectionSlug"));
+			Fetcher fetcher = Fetcher.createFromSlug(mediaApi, collectionList, (String) map.get("currentCollectionSlug"));
 			playlist.setFetcher(fetcher);
 
 			@SuppressWarnings("unchecked")
