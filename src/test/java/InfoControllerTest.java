@@ -16,7 +16,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -33,7 +33,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -50,7 +50,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -70,7 +70,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -89,7 +89,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
