@@ -17,13 +17,13 @@ class InfoController extends Controller {
 		Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();
 		Map<String, Map<String, Object>> metrics = new HashMap<String, Map<String, Object>>();
 		Map<String, Object> queueCheck = new HashMap<String, Object>();
-		queueCheck.put("techDetail", "Queue has at least 5 tracks");
-		queueCheck.put("ok", status.getPlaylist().getLength() >= 5);
+		queueCheck.put("techDetail", "Queue has at least 5 tracks, or is being actively repopulated");
+		queueCheck.put("ok", status.getPlaylist().getLength() >= 5 || status.getPlaylist().isFetcherRunning());
 		queueCheck.put("failThreshold", 3);
 		checks.put("queue", queueCheck);
 		Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
-		emptyQueueCheck.put("techDetail", "Queue has any tracks");
-		emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0);
+		emptyQueueCheck.put("techDetail", "Queue has any tracks, or is being actively repopulated");
+		emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0 || status.getPlaylist().isFetcherRunning());
 		emptyQueueCheck.put("failThreshold", 2);
 		checks.put("empty-queue", emptyQueueCheck);
 		Map<String, Object> queueMetric = new HashMap<String, Object>();
