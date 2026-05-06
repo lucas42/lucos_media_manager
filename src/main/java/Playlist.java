@@ -8,11 +8,6 @@ class Playlist {
 	private transient Thread currentFetcherThread;
 	private transient Loganne loganne;
 
-	// State for collectionSwitch event emission
-	private volatile boolean pendingCollectionSwitch = false;
-	private volatile Fetcher previousFetcher = null;
-	private volatile long switchStartTimeMs = 0;
-
 	// Dropping below this number of tracks triggers a topup
 	static final int TOPUP_LIMIT = 10;
 
@@ -221,27 +216,53 @@ class Playlist {
 		if (currentFetcherThread != null && currentFetcherThread.isAlive())
 			return;
 
-		// Capture switch state before starting the thread
 		final Fetcher currentFetcher = fetcher;
-		final boolean shouldEmitSwitch = pendingCollectionSwitch;
-		final Fetcher capturedPreviousFetcher = previousFetcher;
-		final long capturedSwitchStartTime = switchStartTimeMs;
-		pendingCollectionSwitch = false;
-
-		if (loganne != null && !shouldEmitSwitch)
-			loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
-
 		currentFetcherThread = new Thread(() -> {
 			currentFetcher.run();
-			if (shouldEmitSwitch && loganne != null) {
-				long latencyMs = System.currentTimeMillis() - capturedSwitchStartTime;
+			if (loganne != null)
+				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist");
+		});
+
+		currentFetcherThread.start();
+	}
+
+	/**
+	 * Switches the fetcher for this playlist as a result of a user-driven collection change.
+	 * Clears all current tracks, starts fetching from the new fetcher, and emits a
+	 * collectionSwitch Loganne event once the first batch has been fetched.
+	 */
+	public void switchFetcher(Fetcher newFetcher) {
+		final Fetcher prevFetcher = this.fetcher;
+		final long startTimeMs = System.currentTimeMillis();
+		setFetcher(newFetcher);
+		topupTracksAfterSwitch(prevFetcher, startTimeMs);
+	}
+
+	/**
+	 * Starts a fetch thread for a collection switch, emitting a collectionSwitch
+	 * Loganne event once the first batch has populated the queue.
+	 */
+	private void topupTracksAfterSwitch(Fetcher prevFetcher, long startTimeMs) {
+		// Don't do anything if there's already enough tracks
+		if (tracks.size() >= TOPUP_LIMIT)
+			return;
+
+		// Don't do anything if there's already a fetcher thread running
+		if (currentFetcherThread != null && currentFetcherThread.isAlive())
+			return;
+
+		final Fetcher currentFetcher = fetcher;
+		currentFetcherThread = new Thread(() -> {
+			currentFetcher.run();
+			if (loganne != null) {
+				long latencyMs = System.currentTimeMillis() - startTimeMs;
 				int collectionSize = tracks.size();
 				Map<String, Object> fields = new HashMap<>();
 				fields.put("slug", currentFetcher.getSlug());
 				fields.put("name", currentFetcher.getName());
-				if (capturedPreviousFetcher != null) {
-					fields.put("previousSlug", capturedPreviousFetcher.getSlug());
-					fields.put("previousName", capturedPreviousFetcher.getName());
+				if (prevFetcher != null) {
+					fields.put("previousSlug", prevFetcher.getSlug());
+					fields.put("previousName", prevFetcher.getName());
 				}
 				fields.put("firstBatchLatencyMs", latencyMs);
 				fields.put("collectionSize", collectionSize);
@@ -258,25 +279,10 @@ class Playlist {
 	 * To populate the playlist using the new fetcher, call topupTracks() after.
 	 */
 	public void setFetcher(Fetcher fetcher) {
-		setFetcher(fetcher, false);
-	}
-
-	/**
-	 * Sets the fetcher for this playlist.
-	 * Also clears all current tracks.
-	 * To populate the playlist using the new fetcher, call topupTracks() after.
-	 * If emitCollectionSwitch is true, a collectionSwitch Loganne event will be emitted
-	 * once the new fetcher's first batch has populated the queue.
-	 */
-	public void setFetcher(Fetcher fetcher, boolean emitCollectionSwitch) {
-		if (emitCollectionSwitch) {
-			this.previousFetcher = this.fetcher;
-			this.switchStartTimeMs = System.currentTimeMillis();
-			this.pendingCollectionSwitch = true;
-		}
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
 		tracks = new CopyOnWriteArrayList<Track>();
+		currentFetcherThread = null;
 	}
 
 	/**

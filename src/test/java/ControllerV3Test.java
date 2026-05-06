@@ -517,11 +517,11 @@ class ControllerV3Test {
 			Fetcher allFetcher = mock(RandomFetcher.class);
 			when(allFetcher.getSlug()).thenReturn("all");
 			when(allFetcher.getName()).thenReturn("All Music");
-			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "robots", "Robots")).thenReturn(robotFetcher);
-			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "all", "All Music")).thenReturn(allFetcher);
 			CollectionList collectionList = mock(CollectionList.class);
 			when(collectionList.getNameForSlug("robots")).thenReturn("Robots");
 			when(collectionList.getNameForSlug("all")).thenReturn("All Music");
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, collectionList, "robots")).thenReturn(robotFetcher);
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, collectionList, "all")).thenReturn(allFetcher);
 			Playlist playlist = new Playlist(mock(RandomFetcher.class), null);
 			Status status = new Status(playlist, mock(DeviceList.class), collectionList, api,
 					mock(FileSystemSync.class));
@@ -550,29 +550,29 @@ class ControllerV3Test {
 			Fetcher allFetcher = mock(RandomFetcher.class);
 			when(allFetcher.getSlug()).thenReturn("all");
 			when(allFetcher.getName()).thenReturn("All Music");
-			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "relax", "Relax")).thenReturn(relaxFetcher);
-			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, "all", "All Music")).thenReturn(allFetcher);
 			CollectionList collectionList = mock(CollectionList.class);
 			when(collectionList.getNameForSlug("relax")).thenReturn("Relax");
 			when(collectionList.getNameForSlug("all")).thenReturn("All Music");
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, collectionList, "relax")).thenReturn(relaxFetcher);
+			mockedAbstractFetcher.when(() -> Fetcher.createFromSlug(api, collectionList, "all")).thenReturn(allFetcher);
 			Playlist playlist = new Playlist(allFetcher, null);
 			Status status = new Status(playlist, mock(DeviceList.class), collectionList, api,
 					mock(FileSystemSync.class));
 
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "all", 204, "Not Changed", null,
 					null);
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "all", "All Music"), times(0));
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "relax", "Relax"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "relax"), times(0));
 			assertEquals("all", playlist.getCurrentFetcherSlug());
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Changed", null,
 					null);
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "all", "All Music"), times(0));
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "relax", "Relax"), times(1));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "relax"), times(1));
 			assertEquals("relax", playlist.getCurrentFetcherSlug());
 			compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Not Changed",
 					null, null);
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "all", "All Music"), times(0));
-			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, "relax", "Relax"), times(1));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "all"), times(0));
+			mockedAbstractFetcher.verify(() -> Fetcher.createFromSlug(api, collectionList, "relax"), times(1));
 			assertEquals("relax", playlist.getCurrentFetcherSlug());
 		}
 	}

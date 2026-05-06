@@ -47,11 +47,12 @@ class PlaylistTest {
 		verify(fetcher).setPlaylist(playlist);
 
 		playlist.topupTracks();
-		verify(loganne).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		boolean ended = initialFetch.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher).run();
+		// fetchTracks fires inside the thread after run() completes
+		verify(loganne, timeout(1000)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
 		playlist.queue(tracks);
 
 		assertEquals(15, playlist.getLength());
@@ -74,10 +75,9 @@ class PlaylistTest {
 		}).when(fetcher).run();
 
 		// When calling skipTrack() results in the number of tracks being below 10
-		// the fetcher should be called
+		// the fetcher should be called (but fetchTracks won't fire until run() completes)
 		playlist.skipTrack();
 		assertEquals(9, playlist.getLength());
-		verify(loganne, times(2)).post("fetchTracks", "Fetching more tracks to add to the current playlist");
 
 		// Shouldn't trigger another fetch when a previous one is still in flight
 		for (int ii = 0; ii < 5; ii++) {
@@ -89,7 +89,8 @@ class PlaylistTest {
 		ended = fetching.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher, times(2)).run();
-		verifyNoMoreInteractions(loganne);
+		// fetchTracks should now have fired twice (once per completed run)
+		verify(loganne, timeout(1000).times(2)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
 		assertEquals(4, playlist.getLength());
 	}
 
@@ -394,8 +395,7 @@ class PlaylistTest {
 			return null;
 		}).when(loganne).post(eq("collectionSwitch"), anyString(), any(Map.class));
 
-		playlist.setFetcher(newFetcher, true);
-		playlist.topupTracks();
+		playlist.switchFetcher(newFetcher);
 
 		assertTrue(eventFired.await(10, TimeUnit.SECONDS), "collectionSwitch event should fire after first batch");
 
