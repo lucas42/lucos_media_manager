@@ -223,7 +223,7 @@ class Playlist {
 			return;
 
 		// Don't do anything if there's already a fetcher thread running
-		if (currentFetcherThread != null && currentFetcherThread.isAlive())
+		if (isFetcherRunning())
 			return;
 		if (loganne != null)
 			loganne.post("fetchTracks", "Fetching more tracks to add to the current playlist");
