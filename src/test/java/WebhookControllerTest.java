@@ -100,7 +100,7 @@ class WebhookControllerTest {
 		Map<String, String> updatedMetadata = new HashMap<String, String>(
 				Map.of("title", "Stairway To Heaven", "artist", "Dolly Parton", "trackid", "1347"));
 		Track updatedTrack = new Track(mediaApi, "http://example.com/track/1347", updatedMetadata);
-		when(mediaApi.fetchTrack("/tracks/1347")).thenReturn(updatedTrack);
+		when(mediaApi.fetchTrack("/v3/tracks/1347")).thenReturn(updatedTrack);
 
 		int hashCode = status.hashCode();
 
@@ -108,7 +108,7 @@ class WebhookControllerTest {
 				"{\"url\":\"https://media-metadata.l42.eu/tracks/1347\",\"type\":\"trackUpdated\"}",
 				204, "No Content", null, null);
 
-		verify(mediaApi).fetchTrack("/tracks/1347");
+		verify(mediaApi).fetchTrack("/v3/tracks/1347");
 
 		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
 		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");

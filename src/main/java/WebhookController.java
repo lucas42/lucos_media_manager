@@ -30,8 +30,12 @@ class WebhookController extends Controller {
 				if (hookname.equals("trackUpdated")) {
 					LoganneEvent event = gson.fromJson(request.getData(), LoganneEvent.class);
 					if (event == null || event.url == null) throw new JsonSyntaxException("Missing url field in event");
-					String trackPath = URI.create(event.url).getPath();
-					Track fetchedTrack = status.getMediaApi().fetchTrack(trackPath);
+					// event.url is on media-metadata.l42.eu (e.g. /tracks/22510); its path layout
+					// differs from the media API, so we extract only the trailing numeric ID and
+					// build the v3 path explicitly. Reusing the full path hits the deprecated v1
+					// endpoint (HTTP 410).
+					String trackId = URI.create(event.url).getPath().replaceFirst("^.*/", "");
+					Track fetchedTrack = status.getMediaApi().fetchTrack("/v3/tracks/" + trackId);
 					if (fetchedTrack == null) throw new IOException("Media API returned null for track at " + event.url);
 					status.getPlaylist().updateTracks(fetchedTrack.getMetadata("trackid"), fetchedTrack);
 					request.sendHeaders(204, "No Content");
