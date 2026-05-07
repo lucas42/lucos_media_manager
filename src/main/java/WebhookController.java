@@ -30,7 +30,9 @@ class WebhookController extends Controller {
 				if (hookname.equals("trackUpdated")) {
 					LoganneEvent event = gson.fromJson(request.getData(), LoganneEvent.class);
 					if (event == null || event.url == null) throw new JsonSyntaxException("Missing url field in event");
-					Track fetchedTrack = status.getMediaApi().fetchTrack(event.url);
+					String trackPath = URI.create(event.url).getPath();
+					Track fetchedTrack = status.getMediaApi().fetchTrack(trackPath);
+					if (fetchedTrack == null) throw new IOException("Media API returned null for track at " + event.url);
 					status.getPlaylist().updateTracks(fetchedTrack.getMetadata("trackid"), fetchedTrack);
 					request.sendHeaders(204, "No Content");
 					request.close();

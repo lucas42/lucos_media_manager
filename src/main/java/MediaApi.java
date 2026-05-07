@@ -15,9 +15,7 @@ public class MediaApi {
 	static final int READ_TIMEOUT_MS = 30_000;
 
 	private InputStreamReader fetch(String path) throws MalformedURLException, IOException {
-		// Accept either a relative path (prepend apiUrl) or a fully-qualified URL (use as-is)
-		String urlString = (path.startsWith("http://") || path.startsWith("https://")) ? path : apiUrl + path;
-		URL url = URI.create(urlString).toURL();
+		URL url = URI.create(apiUrl + path).toURL();
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
 		connection.setReadTimeout(READ_TIMEOUT_MS);
@@ -33,7 +31,11 @@ public class MediaApi {
 	}
 
 	public Track fetchTrack(String path) throws MalformedURLException, IOException {
-		return gson.fromJson(fetch(path), Track.class);
+		try {
+			return gson.fromJson(fetch(path), Track.class);
+		} catch (JsonSyntaxException e) {
+			throw new IOException("Malformed JSON from media API: " + e.getMessage(), e);
+		}
 	}
 
 	public MediaApiResult fetchTracks(String path) throws MalformedURLException, IOException {
