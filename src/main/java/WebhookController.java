@@ -39,6 +39,9 @@ class WebhookController extends Controller {
 				} else if(hookname.equals("trackDeleted")) {
 					LoganneEvent event = gson.fromJson(request.getData(), LoganneEvent.class);
 					if (event == null || event.url == null) throw new JsonSyntaxException("Missing url field in event");
+					// Track only stores the underlying media URL, not the track concept URI, so we
+					// can't match by URI directly. Extracting the ID from the path is a workaround;
+					// if Track were to store the concept URI in future, this could use deleteTrackByUri().
 					String trackId = URI.create(event.url).getPath().replaceFirst("^.*/", "");
 					status.getPlaylist().deleteTrackById(trackId);
 					request.sendHeaders(204, "No Content");
@@ -61,7 +64,7 @@ class WebhookController extends Controller {
 				}
 			} catch (JsonSyntaxException exception) {
 				request.sendHeaders(400, "Bad Request");
-				request.writeBody("JSON Syntax Error");
+				request.writeBody("JSON payload error");
 				request.writeBody(exception.getMessage());
 				request.close();
 			} catch (IOException exception) {
