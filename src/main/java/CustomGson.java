@@ -81,7 +81,11 @@ class CustomGson {
 	}
 }
 
-class LoganneTrackEvent {
-	Track track;
+/**
+ * Minimal representation of a Loganne event, used when the webhook handler
+ * only needs to identify the affected resource rather than deserialise its full state.
+ */
+class LoganneEvent {
+	String url;
 	String type;
 }

@@ -84,21 +84,31 @@ class WebhookControllerTest {
 		Fetcher fetcher = mock(RandomFetcher.class);
 		Loganne loganne = mock(Loganne.class);
 		Playlist playlist = new Playlist(fetcher, loganne);
-		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
+		MediaApi mediaApi = mock(MediaApi.class);
+		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mediaApi,
 				mock(FileSystemSync.class));
 		Map<String, String> initialMetadata = new HashMap<String, String>(
 				Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347"));
 		Map<String, String> noChangeMetadata = new HashMap<String, String>(
 				Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532"));
-		Track trackToChange = new Track(status.getMediaApi(), "http://example.com/track/1337", initialMetadata);
-		Track trackNoChange = new Track(status.getMediaApi(), "http://example.com/track/8532", noChangeMetadata);
+		Track trackToChange = new Track(mediaApi, "http://example.com/track/1337", initialMetadata);
+		Track trackNoChange = new Track(mediaApi, "http://example.com/track/8532", noChangeMetadata);
 		playlist.queueNext(trackToChange);
 		playlist.queueNext(trackNoChange);
+
+		// Stub the API fetch to return the updated track state
+		Map<String, String> updatedMetadata = new HashMap<String, String>(
+				Map.of("title", "Stairway To Heaven", "artist", "Dolly Parton", "trackid", "1347"));
+		Track updatedTrack = new Track(mediaApi, "http://example.com/track/1347", updatedMetadata);
+		when(mediaApi.fetchTrack("https://media-metadata.l42.eu/tracks/1347")).thenReturn(updatedTrack);
+
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/webhooks/trackUpdated", Method.POST,
-				"{\n	humanReadable: \"Track #1347 updated\",\n	source: \"test_updater\",\n	track: {\n		fingerprint: \"abcfxx\",\n		duration: 150,\n		url: \"http://example.com/track/1347\",\n		id: 1347,\n		tags: {\n			artist: [{\"name\": \"Dolly Parton\"}],\n			title: [{\"name\": \"Stairway To Heaven\"}]\n		},\n		weighting: 7\n	},\n	type: \"trackUpdated\",\n	date: \"2021-03-27T22:28:45.716Z\"\n}",
+				"{\"url\":\"https://media-metadata.l42.eu/tracks/1347\",\"type\":\"trackUpdated\"}",
 				204, "No Content", null, null);
+
+		verify(mediaApi).fetchTrack("https://media-metadata.l42.eu/tracks/1347");
 
 		assertEquals(trackNoChange.getUrl(), "http://example.com/track/8532");
 		assertEquals(trackNoChange.getMetadata("artist"), "Beautiful South");
@@ -142,7 +152,7 @@ class WebhookControllerTest {
 		int hashCode = status.hashCode();
 
 		compareRequestResponse(status, "/webhooks/trackDeleted", Method.POST,
-				"{\"humanReadable\":\"Track #1347 deleted\",\"source\":\"test_updater\",\"track\":{\"fingerprint\":\"abcfxx\",\"duration\":73,\"url\":\"http://example.com/track/1347\",\"id\":1347,\"tags\":{\"title\":[{\"name\":\"Stairway to Heaven\"}]},\"weighting\":0,\"collections\":[]},\"type\":\"trackDeleted\",\"date\":\"2024-01-27T16:18:47.676Z\"}",
+				"{\"url\":\"https://media-metadata.l42.eu/tracks/1347\",\"type\":\"trackDeleted\"}",
 				204, "No Content", null, null);
 
 		assertEquals(2, playlist.getLength());

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import java.net.URI;
 
 /**
  * Handles webhook requests which come from loganne
@@ -24,16 +25,20 @@ class WebhookController extends Controller {
 		}
 		String hookname = request.getPath().replaceFirst("^/webhooks/", "");
 		if (request.getMethod() == Method.POST) {
-			Gson gson = CustomGson.get(status);
+			Gson gson = new Gson();
 			try {
 				if (hookname.equals("trackUpdated")) {
-					LoganneTrackEvent event = gson.fromJson(request.getData(), LoganneTrackEvent.class);
-					status.getPlaylist().updateTracks(event.track.getMetadata("trackid"), event.track);
+					LoganneEvent event = gson.fromJson(request.getData(), LoganneEvent.class);
+					if (event == null || event.url == null) throw new JsonSyntaxException("Missing url field in event");
+					Track fetchedTrack = status.getMediaApi().fetchTrack(event.url);
+					status.getPlaylist().updateTracks(fetchedTrack.getMetadata("trackid"), fetchedTrack);
 					request.sendHeaders(204, "No Content");
 					request.close();
 				} else if(hookname.equals("trackDeleted")) {
-					LoganneTrackEvent event = gson.fromJson(request.getData(), LoganneTrackEvent.class);
-					status.getPlaylist().deleteTrack(event.track);
+					LoganneEvent event = gson.fromJson(request.getData(), LoganneEvent.class);
+					if (event == null || event.url == null) throw new JsonSyntaxException("Missing url field in event");
+					String trackId = URI.create(event.url).getPath().replaceFirst("^.*/", "");
+					status.getPlaylist().deleteTrackById(trackId);
 					request.sendHeaders(204, "No Content");
 					request.close();
 
@@ -56,6 +61,11 @@ class WebhookController extends Controller {
 				request.sendHeaders(400, "Bad Request");
 				request.writeBody("JSON Syntax Error");
 				request.writeBody(exception.getMessage());
+				request.close();
+			} catch (IOException exception) {
+				System.err.println("ERROR: Failed to fetch track from media API: " + exception.getMessage());
+				request.sendHeaders(500, "Internal Server Error", "text/plain");
+				request.writeBody("Failed to fetch track from media API");
 				request.close();
 			}
 		} else {
