@@ -51,7 +51,13 @@ class LongPollControllerV3Test {
 		Thread.sleep(200);
 		verify(request, never()).sendHeaders(anyInt(), anyString(), anyString());
 		verify(request, never()).close();
-		when(status.summaryHasChanged(123456)).thenReturn(true);
+		// Use doReturn().when() rather than when().thenReturn() here: the worker thread is
+		// concurrently invoking waitForChange() on the same mock. The when().thenReturn() API
+		// first calls the method on the mock to record it as "last invocation", then attaches
+		// the stub — if the worker thread races in between, it replaces "last invocation" with
+		// the void waitForChange(), causing CannotStubVoidMethodWithReturnValue. doReturn()
+		// skips the first-call step and is safe under concurrent invocation.
+		doReturn(true).when(status).summaryHasChanged(123456);
 
 		// Wait for the controller to respond, rather than relying on a fixed sleep + verify timeout
 		responded.get(3, TimeUnit.SECONDS);
