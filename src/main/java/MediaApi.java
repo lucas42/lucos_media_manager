@@ -31,7 +31,11 @@ public class MediaApi {
 	}
 
 	public Track fetchTrack(String path) throws MalformedURLException, IOException {
-		return gson.fromJson(fetch(path), Track.class);
+		try {
+			return gson.fromJson(fetch(path), Track.class);
+		} catch (JsonSyntaxException e) {
+			throw new IOException("Malformed JSON from media API: " + e.getMessage(), e);
+		}
 	}
 
 	public MediaApiResult fetchTracks(String path) throws MalformedURLException, IOException {

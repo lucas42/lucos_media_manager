@@ -102,11 +102,11 @@ class Playlist {
 	}
 
 	/**
-	 * Called when a track has been removed from the media collection
-	 * Removes all instances of it from the playlist
+	 * Called when a track has been removed from the media collection, identified by its track ID.
+	 * Removes all instances of the track from the playlist.
 	 */
-	public void deleteTrack(Track track) {
-		tracks.removeIf(t -> t.equals(track));
+	public void deleteTrackById(String trackid) {
+		tracks.removeIf(t -> trackid.equals(t.getMetadata("trackid")));
 		topupTracks();
 	}
 
