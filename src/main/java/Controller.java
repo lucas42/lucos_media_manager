@@ -12,7 +12,11 @@ public abstract class Controller implements Runnable {
 			processRequest();
 
 			// If the request could've altered state, then sync the latest status to the file system
-			if (request.alteredState()) status.syncToFileSystem();
+			// and notify any long-poll threads waiting for a state change
+			if (request.alteredState()) {
+				status.syncToFileSystem();
+				status.notifyChange();
+			}
 		} catch (Exception e) {
 			System.err.println("ERROR: Unknown Error (Class:"+this.getClass().getSimpleName()+", Host:"+request.getHostName()+"):");
 			e.printStackTrace();

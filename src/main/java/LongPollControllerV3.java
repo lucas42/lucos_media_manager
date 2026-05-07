@@ -30,32 +30,34 @@ class LongPollControllerV3 extends Controller {
 		} catch (InterruptedException e) {
 		}
 		status.getDeviceList().closeConnection(request);
+
+		// Notify any waiting poll threads that device list has changed
+		status.notifyChange();
 	}
 
 	protected void processRequest() throws IOException, InterruptedException {
 		if (request.getMethod().equals(Method.GET)) {
 			if (request.isAuthorised()) {
 				status.getDeviceList().openConnection(request);
-				long startTime = System.nanoTime();
+				long endTimeNs = System.nanoTime() + (POLL_TIMEOUT * 1000000000L);
 				int hashcode;
 				try {
 					hashcode = Integer.parseInt(request.getParam("hashcode"));
 				} catch (NumberFormatException e) {
 					hashcode = 0;
 				}
-				while (true) {
-					// Only respond when a change has occurred, or the request has taken over 30
-					// seconds
-					if (status.summaryHasChanged(hashcode)
-							|| (System.nanoTime() - startTime) > (POLL_TIMEOUT * 1000000000L)) {
-						request.sendHeaders(200, "Long Poll", "application/json");
-						Gson gson = CustomGson.get(status);
-						request.writeBody(gson.toJson(status.getSummary()));
-						request.close();
-						return;
-					}
-					Thread.sleep(1);
+				// Wait for a state change or timeout using wait/notify rather than busy-polling.
+				// waitForChange re-checks the hashcode inside its lock, eliminating the race
+				// between the outer while-check and entering the wait.
+				while (!status.summaryHasChanged(hashcode)) {
+					long remainingMs = (endTimeNs - System.nanoTime()) / 1_000_000;
+					if (remainingMs <= 0) break;
+					status.waitForChange(hashcode, remainingMs);
 				}
+				request.sendHeaders(200, "Long Poll", "application/json");
+				Gson gson = CustomGson.get(status);
+				request.writeBody(gson.toJson(status.getSummary()));
+				request.close();
 			} else {
 				request.sendHeaders(401, "Unauthorized", Map.of(
 						"Content-Type", "text/plain",

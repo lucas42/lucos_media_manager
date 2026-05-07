@@ -9,6 +9,12 @@ class Status {
 	private CollectionList collectionList;
 	private MediaApi mediaApi;
 	private FileSystemSync fsSync;
+
+	/**
+	 * Lock used by the wait/notify mechanism so poll threads can efficiently wait
+	 * for state changes without busy-polling.
+	 */
+	private final Object changeLock = new Object();
 	public Status(Playlist playlist, DeviceList deviceList, CollectionList collectionList, MediaApi mediaApi, FileSystemSync fsSync) {
 		this.playlist = playlist;
 		this.deviceList = deviceList;
@@ -48,6 +54,30 @@ class Status {
 	}
 	public boolean summaryHasChanged(int oldhashcode) {
 		return (this.hashCode() != oldhashcode);
+	}
+
+	/**
+	 * Wakes any threads waiting in {@link #waitForChange}.
+	 * Should be called whenever state changes so that long-poll threads respond immediately.
+	 */
+	public void notifyChange() {
+		synchronized (changeLock) {
+			changeLock.notifyAll();
+		}
+	}
+
+	/**
+	 * Waits until state changes from the given hashcode, or the timeout elapses.
+	 * Uses a condition variable so the calling thread doesn't busy-poll.
+	 * The hashcode is re-checked inside the lock to avoid missing a notification
+	 * that arrives between the caller's outer check and entering this method.
+	 */
+	public void waitForChange(int currentHashcode, long timeoutMs) throws InterruptedException {
+		synchronized (changeLock) {
+			if (this.hashCode() == currentHashcode) {
+				changeLock.wait(timeoutMs);
+			}
+		}
 	}
 	public Map<String, Object> getSummary() {
 		Map<String, Object> summary = new HashMap<String, Object>();

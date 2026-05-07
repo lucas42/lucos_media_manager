@@ -40,6 +40,9 @@ class LongPollControllerV3Test {
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
+		// waitForChange is a no-op on the mock; add a 1ms sleep so the spin loop has a
+		// memory barrier and sees stub updates from the test thread promptly.
+		doAnswer(inv -> { Thread.sleep(1); return null; }).when(status).waitForChange(anyInt(), anyLong());
 
 		// Run the controller in a separate thread, so can test change of state
 		Controller controller = new FrontController(status, request);
@@ -72,6 +75,9 @@ class LongPollControllerV3Test {
 		Status status = mock(Status.class);
 		when(status.summaryHasChanged(anyInt())).thenReturn(false);
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
+		// waitForChange is a no-op on the mock; add a 1ms sleep to prevent extreme CPU
+		// spin and provide memory barriers, matching the original Thread.sleep(1) behaviour.
+		doAnswer(inv -> { Thread.sleep(1); return null; }).when(status).waitForChange(anyInt(), anyLong());
 
 		// Run the controller in a separate thread
 		Controller controller = new LongPollControllerV3(status, request, 2, 30); // Call LongPollControllerV3 directly
