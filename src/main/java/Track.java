@@ -156,13 +156,15 @@ class Track {
 		if (trackid == null || mediaApi == null) {
 			return;
 		}
-		String path = "/v3/tracks/" + trackid + "/tags";
+		String path = "/v3/tracks/" + trackid;
 		JsonObject value = new JsonObject();
 		value.addProperty("name", Instant.now().toString());
 		JsonArray values = new JsonArray();
 		values.add(value);
+		JsonObject tags = new JsonObject();
+		tags.add(tagName, values);
 		JsonObject body = new JsonObject();
-		body.add(tagName, values);
+		body.add("tags", tags);
 		try {
 			mediaApi.patch(path, body.toString());
 		} catch (Exception e) {

@@ -426,7 +426,7 @@ class PlaylistTest {
 
 		playlist.completeTrack(track.getUuid());
 
-		verify(mockApi).patch(eq("/v3/tracks/99/tags"), contains("lastSuccessfulPlay"));
+		verify(mockApi).patch(eq("/v3/tracks/99"), contains("lastSuccessfulPlay"));
 	}
 
 	@Test
@@ -438,7 +438,7 @@ class PlaylistTest {
 
 		playlist.skipTrack(track.getUuid());
 
-		verify(mockApi).patch(eq("/v3/tracks/55/tags"), contains("lastSkip"));
+		verify(mockApi).patch(eq("/v3/tracks/55"), contains("lastSkip"));
 	}
 
 	@Test
@@ -450,7 +450,7 @@ class PlaylistTest {
 
 		playlist.skipTrack();
 
-		verify(mockApi).patch(eq("/v3/tracks/33/tags"), contains("lastSkip"));
+		verify(mockApi).patch(eq("/v3/tracks/33"), contains("lastSkip"));
 	}
 
 	@Test
@@ -462,7 +462,7 @@ class PlaylistTest {
 
 		playlist.flagTrackAsError(track.getUuid(), "Network error");
 
-		verify(mockApi).patch(eq("/v3/tracks/22/tags"), contains("lastError"));
+		verify(mockApi).patch(eq("/v3/tracks/22"), contains("lastError"));
 	}
 
 	@Test
