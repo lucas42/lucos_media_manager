@@ -161,7 +161,7 @@ class PlaylistTest {
 		newHashcode = playlist.hashCode();
 		assertNotEquals(oldHashcode, newHashcode);
 
-		playlist.skipTrack(trackC);
+		playlist.skipTrack(trackC.getUuid());
 		assertEquals(3, playlist.getLength());
 		assertEquals(trackB, playlist.getCurrentTrack());
 		assertEquals(trackA, playlist.getNextTrack());
@@ -175,7 +175,7 @@ class PlaylistTest {
 		newHashcode = playlist.hashCode();
 		assertNotEquals(oldHashcode, newHashcode);
 
-		playlist.completeTrack(trackB);
+		playlist.completeTrack(trackB.getUuid());
 		assertEquals(2, playlist.getLength());
 		assertEquals(trackA, playlist.getCurrentTrack());
 		assertEquals(trackD, playlist.getNextTrack());
@@ -188,7 +188,7 @@ class PlaylistTest {
 		newHashcode = playlist.hashCode();
 		assertNotEquals(oldHashcode, newHashcode);
 
-		playlist.flagTrackAsError(trackA, "Http status 404 returned");
+		playlist.flagTrackAsError(trackA.getUuid(), "Http status 404 returned");
 		assertEquals(1, playlist.getLength());
 		assertEquals(trackD, playlist.getCurrentTrack());
 		assertEquals(null, playlist.getNextTrack());
@@ -418,18 +418,6 @@ class PlaylistTest {
 	}
 
 	@Test
-	void completeTrackRecordsLastSuccessfulPlay() throws IOException {
-		MediaApi mockApi = mock(MediaApi.class);
-		Track track = new Track(mockApi, "https://example.com/track1", new HashMap<>(Map.of("trackid", "42")));
-		Playlist playlist = new Playlist(mock(Fetcher.class), null);
-		playlist.queueEnd(track);
-
-		playlist.completeTrack(track);
-
-		verify(mockApi).patch(eq("/v3/tracks/42/tags"), contains("lastSuccessfulPlay"));
-	}
-
-	@Test
 	void completeTrackByUuidRecordsLastSuccessfulPlay() throws IOException {
 		MediaApi mockApi = mock(MediaApi.class);
 		Track track = new Track(mockApi, "https://example.com/track2", new HashMap<>(Map.of("trackid", "99")));
@@ -439,18 +427,6 @@ class PlaylistTest {
 		playlist.completeTrack(track.getUuid());
 
 		verify(mockApi).patch(eq("/v3/tracks/99/tags"), contains("lastSuccessfulPlay"));
-	}
-
-	@Test
-	void skipTrackRecordsLastSkip() throws IOException {
-		MediaApi mockApi = mock(MediaApi.class);
-		Track track = new Track(mockApi, "https://example.com/track3", new HashMap<>(Map.of("trackid", "77")));
-		Playlist playlist = new Playlist(mock(Fetcher.class), null);
-		playlist.queueEnd(track);
-
-		playlist.skipTrack(track);
-
-		verify(mockApi).patch(eq("/v3/tracks/77/tags"), contains("lastSkip"));
 	}
 
 	@Test
@@ -478,18 +454,6 @@ class PlaylistTest {
 	}
 
 	@Test
-	void flagTrackAsErrorRecordsLastError() throws IOException {
-		MediaApi mockApi = mock(MediaApi.class);
-		Track track = new Track(mockApi, "https://example.com/track6", new HashMap<>(Map.of("trackid", "11")));
-		Playlist playlist = new Playlist(mock(Fetcher.class), null);
-		playlist.queueEnd(track);
-
-		playlist.flagTrackAsError(track, "HTTP 500");
-
-		verify(mockApi).patch(eq("/v3/tracks/11/tags"), contains("lastError"));
-	}
-
-	@Test
 	void flagTrackAsErrorByUuidRecordsLastError() throws IOException {
 		MediaApi mockApi = mock(MediaApi.class);
 		Track track = new Track(mockApi, "https://example.com/track7", new HashMap<>(Map.of("trackid", "22")));
@@ -509,7 +473,7 @@ class PlaylistTest {
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
 		playlist.queueEnd(track);
 
-		playlist.completeTrack(track);
+		playlist.completeTrack(track.getUuid());
 
 		verify(mockApi, never()).patch(any(), any());
 	}

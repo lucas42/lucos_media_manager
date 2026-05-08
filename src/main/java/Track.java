@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.nio.charset.StandardCharsets;
+import com.google.gson.*;
 
 class Track {
 	private transient MediaApi mediaApi;
@@ -144,22 +145,26 @@ class Track {
 	}
 
 	/**
-	 * Records a single-value timestamp tag on this track in the media metadata API.
+	 * Records the current timestamp as a tag on this track in the media metadata API.
 	 * Errors are logged but do not propagate — tag recording is best-effort and must not
 	 * interfere with the playlist operation that triggered it.
 	 *
 	 * @param tagName  The tag predicate name (e.g. "lastSuccessfulPlay", "lastSkip", "lastError")
-	 * @param tagValue The RFC3339 timestamp value to store
 	 */
-	void recordTag(String tagName, String tagValue) {
+	void recordTag(String tagName) {
 		String trackid = metadata.get("trackid");
 		if (trackid == null || mediaApi == null) {
 			return;
 		}
 		String path = "/v3/tracks/" + trackid + "/tags";
-		String body = "{\"" + tagName + "\": [{\"name\": \"" + tagValue + "\"}]}";
+		JsonObject value = new JsonObject();
+		value.addProperty("name", Instant.now().toString());
+		JsonArray values = new JsonArray();
+		values.add(value);
+		JsonObject body = new JsonObject();
+		body.add(tagName, values);
 		try {
-			mediaApi.patch(path, body);
+			mediaApi.patch(path, body.toString());
 		} catch (Exception e) {
 			System.out.println("WARNING: Failed to record " + tagName + " tag for track " + trackid + ": " + e.getMessage());
 		}

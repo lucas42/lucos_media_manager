@@ -1,7 +1,6 @@
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.math.BigInteger;
-import java.time.Instant;
 
 class Playlist {
 	private CopyOnWriteArrayList<Track> tracks = new CopyOnWriteArrayList<Track>();
@@ -56,33 +55,19 @@ class Playlist {
 	}
 
 	// Called when a track gets to the end of its playback
-	public boolean completeTrack(Track track) {
-		track.recordTag("lastSuccessfulPlay", Instant.now().toString());
-		return removeTrack(track);
-	}
-
 	public boolean completeTrack(String uuid) {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
-			track.recordTag("lastSuccessfulPlay", Instant.now().toString());
+			track.recordTag("lastSuccessfulPlay");
 		}
 		return removeTrackByUuid(uuid);
 	}
 
 	// Called when loading or playback of a track encounters an error
-	public boolean flagTrackAsError(Track track, String errorMessage) {
-		track.recordTag("lastError", Instant.now().toString());
-		boolean trackRemoved = removeTrack(track);
-		if (trackRemoved) {
-			System.out.println("NOTICE: Track " + track.getUrl() + " flagged with error: " + errorMessage);
-		}
-		return trackRemoved;
-	}
-
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
-			track.recordTag("lastError", Instant.now().toString());
+			track.recordTag("lastError");
 		}
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {
@@ -91,16 +76,11 @@ class Playlist {
 		return trackRemoved;
 	}
 
-	// Called when a track is deliberatly skipped
-	public boolean skipTrack(Track track) {
-		track.recordTag("lastSkip", Instant.now().toString());
-		return removeTrack(track);
-	}
-
+	// Called when a track is deliberately skipped
 	public boolean skipTrack(String uuid) {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
-			track.recordTag("lastSkip", Instant.now().toString());
+			track.recordTag("lastSkip");
 		}
 		return removeTrackByUuid(uuid);
 	}
@@ -111,7 +91,7 @@ class Playlist {
 	 */
 	public void skipTrack() {
 		if (tracks.size() > 0) {
-			tracks.get(0).recordTag("lastSkip", Instant.now().toString());
+			tracks.get(0).recordTag("lastSkip");
 			tracks.remove(0);
 		}
 		topupTracks();
