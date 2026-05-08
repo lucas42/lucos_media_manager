@@ -143,6 +143,28 @@ class Track {
 		this.update(latestTrack.getUrl(), latestTrack.getMetadata());
 	}
 
+	/**
+	 * Records a single-value timestamp tag on this track in the media metadata API.
+	 * Errors are logged but do not propagate — tag recording is best-effort and must not
+	 * interfere with the playlist operation that triggered it.
+	 *
+	 * @param tagName  The tag predicate name (e.g. "lastSuccessfulPlay", "lastSkip", "lastError")
+	 * @param tagValue The RFC3339 timestamp value to store
+	 */
+	void recordTag(String tagName, String tagValue) {
+		String trackid = metadata.get("trackid");
+		if (trackid == null || mediaApi == null) {
+			return;
+		}
+		String path = "/v3/tracks/" + trackid + "/tags";
+		String body = "{\"" + tagName + "\": [{\"name\": \"" + tagValue + "\"}]}";
+		try {
+			mediaApi.patch(path, body);
+		} catch (Exception e) {
+			System.out.println("WARNING: Failed to record " + tagName + " tag for track " + trackid + ": " + e.getMessage());
+		}
+	}
+
 	public String getUuid() {
 		return uuid;
 	}

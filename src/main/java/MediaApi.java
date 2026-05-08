@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import com.google.gson.*;
 
 public class MediaApi {
@@ -44,6 +45,28 @@ public class MediaApi {
 
 	public MediaCollection[] fetchCollections(String path) throws MalformedURLException, IOException {
 		return gson.fromJson(fetch(path), MediaCollection[].class);
+	}
+
+	/**
+	 * Sends a PATCH request to the given API path with a JSON body.
+	 * Used to update tag values on tracks (e.g. lastSuccessfulPlay, lastSkip, lastError).
+	 */
+	public void patch(String path, String jsonBody) throws MalformedURLException, IOException {
+		URL url = URI.create(apiUrl + path).toURL();
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
+		connection.setRequestProperty("Authorization", "Bearer " + apiKey);
+		connection.setRequestProperty("Content-Type", "application/json");
+		connection.setRequestMethod("PATCH");
+		connection.setDoOutput(true);
+		try (OutputStream os = connection.getOutputStream()) {
+			os.write(jsonBody.getBytes(StandardCharsets.UTF_8));
+		}
+		int responseCode = connection.getResponseCode();
+		if (responseCode >= 400) {
+			throw new IOException("API error: HTTP " + responseCode);
+		}
 	}
 }
 
