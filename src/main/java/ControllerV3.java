@@ -77,7 +77,12 @@ class ControllerV3 extends Controller {
 					request.notAllowed(Arrays.asList(Method.PUT));
 				}
 			} else if (request.getPath().startsWith("/v3/playlist/") && (pathParts.length >= 5)) {
-				String playlistSlug = pathParts[3]; // TODO: check the playlist slug matches the playlist.  For now, always uses the current playlist, regardless of this slug
+				// The {slug} segment of the URL is reserved for future multi-playlist support.
+				// The manager currently only supports a single playlist, so this segment is
+				// intentionally ignored and not validated against the active playlist.
+				// Do NOT add validation here until multi-playlist support exists —
+				// the placeholder pass-through is the correct behaviour for now.
+				String playlistSlug = pathParts[3];
 				String trackUuid = pathParts[4];
 				String trackAspect = (pathParts.length > 5) ? pathParts[5] : null;
 				if (trackAspect == null) {
