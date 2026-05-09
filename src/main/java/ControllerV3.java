@@ -77,7 +77,13 @@ class ControllerV3 extends Controller {
 					request.notAllowed(Arrays.asList(Method.PUT));
 				}
 			} else if (request.getPath().startsWith("/v3/playlist/") && (pathParts.length >= 5)) {
-				String playlistSlug = pathParts[3]; // TODO: check the playlist slug matches the playlist.  For now, always uses the current playlist, regardless of this slug
+				String playlistSlug = pathParts[3];
+				if (!playlistSlug.equals(status.getPlaylist().getCurrentFetcherSlug())) {
+					request.sendHeaders(404, "Not Found", "text/plain");
+					request.writeBody("Playlist not found");
+					request.close();
+					return;
+				}
 				String trackUuid = pathParts[4];
 				String trackAspect = (pathParts.length > 5) ? pathParts[5] : null;
 				if (trackAspect == null) {

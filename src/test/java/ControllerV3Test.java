@@ -79,8 +79,41 @@ class ControllerV3Test {
 		compareRequestResponse(status, "/v3/unknown", Method.GET, null, null, 404, "Not Found", "text/plain",
 				"File Not Found");
 		compareRequestResponse(status, "/v3", Method.GET, null, null, 404, "Not Found", "text/plain", "File Not Found");
-		compareRequestResponse(status, "/v3/playlist/slug/uuid/unknown", Method.GET, null, null, 404, "Not Found",
-				"text/plain", "File Not Found");
+
+		// Unknown aspect within a matching playlist slug returns 404 "File Not Found"
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("mylist");
+		Playlist playlist = new Playlist(fetcher, null);
+		Status statusWithPlaylist = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class),
+				mock(MediaApi.class), mock(FileSystemSync.class));
+		compareRequestResponse(statusWithPlaylist, "/v3/playlist/mylist/uuid/unknown", Method.GET, null, null, 404,
+				"Not Found", "text/plain", "File Not Found");
+	}
+
+	@Test
+	void wrongSlugReturns404() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
+		Playlist playlist = new Playlist(fetcher, null);
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		Track track = new Track(status.getMediaApi(), "http://example.com/track/1");
+		playlist.queueEnd(track);
+
+		// Wrong slug returns 404 without touching playlist state
+		compareRequestResponse(status, "/v3/playlist/wrong-slug/" + track.getUuid(), Method.DELETE,
+				Map.of("action", "complete"), null, 404, "Not Found", "text/plain", "Playlist not found");
+		assertEquals(1, playlist.getLength()); // track not removed
+
+		// Slug matching is case-sensitive
+		compareRequestResponse(status, "/v3/playlist/SPECIAL/" + track.getUuid(), Method.DELETE,
+				Map.of("action", "complete"), null, 404, "Not Found", "text/plain", "Playlist not found");
+		assertEquals(1, playlist.getLength()); // track not removed
+
+		// Correct slug still works
+		compareRequestResponse(status, "/v3/playlist/special/" + track.getUuid(), Method.DELETE,
+				Map.of("action", "skip"), null, 204, "Changed", null, null);
+		assertEquals(0, playlist.getLength());
 	}
 
 	@Test
@@ -616,7 +649,9 @@ class ControllerV3Test {
 
 	@Test
 	void updateTrackTime() throws Exception {
-		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("whatever");
+		Playlist playlist = new Playlist(fetcher, null);
 		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/2456", new HashMap<String, String>(
