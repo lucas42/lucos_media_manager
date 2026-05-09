@@ -55,39 +55,33 @@ class Playlist {
 	}
 
 	// Called when a track gets to the end of its playback
-	public boolean completeTrack(Track track) {
-		return removeTrack(track);
-	}
-
 	public boolean completeTrack(String uuid) {
+		Track track = getTrackByUuid(uuid);
+		if (track != null) {
+			track.recordTag("lastSuccessfulPlay");
+		}
 		return removeTrackByUuid(uuid);
 	}
 
 	// Called when loading or playback of a track encounters an error
-	public boolean flagTrackAsError(Track track, String errorMessage) {
-		boolean trackRemoved = removeTrack(track);
-		if (trackRemoved) {
-			System.out.println("NOTICE: Track " + track.getUrl() + " flagged with error: " + errorMessage);
-			// TODO: Record the error somewhere more presistent than application log
-		}
-		return trackRemoved;
-	}
-
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
+		Track track = getTrackByUuid(uuid);
+		if (track != null) {
+			track.recordTag("lastError");
+		}
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {
 			System.out.println("NOTICE: Track " + uuid + " flagged with error: " + errorMessage);
-			// TODO: Record the error somewhere more presistent than application log
 		}
 		return trackRemoved;
 	}
 
-	// Called when a track is deliberatly skipped
-	public boolean skipTrack(Track track) {
-		return removeTrack(track);
-	}
-
+	// Called when a track is deliberately skipped
 	public boolean skipTrack(String uuid) {
+		Track track = getTrackByUuid(uuid);
+		if (track != null) {
+			track.recordTag("lastSkip");
+		}
 		return removeTrackByUuid(uuid);
 	}
 
@@ -96,8 +90,10 @@ class Playlist {
 	 * (Queues additional tracks if necessary)
 	 */
 	public void skipTrack() {
-		if (tracks.size() > 0)
+		if (tracks.size() > 0) {
+			tracks.get(0).recordTag("lastSkip");
 			tracks.remove(0);
+		}
 		topupTracks();
 	}
 
