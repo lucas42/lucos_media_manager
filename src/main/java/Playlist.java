@@ -68,6 +68,7 @@ class Playlist {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
 			track.recordTag("lastError");
+			track.recordTagWithValue("lastErrorMessage", errorMessage);
 		}
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {

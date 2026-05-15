@@ -462,7 +462,20 @@ class PlaylistTest {
 
 		playlist.flagTrackAsError(track.getUuid(), "Network error");
 
-		verify(mockApi).patch(eq("/v3/tracks/22"), contains("lastError"));
+		verify(mockApi).patch(eq("/v3/tracks/22"), contains("\"lastError\":"));
+	}
+
+	@Test
+	void flagTrackAsErrorByUuidRecordsLastErrorMessage() throws IOException {
+		MediaApi mockApi = mock(MediaApi.class);
+		Track track = new Track(mockApi, "https://example.com/track8", new HashMap<>(Map.of("trackid", "23")));
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		playlist.queueEnd(track);
+
+		playlist.flagTrackAsError(track.getUuid(), "Network timeout");
+
+		verify(mockApi).patch(eq("/v3/tracks/23"), contains("lastErrorMessage"));
+		verify(mockApi).patch(eq("/v3/tracks/23"), contains("Network timeout"));
 	}
 
 	@Test
