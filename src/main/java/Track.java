@@ -152,36 +152,7 @@ class Track {
 	 * @param tagName  The tag predicate name (e.g. "lastSuccessfulPlay", "lastSkip", "lastError")
 	 */
 	void recordTag(String tagName) {
-		recordTagWithValue(tagName, Instant.now().toString());
-	}
-
-	/**
-	 * Records an arbitrary string value as a tag on this track in the media metadata API.
-	 * Errors are logged but do not propagate — tag recording is best-effort and must not
-	 * interfere with the playlist operation that triggered it.
-	 *
-	 * @param tagName  The tag predicate name (e.g. "lastErrorMessage")
-	 * @param value    The string value to store
-	 */
-	void recordTagWithValue(String tagName, String value) {
-		String trackid = metadata.get("trackid");
-		if (trackid == null || mediaApi == null) {
-			return;
-		}
-		String path = "/v3/tracks/" + trackid;
-		JsonObject tagValue = new JsonObject();
-		tagValue.addProperty("name", value);
-		JsonArray values = new JsonArray();
-		values.add(tagValue);
-		JsonObject tags = new JsonObject();
-		tags.add(tagName, values);
-		JsonObject body = new JsonObject();
-		body.add("tags", tags);
-		try {
-			mediaApi.patch(path, body.toString());
-		} catch (Exception e) {
-			System.out.println("WARNING: Failed to record " + tagName + " tag for track " + trackid + ": " + e.getMessage());
-		}
+		recordTagsWithValues(Map.of(tagName, Instant.now().toString()));
 	}
 
 	/**
