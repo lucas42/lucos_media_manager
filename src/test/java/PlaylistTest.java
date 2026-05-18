@@ -454,7 +454,7 @@ class PlaylistTest {
 	}
 
 	@Test
-	void flagTrackAsErrorByUuidRecordsLastError() throws IOException {
+	void flagTrackAsErrorByUuidRecordsBothTagsInSinglePatch() throws IOException {
 		MediaApi mockApi = mock(MediaApi.class);
 		Track track = new Track(mockApi, "https://example.com/track7", new HashMap<>(Map.of("trackid", "22")));
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
@@ -462,7 +462,12 @@ class PlaylistTest {
 
 		playlist.flagTrackAsError(track.getUuid(), "Network error");
 
-		verify(mockApi).patch(eq("/v3/tracks/22"), contains("\"lastError\":"));
+		// Exactly one PATCH call that carries both lastError and lastErrorMessage,
+		// preventing duplicate Loganne events (lucas42/lucos_media_metadata_api#241).
+		verify(mockApi, times(1)).patch(
+			eq("/v3/tracks/22"),
+			argThat(body -> body.contains("\"lastError\"") && body.contains("lastErrorMessage") && body.contains("Network error"))
+		);
 	}
 
 	@Test

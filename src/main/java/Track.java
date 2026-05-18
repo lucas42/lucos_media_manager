@@ -184,6 +184,45 @@ class Track {
 		}
 	}
 
+	/**
+	 * Records two tag values as a single PATCH request, avoiding duplicate Loganne events.
+	 * Use this when two tags should be treated atomically by the metadata API (e.g. lastError
+	 * paired with lastErrorMessage). Errors are logged but do not propagate.
+	 *
+	 * @param tagName1  The first tag predicate name (e.g. "lastError")
+	 * @param value1    The first value to store
+	 * @param tagName2  The second tag predicate name (e.g. "lastErrorMessage")
+	 * @param value2    The second value to store
+	 */
+	void recordTwoTagsWithValues(String tagName1, String value1, String tagName2, String value2) {
+		String trackid = metadata.get("trackid");
+		if (trackid == null || mediaApi == null) {
+			return;
+		}
+		String path = "/v3/tracks/" + trackid;
+		JsonObject tags = new JsonObject();
+
+		JsonObject tagValue1 = new JsonObject();
+		tagValue1.addProperty("name", value1);
+		JsonArray values1 = new JsonArray();
+		values1.add(tagValue1);
+		tags.add(tagName1, values1);
+
+		JsonObject tagValue2 = new JsonObject();
+		tagValue2.addProperty("name", value2);
+		JsonArray values2 = new JsonArray();
+		values2.add(tagValue2);
+		tags.add(tagName2, values2);
+
+		JsonObject body = new JsonObject();
+		body.add("tags", tags);
+		try {
+			mediaApi.patch(path, body.toString());
+		} catch (Exception e) {
+			System.out.println("WARNING: Failed to record " + tagName1 + "/" + tagName2 + " tags for track " + trackid + ": " + e.getMessage());
+		}
+	}
+
 	public String getUuid() {
 		return uuid;
 	}
