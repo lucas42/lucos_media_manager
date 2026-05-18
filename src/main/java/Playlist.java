@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.math.BigInteger;
+import java.time.Instant;
 
 class Playlist {
 	private CopyOnWriteArrayList<Track> tracks = new CopyOnWriteArrayList<Track>();
@@ -67,8 +68,7 @@ class Playlist {
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
-			track.recordTag("lastError");
-			track.recordTagWithValue("lastErrorMessage", errorMessage);
+			track.recordTagsWithValues(Map.of("lastError", Instant.now().toString(), "lastErrorMessage", errorMessage));
 		}
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {

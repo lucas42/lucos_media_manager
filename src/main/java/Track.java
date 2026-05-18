@@ -152,35 +152,36 @@ class Track {
 	 * @param tagName  The tag predicate name (e.g. "lastSuccessfulPlay", "lastSkip", "lastError")
 	 */
 	void recordTag(String tagName) {
-		recordTagWithValue(tagName, Instant.now().toString());
+		recordTagsWithValues(Map.of(tagName, Instant.now().toString()));
 	}
 
 	/**
-	 * Records an arbitrary string value as a tag on this track in the media metadata API.
-	 * Errors are logged but do not propagate — tag recording is best-effort and must not
-	 * interfere with the playlist operation that triggered it.
+	 * Records multiple tag values as a single PATCH request, avoiding duplicate Loganne events.
+	 * Use this when tags should be treated atomically by the metadata API (e.g. lastError
+	 * paired with lastErrorMessage). Errors are logged but do not propagate.
 	 *
-	 * @param tagName  The tag predicate name (e.g. "lastErrorMessage")
-	 * @param value    The string value to store
+	 * @param tagValues  Map of tag predicate name to value (e.g. {"lastError": "...", "lastErrorMessage": "..."})
 	 */
-	void recordTagWithValue(String tagName, String value) {
+	void recordTagsWithValues(Map<String, String> tagValues) {
 		String trackid = metadata.get("trackid");
 		if (trackid == null || mediaApi == null) {
 			return;
 		}
 		String path = "/v3/tracks/" + trackid;
-		JsonObject tagValue = new JsonObject();
-		tagValue.addProperty("name", value);
-		JsonArray values = new JsonArray();
-		values.add(tagValue);
 		JsonObject tags = new JsonObject();
-		tags.add(tagName, values);
+		for (Map.Entry<String, String> entry : tagValues.entrySet()) {
+			JsonObject tagValue = new JsonObject();
+			tagValue.addProperty("name", entry.getValue());
+			JsonArray values = new JsonArray();
+			values.add(tagValue);
+			tags.add(entry.getKey(), values);
+		}
 		JsonObject body = new JsonObject();
 		body.add("tags", tags);
 		try {
 			mediaApi.patch(path, body.toString());
 		} catch (Exception e) {
-			System.out.println("WARNING: Failed to record " + tagName + " tag for track " + trackid + ": " + e.getMessage());
+			System.out.println("WARNING: Failed to record tags for track " + trackid + ": " + e.getMessage());
 		}
 	}
 
