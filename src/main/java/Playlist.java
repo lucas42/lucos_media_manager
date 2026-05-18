@@ -68,7 +68,7 @@ class Playlist {
 	public boolean flagTrackAsError(String uuid, String errorMessage) {
 		Track track = getTrackByUuid(uuid);
 		if (track != null) {
-			track.recordTwoTagsWithValues("lastError", Instant.now().toString(), "lastErrorMessage", errorMessage);
+			track.recordTagsWithValues(Map.of("lastError", Instant.now().toString(), "lastErrorMessage", errorMessage));
 		}
 		boolean trackRemoved = removeTrackByUuid(uuid);
 		if (trackRemoved) {
