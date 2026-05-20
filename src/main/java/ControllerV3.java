@@ -111,7 +111,7 @@ class ControllerV3 extends Controller {
 								// Attempt to parse as a JSON envelope; extract errorMessage and log full context
 								JsonObject jsonBody = JsonParser.parseString(rawBody).getAsJsonObject();
 								JsonElement errorField = jsonBody.get("errorMessage");
-								errorMessage = (errorField != null && !errorField.isJsonNull()) ? errorField.getAsString() : rawBody;
+								errorMessage = (errorField != null && !errorField.isJsonNull() && errorField.isJsonPrimitive()) ? errorField.getAsString() : rawBody;
 								System.out.println("NOTICE: Track " + trackUuid + " error context: " + jsonBody);
 							} catch (JsonSyntaxException | IllegalStateException e) {
 								// Not a JSON object — treat as plain text

@@ -387,6 +387,21 @@ class ControllerV3Test {
 
 		// Track should have been removed from the playlist
 		assertEquals(0, playlist.getLength());
+
+		// Edge case: errorMessage field is a non-string (object) — should fall back to full raw body
+		Track trackB = new Track(mediaApi, "http://example.com/track/8532", new HashMap<String, String>(
+				Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		playlist.queue(new Track[] { trackB });
+
+		String jsonBodyNonStringError = "{\"errorMessage\":{\"code\":42},\"context\":{\"stage\":\"fetch\"}}";
+		compareRequestResponse(status, "/v3/playlist/special/" + trackB.getUuid(), Method.DELETE,
+				Map.of("action", "error"), jsonBodyNonStringError, 204, "Changed", null, null);
+
+		ArgumentCaptor<String> patchBodyCaptor2 = ArgumentCaptor.forClass(String.class);
+		verify(mediaApi).patch(eq("/v3/tracks/8532"), patchBodyCaptor2.capture());
+		// Full raw body used as fallback when errorMessage is not a string primitive
+		assertTrue(patchBodyCaptor2.getValue().contains("errorMessage"), "fallback patch body should be the full JSON string");
+		assertEquals(0, playlist.getLength());
 	}
 
 	@Test
