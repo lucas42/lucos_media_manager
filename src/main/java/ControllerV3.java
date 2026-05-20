@@ -107,18 +107,14 @@ class ControllerV3 extends Controller {
 						} else if (action.equals("error")) {
 							String rawBody = request.getData();
 							String errorMessage;
-							if (rawBody.startsWith("{")) {
-								// JSON envelope — parse, log full context, extract errorMessage field
-								try {
-									JsonObject jsonBody = JsonParser.parseString(rawBody).getAsJsonObject();
-									JsonElement errorField = jsonBody.get("errorMessage");
-									errorMessage = (errorField != null && !errorField.isJsonNull()) ? errorField.getAsString() : rawBody;
-									System.out.println("NOTICE: Track " + trackUuid + " error context: " + jsonBody);
-								} catch (JsonSyntaxException e) {
-									// Malformed JSON — treat as plain text
-									errorMessage = rawBody;
-								}
-							} else {
+							try {
+								// Attempt to parse as a JSON envelope; extract errorMessage and log full context
+								JsonObject jsonBody = JsonParser.parseString(rawBody).getAsJsonObject();
+								JsonElement errorField = jsonBody.get("errorMessage");
+								errorMessage = (errorField != null && !errorField.isJsonNull()) ? errorField.getAsString() : rawBody;
+								System.out.println("NOTICE: Track " + trackUuid + " error context: " + jsonBody);
+							} catch (JsonSyntaxException | IllegalStateException e) {
+								// Not a JSON object — treat as plain text
 								errorMessage = rawBody;
 							}
 							if (errorMessage.equals("")) {
