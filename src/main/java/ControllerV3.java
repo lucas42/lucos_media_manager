@@ -1,3 +1,7 @@
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -101,7 +105,18 @@ class ControllerV3 extends Controller {
 								request.close();
 							}
 						} else if (action.equals("error")) {
-							String errorMessage = request.getData();
+							String rawBody = request.getData();
+							String errorMessage;
+							try {
+								// Attempt to parse as a JSON envelope; extract errorMessage and log full context
+								JsonObject jsonBody = JsonParser.parseString(rawBody).getAsJsonObject();
+								JsonElement errorField = jsonBody.get("errorMessage");
+								errorMessage = (errorField != null && !errorField.isJsonNull() && errorField.isJsonPrimitive()) ? errorField.getAsString() : rawBody;
+								System.out.println("NOTICE: Track " + trackUuid + " error context: " + jsonBody);
+							} catch (JsonSyntaxException | IllegalStateException e) {
+								// Not a JSON object — treat as plain text
+								errorMessage = rawBody;
+							}
 							if (errorMessage.equals("")) {
 								request.sendHeaders(400, "Bad Request", "text/plain");
 								request.writeBody("Missing error message from request body");

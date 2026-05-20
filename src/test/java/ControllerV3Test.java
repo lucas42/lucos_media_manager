@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.*;
 
 class ControllerV3Test {
@@ -342,6 +345,63 @@ class ControllerV3Test {
 		checkNotAllowed(status, "/v3/playlist/special/" + trackD.getUuid(), Method.PUT, Map.of("action", "error"),
 				Arrays.asList(Method.DELETE, Method.POST), true);
 
+	}
+
+	@Test
+	void trackErrorJson() throws Exception {
+		Fetcher fetcher = mock(Fetcher.class);
+		when(fetcher.getSlug()).thenReturn("special");
+
+		Playlist playlist = new Playlist(fetcher, null);
+		MediaApi mediaApi = mock(MediaApi.class);
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mediaApi,
+				mock(FileSystemSync.class));
+		Track trackA = new Track(mediaApi, "http://example.com/track/1347", new HashMap<String, String>(
+				Map.of("title", "Stairway To Heaven", "artist", "Led Zeplin", "trackid", "1347")));
+		playlist.queue(new Track[] { trackA });
+
+		String jsonBody = "{\"errorMessage\":\"Unable to decode audio data\",\"context\":{\"stage\":\"decode\",\"sessionErrorCount\":3}}";
+
+		// Capture stdout so we can assert the full envelope is logged
+		ByteArrayOutputStream capturedOut = new ByteArrayOutputStream();
+		PrintStream oldOut = System.out;
+		System.setOut(new PrintStream(capturedOut));
+		try {
+			compareRequestResponse(status, "/v3/playlist/special/" + trackA.getUuid(), Method.DELETE,
+					Map.of("action", "error"), jsonBody, 204, "Changed", null, null);
+		} finally {
+			System.setOut(oldOut);
+		}
+
+		// The errorMessage field value (not the full JSON string) should be used as lastErrorMessage
+		ArgumentCaptor<String> patchBodyCaptor = ArgumentCaptor.forClass(String.class);
+		verify(mediaApi).patch(eq("/v3/tracks/1347"), patchBodyCaptor.capture());
+		String patchBody = patchBodyCaptor.getValue();
+		assertTrue(patchBody.contains("Unable to decode audio data"), "patch body should contain extracted errorMessage value");
+		assertFalse(patchBody.contains("sessionErrorCount"), "patch body should not contain JSON context fields — only errorMessage");
+
+		// Full JSON envelope should appear in stdout
+		String stdout = capturedOut.toString();
+		assertTrue(stdout.contains("sessionErrorCount"), "stdout should contain the full context envelope");
+		assertTrue(stdout.contains("Unable to decode audio data"), "stdout should contain the errorMessage");
+
+		// Track should have been removed from the playlist
+		assertEquals(0, playlist.getLength());
+
+		// Edge case: errorMessage field is a non-string (object) — should fall back to full raw body
+		Track trackB = new Track(mediaApi, "http://example.com/track/8532", new HashMap<String, String>(
+				Map.of("title", "Good as Gold", "artist", "Beautiful South", "trackid", "8532")));
+		playlist.queue(new Track[] { trackB });
+
+		String jsonBodyNonStringError = "{\"errorMessage\":{\"code\":42},\"context\":{\"stage\":\"fetch\"}}";
+		compareRequestResponse(status, "/v3/playlist/special/" + trackB.getUuid(), Method.DELETE,
+				Map.of("action", "error"), jsonBodyNonStringError, 204, "Changed", null, null);
+
+		ArgumentCaptor<String> patchBodyCaptor2 = ArgumentCaptor.forClass(String.class);
+		verify(mediaApi).patch(eq("/v3/tracks/8532"), patchBodyCaptor2.capture());
+		// Full raw body used as fallback when errorMessage is not a string primitive
+		assertTrue(patchBodyCaptor2.getValue().contains("errorMessage"), "fallback patch body should be the full JSON string");
+		assertEquals(0, playlist.getLength());
 	}
 
 	@Test
