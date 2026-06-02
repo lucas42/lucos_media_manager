@@ -53,8 +53,8 @@ class PlaylistTest {
 		boolean ended = initialFetch.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher).run();
-		// fetchTracks fires inside the thread after run() completes
-		verify(loganne, timeout(1000)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
+		// fetchTracks fires inside the thread after run() completes, at level:detail
+		verify(loganne, timeout(1000)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
 		playlist.queue(tracks);
 
 		assertEquals(15, playlist.getLength());
@@ -91,8 +91,8 @@ class PlaylistTest {
 		ended = fetching.await(10, TimeUnit.SECONDS);
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher, times(2)).run();
-		// fetchTracks should now have fired twice (once per completed run)
-		verify(loganne, timeout(1000).times(2)).post("fetchTracks", "Fetched more tracks to add to the current playlist");
+		// fetchTracks should now have fired twice (once per completed run), both at level:detail
+		verify(loganne, timeout(1000).times(2)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
 		assertEquals(4, playlist.getLength());
 	}
 
@@ -395,14 +395,14 @@ class PlaylistTest {
 		doAnswer(invocation -> {
 			eventFired.countDown();
 			return null;
-		}).when(loganne).post(eq("collectionSwitch"), anyString(), any(Map.class));
+		}).when(loganne).post(eq("collectionSwitch"), anyString(), anyString(), any(Map.class));
 
 		playlist.switchFetcher(newFetcher);
 
 		assertTrue(eventFired.await(10, TimeUnit.SECONDS), "collectionSwitch event should fire after first batch");
 
 		// Verify the event was posted with correct fields
-		verify(loganne).post(eq("collectionSwitch"), eq("Switched to collection Robots"), argThat(rawFields -> {
+		verify(loganne).post(eq("collectionSwitch"), eq("Switched to collection Robots"), eq("routine"), argThat(rawFields -> {
 			@SuppressWarnings("unchecked")
 			Map<String, Object> fields = (Map<String, Object>) rawFields;
 			return "robots".equals(fields.get("slug"))
@@ -414,7 +414,7 @@ class PlaylistTest {
 		}));
 
 		// fetchTracks must NOT be emitted during a collection switch
-		verify(loganne, never()).post(eq("fetchTracks"), anyString());
+		verify(loganne, never()).post(eq("fetchTracks"), anyString(), anyString());
 	}
 
 	@Test

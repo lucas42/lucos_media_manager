@@ -40,14 +40,15 @@ class LoganneTest {
 		String body = capturePostedBody(7999, () -> {
 			try {
 				Loganne loganne = new Loganne("lucos_media_test", "http://localhost:7999/events");
-				loganne.post("TestType", "A little message");
+				loganne.post("TestType", "A little message", "routine");
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		});
-		assertEquals(
-				"{\"source\":\"lucos_media_test\",\"type\":\"TestType\",\"humanReadable\":\"A little message\"}",
-				body);
+		assertTrue(body.contains("\"source\":\"lucos_media_test\""), "body should contain source");
+		assertTrue(body.contains("\"type\":\"TestType\""), "body should contain type");
+		assertTrue(body.contains("\"humanReadable\":\"A little message\""), "body should contain humanReadable");
+		assertTrue(body.contains("\"level\":\"routine\""), "body should contain level");
 	}
 
 	@Test
@@ -55,7 +56,7 @@ class LoganneTest {
 		String body = capturePostedBody(7998, () -> {
 			try {
 				Loganne loganne = new Loganne("lucos_media_test", "http://localhost:7998/events");
-				loganne.post("collectionSwitch", "Switched to collection Robots", Map.of(
+				loganne.post("collectionSwitch", "Switched to collection Robots", "routine", Map.of(
 						"slug", "robots",
 						"name", "Robots",
 						"collectionSize", 42
@@ -68,7 +69,8 @@ class LoganneTest {
 		assertTrue(body.contains("\"source\":\"lucos_media_test\""), "body should contain source");
 		assertTrue(body.contains("\"type\":\"collectionSwitch\""), "body should contain type");
 		assertTrue(body.contains("\"humanReadable\":\"Switched to collection Robots\""), "body should contain humanReadable");
-		// Verify structured fields are included
+		// Verify level and structured fields are included
+		assertTrue(body.contains("\"level\":\"routine\""), "body should contain level");
 		assertTrue(body.contains("\"slug\":\"robots\""), "body should contain slug");
 		assertTrue(body.contains("\"name\":\"Robots\""), "body should contain name");
 		assertTrue(body.contains("\"collectionSize\":42"), "body should contain collectionSize");

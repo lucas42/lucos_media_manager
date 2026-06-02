@@ -192,7 +192,7 @@ class ControllerV3Test {
 																											// as
 																											// current
 																											// one
-		verify(loganne).post("deviceSwitch", "Playing music on first device connected");
+		verify(loganne).post("deviceSwitch", "Playing music on first device connected", "routine");
 		compareRequestResponse(status, "/v3/current-device", Method.PUT, null, "a7441bd5-65a1-4357-bc96-c0ece53def07",
 				204, "Changed", null, null);
 		assertTrue(status.getDeviceList().getDevice("a7441bd5-65a1-4357-bc96-c0ece53def07").isCurrent()); // Device
@@ -206,7 +206,7 @@ class ControllerV3Test {
 																											// marked as
 																											// not
 																											// current
-		verify(loganne).post("deviceSwitch", "Moving music to play on Device 2");
+		verify(loganne).post("deviceSwitch", "Moving music to play on Device 2", "routine");
 		compareRequestResponse(status, "/v3/current-device", Method.PUT, null, "47d9cba3-fd9f-445d-b984-072e4f75732c",
 				204, "Changed", null, null);
 		assertTrue(status.getDeviceList().getDevice("47d9cba3-fd9f-445d-b984-072e4f75732c").isCurrent()); // Existing
@@ -219,7 +219,7 @@ class ControllerV3Test {
 																											// marked as
 																											// not
 																											// current
-		verify(loganne).post("deviceSwitch", "Moving music to play on Device 1");
+		verify(loganne).post("deviceSwitch", "Moving music to play on Device 1", "routine");
 
 		checkNotAllowed(status, "/v3/current-device", Method.POST, null, Arrays.asList(Method.PUT), true);
 
