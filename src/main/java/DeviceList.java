@@ -27,7 +27,7 @@ class DeviceList {
 		// If this is the first device, it should be marked as current
 		if (size() == 1) {
 			instance.isCurrent = true;
-			loganne.post("deviceSwitch", "Playing music on first device connected");
+			loganne.post("deviceSwitch", "Playing music on first device connected", "routine");
 		}
 		return instance;
 	}
@@ -73,7 +73,7 @@ class DeviceList {
 			device.isCurrent = false;
 		}
 		newCurrent.isCurrent = true;
-		loganne.post("deviceSwitch", "Moving music to play on "+newCurrent.getName());
+		loganne.post("deviceSwitch", "Moving music to play on "+newCurrent.getName(), "routine");
 	}
 
 	/**

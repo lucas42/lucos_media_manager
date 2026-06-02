@@ -216,7 +216,7 @@ class Playlist {
 	public void topupTracks() {
 		topupTracks(() -> {
 			if (loganne != null)
-				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist", Map.of("level", "detail"));
+				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist", "detail");
 		});
 	}
 
@@ -266,7 +266,7 @@ class Playlist {
 				}
 				fields.put("firstBatchLatencyMs", latencyMs);
 				fields.put("collectionSize", collectionSize);
-				loganne.post("collectionSwitch", "Switched to collection " + currentFetcher.getName(), fields);
+				loganne.post("collectionSwitch", "Switched to collection " + currentFetcher.getName(), "routine", fields);
 			}
 		});
 	}

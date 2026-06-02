@@ -16,18 +16,18 @@ class Loganne {
 	/**
 	 * Asynchronously sends an event to the loganne service
 	 */
-	public void post(String type, String humanReadable) {
-		post(type, humanReadable, null);
+	public void post(String type, String humanReadable, String level) {
+		post(type, humanReadable, level, null);
 	}
 
 	/**
 	 * Asynchronously sends an event to the loganne service with additional structured fields
 	 */
-	public void post(String type, String humanReadable, Map<String, Object> extraFields) {
+	public void post(String type, String humanReadable, String level, Map<String, Object> extraFields) {
 		Thread thread = new Thread() {
 			public void run() {
 				try {
-					rawPost(type, humanReadable, extraFields);
+					rawPost(type, humanReadable, level, extraFields);
 				} catch (Exception e) {
 					System.err.println("Can't post to Loganne");
 					e.printStackTrace();
@@ -38,11 +38,12 @@ class Loganne {
 		thread.start();
 	}
 
-	private void rawPost(String type, String humanReadable, Map<String, Object> extraFields) throws IOException {
+	private void rawPost(String type, String humanReadable, String level, Map<String, Object> extraFields) throws IOException {
 		Map<String, Object> postData = new HashMap<String, Object>();
 		postData.put("source", source);
 		postData.put("type", type);
 		postData.put("humanReadable", humanReadable);
+		postData.put("level", level);
 		if (extraFields != null) {
 			postData.putAll(extraFields);
 		}
