@@ -344,7 +344,7 @@ class PlaylistTest {
 
 	@Test
 	void trackTimesByUuid() {
-		TimeWriteResult result;
+		boolean returnVal;
 		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
 		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
 		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
@@ -356,29 +356,23 @@ class PlaylistTest {
 		playlist.queueEnd(trackD);
 
 		// Accepted write: new time > old time
-		result = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f);
-		assertTrue(result.trackFound);
-		assertEquals(0f, result.oldTime, 0.0001f);
-		assertTrue(result.accepted);
+		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f, null);
+		assertTrue(returnVal);
 		assertEquals(13.7f, trackC.getCurrentTime());
 
 		// Accepted write: another track
-		result = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f);
-		assertTrue(result.trackFound);
-		assertEquals(0f, result.oldTime, 0.0001f);
-		assertTrue(result.accepted);
+		returnVal = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f, null);
+		assertTrue(returnVal);
 		assertEquals(69f, trackB.getCurrentTime());
 
-		// Clamped write: new time <= old time (monotonic guard rejects it)
-		result = playlist.setTrackTimeByUuid(trackC.getUuid(), 5.0f);
-		assertTrue(result.trackFound);
-		assertEquals(13.7f, result.oldTime, 0.0001f);
-		assertFalse(result.accepted);
-		assertEquals(13.7f, trackC.getCurrentTime()); // unchanged
+		// Clamped write: new time < current high-water mark (monotonic guard rejects it)
+		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 5.0f, null);
+		assertTrue(returnVal); // track found
+		assertEquals(13.7f, trackC.getCurrentTime()); // unchanged — write was clamped
 
-		// Track not found: sentinel returned
-		result = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f);
-		assertFalse(result.trackFound);
+		// Track not found
+		returnVal = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f, null);
+		assertFalse(returnVal);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
 	}
