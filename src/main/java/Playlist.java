@@ -216,7 +216,7 @@ class Playlist {
 	public void topupTracks() {
 		topupTracks(() -> {
 			if (loganne != null)
-				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist");
+				loganne.post("fetchTracks", "Fetched more tracks to add to the current playlist", Map.of("level", "detail"));
 		});
 	}
 
