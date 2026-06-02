@@ -195,7 +195,7 @@ class ControllerV3 extends Controller {
 					if (request.getMethod().equals(Method.PUT)) {
 						try{
 							float trackTime = Float.parseFloat(request.getData());
-							if (status.getPlaylist().setTrackTimeByUuid(trackUuid, trackTime)) {
+							if (status.getPlaylist().setTrackTimeByUuid(trackUuid, trackTime, request.getUserAgent())) {
 								request.sendHeaders(204, "Changed");
 								request.close();
 							} else {

@@ -190,11 +190,19 @@ class Playlist {
 		return true;
 	}
 
-	public boolean setTrackTimeByUuid(String uuid, float time) {
+	public boolean setTrackTimeByUuid(String uuid, float time, String userAgent) {
 		Track track = getTrackByUuid(uuid);
 		if (track == null)
 			return false;
-		track.setTime(time, null);
+		float oldTime = track.getCurrentTime();
+		boolean accepted = track.setTime(time, null);
+		java.util.Map<String, Object> logData = new java.util.LinkedHashMap<>();
+		logData.put("trackUuid", uuid);
+		logData.put("oldTime", oldTime);
+		logData.put("newTime", time);
+		logData.put("outcome", accepted ? "accepted" : "clamped");
+		logData.put("userAgent", userAgent);
+		System.out.println("INFO: current-time write: " + new com.google.gson.Gson().toJson(logData));
 		return true;
 	}
 

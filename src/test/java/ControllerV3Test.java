@@ -701,6 +701,69 @@ class ControllerV3Test {
 	}
 
 	@Test
+	void updateTrackTimeLogging() throws Exception {
+		Playlist playlist = new Playlist(mock(Fetcher.class), null);
+		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
+				mock(FileSystemSync.class));
+		Track trackA = new Track(status.getMediaApi(), "http://example.com/track/2456", new HashMap<String, String>(
+				Map.of("title", "Strawberry Fields", "artist", "The Beatles", "trackid", "2456")));
+		playlist.queue(new Track[] { trackA });
+
+		// Capture stdout
+		ByteArrayOutputStream capturedOut = new ByteArrayOutputStream();
+		PrintStream oldOut = System.out;
+		System.setOut(new PrintStream(capturedOut));
+		try {
+			// Accepted write: new time > old time (0)
+			HttpRequest request = mock(HttpRequest.class);
+			when(request.getPath()).thenReturn("/v3/playlist/whatever/" + trackA.getUuid() + "/current-time");
+			when(request.getMethod()).thenReturn(Method.PUT);
+			when(request.isAuthorised()).thenReturn(true);
+			when(request.getData()).thenReturn("13.7");
+			when(request.getUserAgent()).thenReturn("lucos_media_linuxplayer/xwing.s.l42.eu");
+			new FrontController(status, request).run();
+
+			String stdout = capturedOut.toString();
+			assertTrue(stdout.contains("\"outcome\":\"accepted\""), "accepted write should be logged with outcome=accepted");
+			assertTrue(stdout.contains("\"oldTime\":0.0"), "old time should be logged as 0.0 before first write");
+			assertTrue(stdout.contains("\"newTime\":13.7"), "new time should be logged");
+			assertTrue(stdout.contains("lucos_media_linuxplayer/xwing.s.l42.eu"), "user-agent should be logged");
+			assertTrue(stdout.contains(trackA.getUuid()), "track uuid should be logged");
+
+			// Clamped write: new time < current time (13.7)
+			capturedOut.reset();
+			HttpRequest request2 = mock(HttpRequest.class);
+			when(request2.getPath()).thenReturn("/v3/playlist/whatever/" + trackA.getUuid() + "/current-time");
+			when(request2.getMethod()).thenReturn(Method.PUT);
+			when(request2.isAuthorised()).thenReturn(true);
+			when(request2.getData()).thenReturn("5.0");
+			when(request2.getUserAgent()).thenReturn("lucos_media_seinn/desktop.s.l42.eu");
+			new FrontController(status, request2).run();
+
+			String clampedStdout = capturedOut.toString();
+			assertTrue(clampedStdout.contains("\"outcome\":\"clamped\""), "clamped write should be logged with outcome=clamped");
+			assertTrue(clampedStdout.contains("\"oldTime\":13.7"), "old time should reflect the current high-water mark");
+			assertTrue(clampedStdout.contains("\"newTime\":5.0"), "new (rejected) time should be logged");
+			assertTrue(clampedStdout.contains("lucos_media_seinn/desktop.s.l42.eu"), "user-agent should be logged for clamped write");
+
+			// Track not found: no log line emitted
+			capturedOut.reset();
+			HttpRequest request3 = mock(HttpRequest.class);
+			when(request3.getPath()).thenReturn("/v3/playlist/whatever/unknown-uuid/current-time");
+			when(request3.getMethod()).thenReturn(Method.PUT);
+			when(request3.isAuthorised()).thenReturn(true);
+			when(request3.getData()).thenReturn("10.0");
+			when(request3.getUserAgent()).thenReturn("lucos_media_linuxplayer/xwing.s.l42.eu");
+			new FrontController(status, request3).run();
+
+			String notFoundStdout = capturedOut.toString();
+			assertFalse(notFoundStdout.contains("current-time write"), "no log line when track uuid is not found");
+		} finally {
+			System.setOut(oldOut);
+		}
+	}
+
+	@Test
 	void reorderTrack() throws Exception {
 		Fetcher fetcher = mock(Fetcher.class);
 		when(fetcher.getSlug()).thenReturn("special");

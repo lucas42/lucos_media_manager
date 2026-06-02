@@ -355,15 +355,23 @@ class PlaylistTest {
 		playlist.queueEnd(trackC);
 		playlist.queueEnd(trackD);
 
-		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f);
+		// Accepted write: new time > old time
+		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f, null);
 		assertTrue(returnVal);
-		assertEquals(trackC.getCurrentTime(), 13.7f);
+		assertEquals(13.7f, trackC.getCurrentTime());
 
-		returnVal = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f);
+		// Accepted write: another track
+		returnVal = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f, null);
 		assertTrue(returnVal);
-		assertEquals(trackB.getCurrentTime(), 69f);
+		assertEquals(69f, trackB.getCurrentTime());
 
-		returnVal = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f);
+		// Clamped write: new time < current high-water mark (monotonic guard rejects it)
+		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 5.0f, null);
+		assertTrue(returnVal); // track found
+		assertEquals(13.7f, trackC.getCurrentTime()); // unchanged — write was clamped
+
+		// Track not found
+		returnVal = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f, null);
 		assertFalse(returnVal);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);

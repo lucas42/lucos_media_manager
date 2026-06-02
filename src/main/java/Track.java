@@ -122,11 +122,13 @@ class Track {
 		return metadata;
 	}
 
-	public void setTime(float newTime, BigInteger newTimeSet) {
+	public boolean setTime(float newTime, BigInteger newTimeSet) {
 		if (newTime > currentTime) {
 			currentTime = newTime;
 			timeSet = newTimeSet;
+			return true;
 		}
+		return false;
 	}
 
 	public void timeSetNow() {
