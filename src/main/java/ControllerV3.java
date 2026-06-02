@@ -195,7 +195,16 @@ class ControllerV3 extends Controller {
 					if (request.getMethod().equals(Method.PUT)) {
 						try{
 							float trackTime = Float.parseFloat(request.getData());
-							if (status.getPlaylist().setTrackTimeByUuid(trackUuid, trackTime)) {
+							String userAgent = request.getUserAgent();
+							TimeWriteResult result = status.getPlaylist().setTrackTimeByUuid(trackUuid, trackTime);
+							if (result.trackFound) {
+								Map<String, Object> logData = new java.util.LinkedHashMap<>();
+								logData.put("trackUuid", trackUuid);
+								logData.put("oldTime", result.oldTime);
+								logData.put("newTime", trackTime);
+								logData.put("outcome", result.accepted ? "accepted" : "clamped");
+								logData.put("userAgent", userAgent);
+								System.out.println("INFO: current-time write: " + new com.google.gson.Gson().toJson(logData));
 								request.sendHeaders(204, "Changed");
 								request.close();
 							} else {

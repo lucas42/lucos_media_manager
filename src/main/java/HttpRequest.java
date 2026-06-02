@@ -27,6 +27,7 @@ class HttpRequest {
 	private String data;
 	private Method method;
 	private String authorizationHeader;
+	private String userAgentHeader;
 	private int responseCode;
 	static private Collection<String> validApiKeys = new HashSet<String>();
 
@@ -108,6 +109,7 @@ class HttpRequest {
 			}
 		}
 		authorizationHeader = headers.get("authorization");
+		userAgentHeader = headers.get("user-agent");
 		int ii = path.indexOf('?');
 		if (ii > -1) {
 			String[] getstring = path.substring(ii + 1).split("&");
@@ -175,6 +177,10 @@ class HttpRequest {
 			return false;
 		}
 		return validApiKeys.contains(apiKey);
+	}
+
+	public String getUserAgent() {
+		return userAgentHeader;
 	}
 
 	public void sendHeaders(int status, String statusstring, Map<String, String> extraheaders) throws IOException {

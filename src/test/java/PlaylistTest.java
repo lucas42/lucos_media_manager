@@ -344,7 +344,7 @@ class PlaylistTest {
 
 	@Test
 	void trackTimesByUuid() {
-		boolean returnVal;
+		TimeWriteResult result;
 		Track trackA = new Track(mock(MediaApi.class), "https://example.com/trackA");
 		Track trackB = new Track(mock(MediaApi.class), "https://example.com/trackB");
 		Track trackC = new Track(mock(MediaApi.class), "https://example.com/trackC");
@@ -355,16 +355,30 @@ class PlaylistTest {
 		playlist.queueEnd(trackC);
 		playlist.queueEnd(trackD);
 
-		returnVal = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f);
-		assertTrue(returnVal);
-		assertEquals(trackC.getCurrentTime(), 13.7f);
+		// Accepted write: new time > old time
+		result = playlist.setTrackTimeByUuid(trackC.getUuid(), 13.7f);
+		assertTrue(result.trackFound);
+		assertEquals(0f, result.oldTime, 0.0001f);
+		assertTrue(result.accepted);
+		assertEquals(13.7f, trackC.getCurrentTime());
 
-		returnVal = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f);
-		assertTrue(returnVal);
-		assertEquals(trackB.getCurrentTime(), 69f);
+		// Accepted write: another track
+		result = playlist.setTrackTimeByUuid(trackB.getUuid(), 69f);
+		assertTrue(result.trackFound);
+		assertEquals(0f, result.oldTime, 0.0001f);
+		assertTrue(result.accepted);
+		assertEquals(69f, trackB.getCurrentTime());
 
-		returnVal = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f);
-		assertFalse(returnVal);
+		// Clamped write: new time <= old time (monotonic guard rejects it)
+		result = playlist.setTrackTimeByUuid(trackC.getUuid(), 5.0f);
+		assertTrue(result.trackFound);
+		assertEquals(13.7f, result.oldTime, 0.0001f);
+		assertFalse(result.accepted);
+		assertEquals(13.7f, trackC.getCurrentTime()); // unchanged
+
+		// Track not found: sentinel returned
+		result = playlist.setTrackTimeByUuid("unknown-uuid", 66.6f);
+		assertFalse(result.trackFound);
 		assertEquals(trackA.getCurrentTime(), 0f);
 		assertEquals(trackD.getCurrentTime(), 0f);
 	}

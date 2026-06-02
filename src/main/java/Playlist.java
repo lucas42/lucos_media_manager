@@ -190,12 +190,13 @@ class Playlist {
 		return true;
 	}
 
-	public boolean setTrackTimeByUuid(String uuid, float time) {
+	public TimeWriteResult setTrackTimeByUuid(String uuid, float time) {
 		Track track = getTrackByUuid(uuid);
 		if (track == null)
-			return false;
-		track.setTime(time, null);
-		return true;
+			return TimeWriteResult.TRACK_NOT_FOUND;
+		float oldTime = track.getCurrentTime();
+		boolean accepted = track.setTime(time, null);
+		return new TimeWriteResult(true, oldTime, accepted);
 	}
 
 	public void updateTracks(String trackid, Track trackUpdate) {
