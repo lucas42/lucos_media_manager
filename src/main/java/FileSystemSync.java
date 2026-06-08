@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.file.*;
 import com.google.gson.Gson;
 import java.util.Map;
 import java.util.HashMap;
@@ -64,14 +65,22 @@ public final class FileSystemSync {
 	}
 
 	public void writeStatus(Status status) {
+		Path target = Paths.get(filePath);
+		Path tmp = null;
 		try {
-			FileWriter writer = new FileWriter(filePath);
-			Gson gson = CustomGson.get(status);
-			gson.toJson(status.getSummary(), writer);
-			writer.close();
+			tmp = Files.createTempFile(target.getParent(), FILE_NAME, ".tmp");
+			try (Writer writer = Files.newBufferedWriter(tmp)) {
+				CustomGson.get(status).toJson(status.getSummary(), writer);
+			}
+			Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			System.err.println("ERROR: Can't write status to filesystem");
 			e.printStackTrace(System.err);
+			if (tmp != null) {
+				try {
+					Files.deleteIfExists(tmp);
+				} catch (IOException ignored) {}
+			}
 		}
 	}
 }
