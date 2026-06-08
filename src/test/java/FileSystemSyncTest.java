@@ -7,14 +7,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 class FileSystemSyncTest {
 
 	@AfterEach
-	void removeStateFile() {
+	void removeStateFile() throws IOException {
 		File stateFile = new File("manager-status.json");
 		stateFile.delete();
+		// Clean up any stray .tmp files left by a failed test
+		try (var stream = Files.newDirectoryStream(Paths.get("."), "manager-status.json*.tmp")) {
+			for (Path p : stream) Files.deleteIfExists(p);
+		}
 	}
 
 	@Test
@@ -97,5 +102,25 @@ class FileSystemSyncTest {
 
 		verify(api, never()).fetchTracks("/v3/tracks/random");
 
+	}
+
+	@Test
+	void writeStatusLeavesNoTmpFiles() throws Exception {
+		FileSystemSync fsSync = new FileSystemSync(".");
+		Playlist playlist = mock(Playlist.class);
+		when(playlist.getCurrentFetcherSlug()).thenReturn("all");
+		when(playlist.getTracks()).thenReturn(new ArrayList<>());
+
+		Status status = new Status(playlist, new DeviceList(mock(Loganne.class)), mock(CollectionList.class),
+				mock(MediaApi.class), fsSync);
+		status.syncToFileSystem();
+
+		// After a successful write there must be no residual temp files
+		try (var stream = Files.newDirectoryStream(Paths.get("."), "manager-status.json*.tmp")) {
+			List<Path> tmpFiles = new ArrayList<>();
+			for (Path p : stream) tmpFiles.add(p);
+			assertEquals(0, tmpFiles.size(),
+					"writeStatus() must not leave .tmp files behind: " + tmpFiles);
+		}
 	}
 }
