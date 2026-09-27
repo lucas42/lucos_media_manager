@@ -14,4 +14,4 @@ WORKDIR /web/lucos/lucos_media_manager
 RUN apk add openjdk25
 COPY --from=build target/manager-latest.jar manager.jar
 
-CMD [ "java", "-cp", "manager.jar", "Manager"]
+CMD [ "java", "-Xlog:gc*,safepoint:stdout:time,level,tags", "-cp", "manager.jar", "Manager"]
