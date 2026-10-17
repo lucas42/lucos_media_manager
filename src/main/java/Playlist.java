@@ -244,7 +244,7 @@ class Playlist {
 	 * Fetches more tracks using the current fetcher, running the given callback
 	 * inside the fetch thread once the fetch completes.
 	 */
-	private void topupTracks(Runnable afterFetch) {
+	private synchronized void topupTracks(Runnable afterFetch) {
 
 		// Don't do anything if there's already enough tracks
 		if (tracks.size() >= TOPUP_LIMIT)
@@ -255,12 +255,12 @@ class Playlist {
 			return;
 
 		final Fetcher currentFetcher = fetcher;
-		currentFetcherThread = new Thread(() -> {
+		final Thread thread = new Thread(() -> {
 			currentFetcher.run();
 			if (isCurrentFetcher(currentFetcher)) afterFetch.run();
 		});
-
-		currentFetcherThread.start();
+		currentFetcherThread = thread;
+		thread.start();
 	}
 
 	/**
@@ -296,7 +296,7 @@ class Playlist {
 	 * Also clears all current tracks.
 	 * To populate the playlist using the new fetcher, call topupTracks() after.
 	 */
-	public void setFetcher(Fetcher fetcher) {
+	public synchronized void setFetcher(Fetcher fetcher) {
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
 		tracks = new CopyOnWriteArrayList<Track>();
