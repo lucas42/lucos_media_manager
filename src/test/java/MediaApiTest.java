@@ -29,6 +29,8 @@ class MediaApiTest {
 	private final List<String> recordedBodies = new ArrayList<>();
 	private final List<String> recordedAuthHeaders = new ArrayList<>();
 
+	private final long originalReadTimeoutMs = MediaApi.READ_TIMEOUT_MS;
+
 	@BeforeEach
 	void startServer() throws IOException {
 		server = HttpServer.create(new InetSocketAddress(0), 0);
@@ -38,6 +40,7 @@ class MediaApiTest {
 
 	@AfterEach
 	void stopServer() {
+		MediaApi.READ_TIMEOUT_MS = originalReadTimeoutMs;
 		server.stop(0);
 		recordedMethods.clear();
 		recordedPaths.clear();
@@ -166,7 +169,8 @@ class MediaApiTest {
 	@Test
 	void stalledResponseBodyThrowsWithinDeadline() throws Exception {
 		try (StallingServer stalling = new StallingServer()) {
-			MediaApi api = new MediaApi(stalling.url(), "test-key", 1_000);
+			MediaApi api = new MediaApi(stalling.url(), "test-key");
+			MediaApi.READ_TIMEOUT_MS = 1_000;
 			long start = System.nanoTime();
 			assertThrows(IOException.class, () -> api.fetchTracks("/v3/tracks/random"));
 			long elapsedMs = (System.nanoTime() - start) / 1_000_000;
@@ -177,7 +181,8 @@ class MediaApiTest {
 	@Test
 	void stalledRequestsDoNotLeakClientSockets() throws Exception {
 		try (StallingServer stalling = new StallingServer()) {
-			MediaApi api = new MediaApi(stalling.url(), "test-key", 300);
+			MediaApi api = new MediaApi(stalling.url(), "test-key");
+			MediaApi.READ_TIMEOUT_MS = 300;
 			int attempts = 10;
 			long before = openFileDescriptors();
 			for (int i = 0; i < attempts; i++) {

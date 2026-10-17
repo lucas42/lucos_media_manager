@@ -9,7 +9,6 @@ public class MediaApi {
 	private final String apiUrl;
 	private final String apiKey;
 	private final java.net.http.HttpClient httpClient;
-	private final long readTimeoutMs;
 
 	public MediaApi() {
 		this(System.getenv("MEDIA_API"), System.getenv("KEY_LUCOS_MEDIA_METADATA_API"));
@@ -20,11 +19,6 @@ public class MediaApi {
 	 * rather than reading from environment variables.
 	 */
 	MediaApi(String apiUrl, String apiKey) {
-		this(apiUrl, apiKey, READ_TIMEOUT_MS);
-	}
-
-	MediaApi(String apiUrl, String apiKey, long readTimeoutMs) {
-		this.readTimeoutMs = readTimeoutMs;
 		gson = CustomGson.get(this);
 		this.apiUrl = apiUrl;
 		this.apiKey = apiKey;
@@ -34,7 +28,7 @@ public class MediaApi {
 	}
 
 	static final int CONNECT_TIMEOUT_MS = 5_000;
-	static final int READ_TIMEOUT_MS = 30_000;
+	static long READ_TIMEOUT_MS = 30_000; // not final, so tests can shorten it
 
 	/**
 	 * Makes an HTTP request to the given API path.
@@ -46,7 +40,7 @@ public class MediaApi {
 		java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
 			.uri(URI.create(apiUrl + path))
 			.header("Authorization", "Bearer " + apiKey)
-			.timeout(Duration.ofMillis(readTimeoutMs));
+			.timeout(Duration.ofMillis(READ_TIMEOUT_MS));
 
 		if (jsonBody != null) {
 			builder.header("Content-Type", "application/json");
@@ -56,19 +50,19 @@ public class MediaApi {
 		}
 
 		java.net.http.HttpResponse<String> response;
-		java.util.concurrent.CompletableFuture<java.net.http.HttpResponse<String>> future =
+		java.util.concurrent.CompletableFuture<java.net.http.HttpResponse<String>> pendingResponse =
 			httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
 		try {
-			response = future.get(readTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+			response = pendingResponse.get(READ_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
 		} catch (java.util.concurrent.TimeoutException e) {
-			future.cancel(true);
-			throw new IOException("Media API request exceeded " + readTimeoutMs + "ms", e);
+			pendingResponse.cancel(true);
+			throw new IOException("Media API request exceeded " + READ_TIMEOUT_MS + "ms", e);
 		} catch (java.util.concurrent.ExecutionException e) {
 			Throwable cause = e.getCause();
 			if (cause instanceof IOException) throw (IOException) cause;
 			throw new IOException("Media API request failed", cause);
 		} catch (InterruptedException e) {
-			future.cancel(true);
+			pendingResponse.cancel(true);
 			Thread.currentThread().interrupt();
 			throw new IOException("HTTP request interrupted", e);
 		}
