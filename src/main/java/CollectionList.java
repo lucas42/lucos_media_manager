@@ -37,8 +37,8 @@ class CollectionList {
 	// Returns a boolean of whether the fetch was successful
 	public boolean refreshList() {
 		try {
-			this.collections = api.fetchCollections("/v3/collections");
-			this.collections = Arrays.stream(this.collections).filter(collection -> collection.isPlayable).toArray(MediaCollection[]::new);
+			MediaCollection[] fetched = api.fetchCollections("/v3/collections");
+			this.collections = Arrays.stream(fetched).filter(collection -> collection.isPlayable).toArray(MediaCollection[]::new);
 			System.err.println("DEBUG: New collection list fetched from media api");
 			return true;
 		} catch (Exception e) {
