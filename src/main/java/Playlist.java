@@ -5,8 +5,8 @@ import java.time.Instant;
 
 class Playlist {
 	private CopyOnWriteArrayList<Track> tracks = new CopyOnWriteArrayList<Track>();
-	private transient Fetcher fetcher;
-	private transient Thread currentFetcherThread;
+	private transient volatile Fetcher fetcher;
+	private transient volatile Thread currentFetcherThread;
 	private transient Loganne loganne;
 
 	// Dropping below this number of tracks triggers a topup

@@ -40,6 +40,7 @@ public abstract class Fetcher implements Runnable {
 			try {
 				Track[] tracks = fetchBatch();
 				if (tracks == null || tracks.length == 0) throw new Exception("Fetch returned no tracks");
+				if (!playlist.isCurrentFetcher(this)) return;
 				playlist.queue(tracks);
 				hasFailedAttempt = false;
 				System.err.println("DEBUG: New tracks added to playlist from " + getSlug());
