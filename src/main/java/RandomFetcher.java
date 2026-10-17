@@ -6,24 +6,10 @@ public class RandomFetcher extends Fetcher {
 		this.api = api;
 	}
 
-	// Implement the run() method of the Runnable interface.
 	@Override
-	public void run() {
+	Track[] fetchBatch() throws Exception {
 		System.err.println("DEBUG: Fetching random tracks to add to playlist");
-		try {
-			fetchList();
-			this.fetchComplete();
-		} catch (Exception e) {
-			System.err.println("ERROR: Can't fetch new tracks.");
-			e.printStackTrace(System.err);
-		}
-	}
-
-	private void fetchList() throws Exception {
-		System.out.println("CALLING /v3/tracks/random");
-		MediaApiResult result = api.fetchTracks("/v3/tracks/random");
-		playlist.queue(result.tracks);
-		System.err.println("DEBUG: New tracks added to playlist");
+		return api.fetchTracks("/v3/tracks/random").tracks;
 	}
 
 	public String getSlug() {

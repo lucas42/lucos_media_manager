@@ -7,7 +7,7 @@ class InfoControllerTest {
 	void infoReturnedOK() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(7);
-		when(playlist.isFetcherRunning()).thenReturn(false);
+		when(playlist.isActivelyRepopulating()).thenReturn(false);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
@@ -16,7 +16,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":7}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -24,7 +24,7 @@ class InfoControllerTest {
 	void playlistLowOnTracks() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(2);
-		when(playlist.isFetcherRunning()).thenReturn(false);
+		when(playlist.isActivelyRepopulating()).thenReturn(false);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
@@ -33,7 +33,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -41,7 +41,7 @@ class InfoControllerTest {
 	void PlaylistEmpty() throws Exception {
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(0);
-		when(playlist.isFetcherRunning()).thenReturn(false);
+		when(playlist.isActivelyRepopulating()).thenReturn(false);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
@@ -50,7 +50,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":false,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":false,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -61,7 +61,7 @@ class InfoControllerTest {
 		// check should report ok:true so monitoring doesn't false-alarm.
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(0);
-		when(playlist.isFetcherRunning()).thenReturn(true);
+		when(playlist.isActivelyRepopulating()).thenReturn(true);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
@@ -70,7 +70,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":0}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 
@@ -80,7 +80,7 @@ class InfoControllerTest {
 		// should report ok:true so monitoring doesn't false-alarm during a fetch.
 		Playlist playlist = mock(Playlist.class);
 		when(playlist.getLength()).thenReturn(2);
-		when(playlist.isFetcherRunning()).thenReturn(true);
+		when(playlist.isActivelyRepopulating()).thenReturn(true);
 		Status status = new Status(playlist, new DeviceList(null), mock(CollectionList.class), mock(MediaApi.class),
 				mock(FileSystemSync.class));
 		HttpRequest request = mock(HttpRequest.class);
@@ -89,7 +89,7 @@ class InfoControllerTest {
 		controller.run();
 		verify(request).sendHeaders(200, "OK", "application/json");
 		verify(request).writeBody(
-				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
+				"{\"system\":\"lucos_media_manager\",\"title\":\"Media Manager\",\"checks\":{\"empty-queue\":{\"techDetail\":\"Queue has any tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":2},\"queue\":{\"techDetail\":\"Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)\",\"ok\":true,\"failThreshold\":3}},\"metrics\":{\"queue-length\":{\"techDetail\":\"Number of tracks in queue\",\"value\":2}},\"ci\":{\"circle\":\"gh/lucas42/lucos_media_manager\"}}");
 		verify(request).close();
 	}
 

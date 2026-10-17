@@ -140,6 +140,18 @@ class Playlist {
 		return currentFetcherThread != null && currentFetcherThread.isAlive();
 	}
 
+	/**
+	 * True if a fetcher thread is running and hasn't yet failed an attempt.
+	 * A fetcher which is retrying after a failure doesn't count as "actively repopulating".
+	 */
+	public boolean isActivelyRepopulating() {
+		return isFetcherRunning() && !fetcher.hasFailedAttempt();
+	}
+
+	public boolean isCurrentFetcher(Fetcher candidate) {
+		return fetcher == candidate;
+	}
+
 	public List<Track> getTracks() {
 		return tracks;
 	}
@@ -245,7 +257,7 @@ class Playlist {
 		final Fetcher currentFetcher = fetcher;
 		currentFetcherThread = new Thread(() -> {
 			currentFetcher.run();
-			afterFetch.run();
+			if (isCurrentFetcher(currentFetcher)) afterFetch.run();
 		});
 
 		currentFetcherThread.start();

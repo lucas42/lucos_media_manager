@@ -254,6 +254,9 @@ class ControllerV3 extends Controller {
 			} else if (request.getPath().equals("/v3/current-collection")) {
 				if (request.getMethod().equals(Method.PUT)) {
 					if (request.getData().equals(status.getPlaylist().getCurrentFetcherSlug())) {
+						if (status.getPlaylist().getLength() == 0 && !status.getPlaylist().isFetcherRunning()) {
+							status.getPlaylist().topupTracks();
+						}
 						request.sendHeaders(204, "Not Changed");
 						request.close();
 					} else {
