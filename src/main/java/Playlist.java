@@ -140,16 +140,8 @@ class Playlist {
 		return currentFetcherThread != null && currentFetcherThread.isAlive();
 	}
 
-	/**
-	 * True if a fetcher thread is running and hasn't yet failed an attempt.
-	 * A fetcher which is retrying after a failure doesn't count as "actively repopulating".
-	 */
-	public boolean isActivelyRepopulating() {
-		return isFetcherRunning() && !fetcher.hasFailedAttempt();
-	}
-
-	public boolean isCurrentFetcher(Fetcher candidate) {
-		return fetcher == candidate;
+	public Fetcher getFetcher() {
+		return fetcher;
 	}
 
 	public List<Track> getTracks() {
@@ -257,7 +249,7 @@ class Playlist {
 		final Fetcher currentFetcher = fetcher;
 		final Thread thread = new Thread(() -> {
 			currentFetcher.run();
-			if (isCurrentFetcher(currentFetcher)) afterFetch.run();
+			afterFetch.run();
 		});
 		currentFetcherThread = thread;
 		thread.start();
@@ -297,6 +289,7 @@ class Playlist {
 	 * To populate the playlist using the new fetcher, call topupTracks() after.
 	 */
 	public synchronized void setFetcher(Fetcher fetcher) {
+		if (this.fetcher != null) this.fetcher.markNotCurrent();
 		this.fetcher = fetcher;
 		fetcher.setPlaylist(this);
 		tracks = new CopyOnWriteArrayList<Track>();

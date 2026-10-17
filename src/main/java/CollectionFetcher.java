@@ -10,7 +10,7 @@ public class CollectionFetcher extends Fetcher {
 	}
 	
 	@Override
-	Track[] fetchBatch() throws Exception {
+	Track[] fetchList() throws Exception {
 		System.err.println("DEBUG: Fetching random tracks from " + slug + " to add to playlist");
 		return api.fetchTracks("/v3/collections/" + slug + "/random").tracks;
 	}

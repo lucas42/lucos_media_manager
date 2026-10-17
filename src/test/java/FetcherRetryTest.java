@@ -23,7 +23,7 @@ class FetcherRetryTest {
 	void retriesWithBackoffThenQueuesTracks() throws Exception {
 		MediaApi api = mock(MediaApi.class);
 		Track t = track();
-		when(api.fetchTracks(anyString())).thenThrow(new RuntimeException("timeout")).thenReturn(result()).thenReturn(result(t));
+		when(api.fetchTracks(anyString())).thenThrow(new RuntimeException("timeout")).thenThrow(new RuntimeException("timeout")).thenReturn(result(t));
 		Playlist playlist = new Playlist(new RandomFetcher(api), null);
 		CollectionFetcher fetcher = new CollectionFetcher(api, "x", mock(CollectionList.class));
 		playlist.setFetcher(fetcher);
@@ -104,7 +104,41 @@ class FetcherRetryTest {
 	}
 
 	@Test
-	void activelyRepopulatingOnlyUntilFirstFailure() throws Exception {
+	void emptyResultIsNotRetried() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		when(api.fetchTracks(anyString())).thenReturn(result());
+		RandomFetcher fetcher = new RandomFetcher(api);
+		Playlist playlist = new Playlist(fetcher, null);
+		List<Long> waits = new ArrayList<>();
+		fetcher.setSleeper(waits::add);
+		Runnable post = mock(Runnable.class);
+		fetcher.setPostFetchFunction(post);
+
+		fetcher.run();
+
+		assertEquals(List.of(), waits);
+		verify(api, times(1)).fetchTracks(anyString());
+		assertFalse(fetcher.hasFailedAttempt());
+		assertEquals(0, playlist.getLength());
+		verify(post, times(1)).run();
+	}
+
+	@Test
+	void switchingFetcherMarksOldOneNotCurrent() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		RandomFetcher oldFetcher = new RandomFetcher(api);
+		Playlist playlist = new Playlist(oldFetcher, null);
+		RandomFetcher newFetcher = new RandomFetcher(api);
+		assertTrue(oldFetcher.isCurrent());
+
+		playlist.setFetcher(newFetcher);
+
+		assertFalse(oldFetcher.isCurrent());
+		assertTrue(newFetcher.isCurrent());
+	}
+
+	@Test
+	void fetcherRetryingAfterFailureIsFlaggedWhileThreadRuns() throws Exception {
 		MediaApi api = mock(MediaApi.class);
 		CountDownLatch release = new CountDownLatch(1);
 		CountDownLatch waiting = new CountDownLatch(1);
@@ -115,15 +149,15 @@ class FetcherRetryTest {
 			waiting.countDown();
 			try { release.await(); } catch (InterruptedException e) { throw new RuntimeException(e); }
 		});
-		assertFalse(playlist.isActivelyRepopulating());
 
 		playlist.topupTracks();
 		assertTrue(waiting.await(5, TimeUnit.SECONDS));
 		assertTrue(playlist.isFetcherRunning());
-		assertFalse(playlist.isActivelyRepopulating());
+		assertTrue(playlist.getFetcher().hasFailedAttempt());
 
 		release.countDown();
 		for (int i = 0; i < 100 && playlist.isFetcherRunning(); i++) Thread.sleep(50);
 		assertEquals(1, playlist.getLength());
+		assertFalse(fetcher.hasFailedAttempt());
 	}
 }

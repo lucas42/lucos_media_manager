@@ -16,14 +16,16 @@ class InfoController extends Controller {
 		Map<String, Object> output = new LinkedHashMap<String, Object>();
 		Map<String, Map<String, Object>> checks = new HashMap<String, Map<String, Object>>();
 		Map<String, Map<String, Object>> metrics = new HashMap<String, Map<String, Object>>();
+		Playlist playlist = status.getPlaylist();
+		boolean repopulating = playlist.isFetcherRunning() && !playlist.getFetcher().hasFailedAttempt();
 		Map<String, Object> queueCheck = new HashMap<String, Object>();
 		queueCheck.put("techDetail", "Queue has at least 5 tracks, or is being actively repopulated (not retrying after a failure)");
-		queueCheck.put("ok", status.getPlaylist().getLength() >= 5 || status.getPlaylist().isActivelyRepopulating());
+		queueCheck.put("ok", playlist.getLength() >= 5 || repopulating);
 		queueCheck.put("failThreshold", 3);
 		checks.put("queue", queueCheck);
 		Map<String, Object> emptyQueueCheck = new HashMap<String, Object>();
 		emptyQueueCheck.put("techDetail", "Queue has any tracks, or is being actively repopulated (not retrying after a failure)");
-		emptyQueueCheck.put("ok", status.getPlaylist().getLength() > 0 || status.getPlaylist().isActivelyRepopulating());
+		emptyQueueCheck.put("ok", playlist.getLength() > 0 || repopulating);
 		emptyQueueCheck.put("failThreshold", 2);
 		checks.put("empty-queue", emptyQueueCheck);
 		Map<String, Object> queueMetric = new HashMap<String, Object>();

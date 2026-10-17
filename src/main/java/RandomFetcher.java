@@ -7,7 +7,7 @@ public class RandomFetcher extends Fetcher {
 	}
 
 	@Override
-	Track[] fetchBatch() throws Exception {
+	Track[] fetchList() throws Exception {
 		System.err.println("DEBUG: Fetching random tracks to add to playlist");
 		return api.fetchTracks("/v3/tracks/random").tracks;
 	}

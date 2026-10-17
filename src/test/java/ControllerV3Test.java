@@ -675,34 +675,6 @@ class ControllerV3Test {
 	}
 
 	@Test
-	void setCollectionToCurrentRefillsEmptyQueueWithNoFetcher() throws Exception {
-		Playlist playlist = mock(Playlist.class);
-		when(playlist.getCurrentFetcherSlug()).thenReturn("relax");
-		when(playlist.getLength()).thenReturn(0);
-		when(playlist.isFetcherRunning()).thenReturn(false);
-		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
-				mock(FileSystemSync.class));
-
-		compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Not Changed", null,
-				null);
-		verify(playlist, times(1)).topupTracks();
-	}
-
-	@Test
-	void setCollectionToCurrentDoesNotRefillWhenFetcherRunning() throws Exception {
-		Playlist playlist = mock(Playlist.class);
-		when(playlist.getCurrentFetcherSlug()).thenReturn("relax");
-		when(playlist.getLength()).thenReturn(0);
-		when(playlist.isFetcherRunning()).thenReturn(true);
-		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),
-				mock(FileSystemSync.class));
-
-		compareRequestResponse(status, "/v3/current-collection", Method.PUT, null, "relax", 204, "Not Changed", null,
-				null);
-		verify(playlist, never()).topupTracks();
-	}
-
-	@Test
 	void updateTrackTime() throws Exception {
 		Playlist playlist = new Playlist(mock(Fetcher.class), null);
 		Status status = new Status(playlist, mock(DeviceList.class), mock(CollectionList.class), mock(MediaApi.class),

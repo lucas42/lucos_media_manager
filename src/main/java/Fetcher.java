@@ -7,6 +7,7 @@ public abstract class Fetcher implements Runnable {
 	protected Playlist playlist;
 	protected Runnable postFetch;
 	private volatile boolean hasFailedAttempt = false;
+	private volatile boolean current = true;
 	private LongConsumer sleeper = Fetcher::sleepMs;
 
 	public void setPlaylist(Playlist playlist) {
@@ -19,31 +20,48 @@ public abstract class Fetcher implements Runnable {
 	void setSleeper(LongConsumer sleeper) {
 		this.sleeper = sleeper;
 	}
-	protected void fetchComplete() {
+	private void fetchComplete() {
 		if (this.postFetch != null) this.postFetch.run();
 	}
 
 	/**
-	 * True once an attempt has failed (or returned no tracks) and the fetcher is still retrying
+	 * Whether the playlist is still using this fetcher
+	 */
+	public boolean isCurrent() {
+		return current;
+	}
+
+	/**
+	 * Called by the playlist when it switches to a different fetcher
+	 */
+	void markNotCurrent() {
+		current = false;
+	}
+
+	/**
+	 * True once an attempt has failed and the fetcher is still retrying
 	 */
 	public boolean hasFailedAttempt() {
 		return hasFailedAttempt;
 	}
 
 	/**
-	 * Fetches a batch of tracks from the media API, retrying until it gets some
-	 * or the playlist switches to a different fetcher.
+	 * Fetches a list of tracks from the media API, retrying failed attempts until one
+	 * succeeds or the playlist switches to a different fetcher.
 	 */
 	@Override
 	public void run() {
-		for (int attempt = 1; playlist.isCurrentFetcher(this); attempt++) {
+		for (int attempt = 1; current; attempt++) {
 			try {
-				Track[] tracks = fetchBatch();
-				if (tracks == null || tracks.length == 0) throw new Exception("Fetch returned no tracks");
-				if (!playlist.isCurrentFetcher(this)) return;
+				Track[] tracks = fetchList();
+				if (!current) return;
+				if (tracks == null || tracks.length == 0) {
+					System.err.println("WARNING: No tracks fetched from " + getSlug());
+					tracks = new Track[0];
+				}
 				playlist.queue(tracks);
 				hasFailedAttempt = false;
-				System.err.println("DEBUG: New tracks added to playlist from " + getSlug());
+				System.err.println("DEBUG: " + tracks.length + " tracks added to playlist from " + getSlug());
 				this.fetchComplete();
 				return;
 			} catch (Exception e) {
@@ -69,7 +87,7 @@ public abstract class Fetcher implements Runnable {
 		}
 	}
 
-	abstract Track[] fetchBatch() throws Exception;
+	abstract Track[] fetchList() throws Exception;
 	abstract String getSlug();
 	abstract String getName();
 	static Fetcher createFromSlug(MediaApi mediaApi, CollectionList collectionList, String slug) {
