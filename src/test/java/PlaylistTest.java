@@ -503,4 +503,42 @@ class PlaylistTest {
 
 		verify(mockApi, never()).patch(any(), any());
 	}
+
+	@Test
+	void concurrentTopupsStartOnlyOneFetcher() throws Exception {
+		int rounds = 200;
+		int callers = 4;
+		java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(callers);
+		try {
+			for (int round = 0; round < rounds; round++) {
+				Fetcher fetcher = mock(Fetcher.class);
+				CountDownLatch release = new CountDownLatch(1);
+				java.util.concurrent.atomic.AtomicInteger runs = new java.util.concurrent.atomic.AtomicInteger();
+				CountDownLatch started = new CountDownLatch(1);
+				doAnswer(invocation -> {
+					runs.incrementAndGet();
+					started.countDown();
+					release.await();
+					return null;
+				}).when(fetcher).run();
+				Playlist playlist = new Playlist(fetcher, null);
+
+				java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(callers);
+				java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+				for (int c = 0; c < callers; c++) {
+					futures.add(pool.submit(() -> {
+						barrier.await();
+						playlist.topupTracks();
+						return null;
+					}));
+				}
+				for (java.util.concurrent.Future<?> f : futures) f.get(10, TimeUnit.SECONDS); // rethrows any exception
+				assertTrue(started.await(5, TimeUnit.SECONDS), "A fetcher should have started");
+				release.countDown();
+				assertEquals(1, runs.get(), "Only one fetcher thread should run at a time");
+			}
+		} finally {
+			pool.shutdownNow();
+		}
+	}
 }
