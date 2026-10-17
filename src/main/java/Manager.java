@@ -38,6 +38,7 @@ public final class Manager {
 		// Establish the listen socket.
 		try (ServerSocket serverSocket = new ServerSocket(port)) {
 			System.out.println("INFO: outgoing data server ready on port " + port);
+			fsSync.refreshRestoredTracksAsync();
 
 			// Process HTTP service requests in an infinite loop.
 			while (true) {
