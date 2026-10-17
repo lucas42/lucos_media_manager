@@ -11,23 +11,22 @@ class CollectionList {
 
 	public CollectionList(MediaApi api) {
 		this.api = api;
-		if (!this.refreshList()) {
-			startRetryThread();
-		}
+		startFetchThread();
 	}
 
-	private void startRetryThread() {
-		if (retryThread != null && retryThread.isAlive()) return;
+	// Fetches the list in the background, retrying until it succeeds, so construction never blocks on the media API
+	private void startFetchThread() {
 		retryThread = new Thread(() -> {
-			while (collections == null) {
-				System.err.println("INFO: Retrying collection list fetch after startup failure");
+			while (true) {
+				refreshList();
+				if (collections != null) return;
+				System.err.println("INFO: Retrying collection list fetch after failure");
 				try {
 					Thread.sleep(RETRY_INTERVAL_MS);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					return;
 				}
-				refreshList();
 			}
 		});
 		retryThread.setDaemon(true);
@@ -50,10 +49,12 @@ class CollectionList {
 	}
 
 	public MediaCollection[] getAllCollections(String currentSlug) {
-		for (MediaCollection collection: this.collections) {
+		MediaCollection[] loaded = this.collections;
+		if (loaded == null) return new MediaCollection[0];
+		for (MediaCollection collection: loaded) {
 			collection.isCurrent = (collection.slug.equals(currentSlug));
 		}
-		return this.collections;
+		return loaded;
 	}
 
 	/**

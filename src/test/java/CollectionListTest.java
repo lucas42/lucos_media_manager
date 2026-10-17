@@ -93,6 +93,8 @@ class CollectionListTest {
 		when(api.fetchCollections("/v3/collections")).thenReturn(new MediaCollection[]{ christmas, jazz });
 
 		CollectionList collectionList = new CollectionList(api);
+		long deadline = System.currentTimeMillis() + 2000;
+		while (collectionList.getAllCollections("x").length == 0 && System.currentTimeMillis() < deadline) Thread.sleep(10);
 
 		assertEquals("Christmas Music", collectionList.getNameForSlug("christmas"));
 		assertEquals("Jazz & Blues", collectionList.getNameForSlug("jazz"));
@@ -101,5 +103,24 @@ class CollectionListTest {
 		assertEquals("all", collectionList.getNameForSlug("all"));
 		// Unknown slug falls back to the slug itself
 		assertEquals("unknown-slug", collectionList.getNameForSlug("unknown-slug"));
+	}
+
+	@Test
+	void constructorDoesNotBlockOnSlowApi() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		CountDownLatch release = new CountDownLatch(1);
+		when(api.fetchCollections("/v3/collections")).thenAnswer(inv -> { release.await(); return new MediaCollection[]{}; });
+
+		try {
+			long start = System.nanoTime();
+			CollectionList collectionList = new CollectionList(api);
+			long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+			assertTrue(elapsedMs < 1_000, "Constructor should return immediately, took " + elapsedMs + "ms");
+			assertEquals(0, collectionList.getAllCollections("anything").length);
+			assertEquals("some-slug", collectionList.getNameForSlug("some-slug"));
+		} finally {
+			release.countDown();
+		}
 	}
 }
