@@ -249,7 +249,7 @@ class Playlist {
 		final Fetcher currentFetcher = fetcher;
 		final Thread thread = new Thread(() -> {
 			currentFetcher.run();
-			afterFetch.run();
+			if (currentFetcher.isCurrent()) afterFetch.run();
 		});
 		currentFetcherThread = thread;
 		thread.start();
