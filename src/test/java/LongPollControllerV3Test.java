@@ -3,6 +3,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 4, unit = TimeUnit.SECONDS)
+	@Timeout(value = 8, unit = TimeUnit.SECONDS)
 	void pollUntilStatusChanges() throws Exception {
 		CompletableFuture<Void> responded = new CompletableFuture<>();
 		HttpRequest request = mock(HttpRequest.class);
@@ -38,7 +39,11 @@ class LongPollControllerV3Test {
 		doAnswer(inv -> { responded.complete(null); return null; })
 			.when(request).close();
 		Status status = mock(Status.class);
-		when(status.summaryHasChanged(anyInt())).thenReturn(false);
+		// Stubbed once up front with a flag the test flips later: re-stubbing a mock while the
+		// worker thread is invoking it can hand the worker's call to the pending stubbing
+		// (CannotStubVoidMethodWithReturnValue) and the poll never responds.
+		AtomicBoolean statusChanged = new AtomicBoolean(false);
+		when(status.summaryHasChanged(anyInt())).thenAnswer(inv -> statusChanged.get());
 		when(status.getDeviceList()).thenReturn(mock(DeviceList.class));
 		// waitForChange is a no-op on the mock; add a 1ms sleep so the spin loop has a
 		// memory barrier and sees stub updates from the test thread promptly.
@@ -51,16 +56,10 @@ class LongPollControllerV3Test {
 		Thread.sleep(200);
 		verify(request, never()).sendHeaders(anyInt(), anyString(), anyString());
 		verify(request, never()).close();
-		// Use doReturn().when() rather than when().thenReturn() here: the worker thread is
-		// concurrently invoking waitForChange() on the same mock. The when().thenReturn() API
-		// first calls the method on the mock to record it as "last invocation", then attaches
-		// the stub — if the worker thread races in between, it replaces "last invocation" with
-		// the void waitForChange(), causing CannotStubVoidMethodWithReturnValue. doReturn()
-		// skips the first-call step and is safe under concurrent invocation.
-		doReturn(true).when(status).summaryHasChanged(123456);
+		statusChanged.set(true);
 
 		// Wait for the controller to respond, rather than relying on a fixed sleep + verify timeout
-		responded.get(3, TimeUnit.SECONDS);
+		responded.get(5, TimeUnit.SECONDS);
 		verify(request).sendHeaders(200, "Long Poll", "application/json");
 		verify(request).close();
 	}
@@ -134,7 +133,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 2, unit = TimeUnit.SECONDS)
+	@Timeout(value = 6, unit = TimeUnit.SECONDS)
 	void RestoreDeviceListAfterInterrupt() throws Exception {
 		DeviceList deviceList = new DeviceList(mock(Loganne.class));
 		Device device1 = deviceList.getDevice("device1");
@@ -153,12 +152,15 @@ class LongPollControllerV3Test {
 																					// so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
-		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
-		verify(request).close();
+		verify(request, timeout(2000).times(1)).sendHeaders(200, "Long Poll", "application/json");
+		verify(request, timeout(2000)).close();
 
 		assertTrue(deviceList.isConnected(device1));
 		thread.interrupt();
-		Thread.sleep(100);
+		long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+		while (deviceList.isConnected(device1) && System.nanoTime() < deadlineNs) {
+			Thread.sleep(20);
+		}
 		assertFalse(deviceList.isConnected(device1));
 	}
 

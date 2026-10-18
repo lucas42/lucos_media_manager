@@ -71,7 +71,11 @@ class FileSystemSyncTest {
 				new Track(api, "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "New Name"))));
 
 		Status outputStatus = fsSync.readStatus(mock(Loganne.class), api);
-		Thread.sleep(100); // HACK: Some playlist fetching happens asynchronously, so wait for that
+		// Some playlist fetching happens asynchronously, so wait (up to 5s) for the top-up to arrive
+		long deadlineNs = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+		while (outputStatus.getPlaylist().getLength() < 3 && System.nanoTime() < deadlineNs) {
+			Thread.sleep(20);
+		}
 
 		assertEquals(0.7, outputStatus.getVolume(), 0.02);
 		assertEquals(false, outputStatus.getPlaying());
