@@ -28,14 +28,15 @@ public class MediaApi {
 	}
 
 	static final int CONNECT_TIMEOUT_MS = 5_000;
-	static final int READ_TIMEOUT_MS = 30_000;
+	static long READ_TIMEOUT_MS = 30_000; // not final, so tests can shorten it
 
 	/**
 	 * Makes an HTTP request to the given API path.
 	 * For GET requests, jsonBody should be null.
 	 * Returns null for 204 No Content responses.
+	 * The whole exchange (headers and body) must finish within the read timeout.
 	 */
-	private InputStreamReader fetch(String path, Method method, String jsonBody) throws MalformedURLException, IOException {
+	private Reader fetch(String path, Method method, String jsonBody) throws MalformedURLException, IOException {
 		java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
 			.uri(URI.create(apiUrl + path))
 			.header("Authorization", "Bearer " + apiKey)
@@ -48,10 +49,20 @@ public class MediaApi {
 			builder.method(method.name(), java.net.http.HttpRequest.BodyPublishers.noBody());
 		}
 
-		java.net.http.HttpResponse<InputStream> response;
+		java.net.http.HttpResponse<String> response;
+		java.util.concurrent.CompletableFuture<java.net.http.HttpResponse<String>> pendingResponse =
+			httpClient.sendAsync(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
 		try {
-			response = httpClient.send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofInputStream());
+			response = pendingResponse.get(READ_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS);
+		} catch (java.util.concurrent.TimeoutException e) {
+			pendingResponse.cancel(true);
+			throw new IOException("Media API request exceeded " + READ_TIMEOUT_MS + "ms", e);
+		} catch (java.util.concurrent.ExecutionException e) {
+			Throwable cause = e.getCause();
+			if (cause instanceof IOException) throw (IOException) cause;
+			throw new IOException("Media API request failed", cause);
 		} catch (InterruptedException e) {
+			pendingResponse.cancel(true);
 			Thread.currentThread().interrupt();
 			throw new IOException("HTTP request interrupted", e);
 		}
@@ -65,10 +76,10 @@ public class MediaApi {
 		if (responseCode == 204) {
 			return null;
 		}
-		return new InputStreamReader(response.body());
+		return new StringReader(response.body());
 	}
 
-	private InputStreamReader fetch(String path) throws MalformedURLException, IOException {
+	private Reader fetch(String path) throws MalformedURLException, IOException {
 		return fetch(path, Method.GET, null);
 	}
 
@@ -93,7 +104,7 @@ public class MediaApi {
 	 * Used to update tag values on tracks (e.g. lastSuccessfulPlay, lastSkip, lastError).
 	 */
 	public void patch(String path, String jsonBody) throws MalformedURLException, IOException {
-		InputStreamReader reader = fetch(path, Method.PATCH, jsonBody);
+		Reader reader = fetch(path, Method.PATCH, jsonBody);
 		if (reader != null) {
 			reader.close();
 		}
