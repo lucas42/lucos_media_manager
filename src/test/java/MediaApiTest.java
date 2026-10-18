@@ -29,6 +29,8 @@ class MediaApiTest {
 	private final List<String> recordedBodies = new ArrayList<>();
 	private final List<String> recordedAuthHeaders = new ArrayList<>();
 
+	private final long originalReadTimeoutMs = MediaApi.READ_TIMEOUT_MS;
+
 	@BeforeEach
 	void startServer() throws IOException {
 		server = HttpServer.create(new InetSocketAddress(0), 0);
@@ -38,6 +40,7 @@ class MediaApiTest {
 
 	@AfterEach
 	void stopServer() {
+		MediaApi.READ_TIMEOUT_MS = originalReadTimeoutMs;
 		server.stop(0);
 		recordedMethods.clear();
 		recordedPaths.clear();
@@ -118,5 +121,77 @@ class MediaApiTest {
 
 		assertNotNull(result);
 		assertEquals("GET", recordedMethods.get(0), "Request method should be GET");
+	}
+
+	// --- Stalled response body (headers arrive, body never completes) ---
+
+	/** Accepts connections, sends headers promising 100 body bytes plus a few, then goes quiet. */
+	private static class StallingServer implements AutoCloseable {
+		final ServerSocket serverSocket;
+		final List<Socket> accepted = Collections.synchronizedList(new ArrayList<>());
+
+		StallingServer() throws IOException {
+			serverSocket = new ServerSocket(0);
+			Thread t = new Thread(() -> {
+				try {
+					while (true) {
+						Socket socket = serverSocket.accept();
+						accepted.add(socket);
+						OutputStream out = socket.getOutputStream();
+						out.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{\"tracks\":[".getBytes(StandardCharsets.UTF_8));
+						out.flush();
+					}
+				} catch (IOException e) {
+					// server closed
+				}
+			});
+			t.setDaemon(true);
+			t.start();
+		}
+
+		String url() {
+			return "http://127.0.0.1:" + serverSocket.getLocalPort();
+		}
+
+		@Override
+		public void close() throws IOException {
+			serverSocket.close();
+			for (Socket s : accepted) s.close();
+		}
+	}
+
+	private static long openFileDescriptors() throws IOException {
+		try (var fds = java.nio.file.Files.list(java.nio.file.Path.of("/proc/self/fd"))) {
+			return fds.count();
+		}
+	}
+
+	@Test
+	void stalledResponseBodyThrowsWithinDeadline() throws Exception {
+		try (StallingServer stalling = new StallingServer()) {
+			MediaApi api = new MediaApi(stalling.url(), "test-key");
+			MediaApi.READ_TIMEOUT_MS = 1_000;
+			long start = System.nanoTime();
+			assertThrows(IOException.class, () -> api.fetchTracks("/v3/tracks/random"));
+			long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+			assertTrue(elapsedMs < 5_000, "Stalled request should fail near the deadline, took " + elapsedMs + "ms");
+		}
+	}
+
+	@Test
+	void stalledRequestsDoNotLeakClientSockets() throws Exception {
+		try (StallingServer stalling = new StallingServer()) {
+			MediaApi api = new MediaApi(stalling.url(), "test-key");
+			MediaApi.READ_TIMEOUT_MS = 300;
+			int attempts = 10;
+			long before = openFileDescriptors();
+			for (int i = 0; i < attempts; i++) {
+				assertThrows(IOException.class, () -> api.fetchTracks("/v3/tracks/random"));
+			}
+			Thread.sleep(500);
+			long growth = openFileDescriptors() - before;
+			// Each attempt adds one server-side socket held by this test; a leaked client socket would double that
+			assertTrue(growth <= stalling.accepted.size() + 2, "Client sockets appear to leak: fd growth " + growth + " for " + stalling.accepted.size() + " server-side sockets");
+		}
 	}
 }

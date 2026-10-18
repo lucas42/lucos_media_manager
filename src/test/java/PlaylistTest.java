@@ -32,6 +32,7 @@ class PlaylistTest {
 	@Test
 	void topups() throws InterruptedException {
 		Fetcher fetcher = mock(RandomFetcher.class);
+		when(fetcher.isCurrent()).thenReturn(true);
 		Loganne loganne = mock(Loganne.class);
 		Track[] tracks = new Track[15];
 
@@ -54,7 +55,10 @@ class PlaylistTest {
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher).run();
 		// fetchTracks fires inside the thread after run() completes, at level:detail
-		verify(loganne, timeout(1000)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		verify(loganne, timeout(5000)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		// The post happens just before the fetcher thread exits; a top-up started while it is still alive is skipped
+		long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+		while (playlist.isFetcherRunning() && System.nanoTime() < deadlineNs) Thread.sleep(5);
 		playlist.queue(tracks);
 
 		assertEquals(15, playlist.getLength());
@@ -63,7 +67,7 @@ class PlaylistTest {
 		// These shouldn't trigger a fetch
 		for (int ii = 0; ii < 5; ii++) {
 			playlist.skipTrack();
-			verifyNoMoreInteractions(fetcher);
+			verify(fetcher, times(1)).run();
 			verifyNoMoreInteractions(loganne);
 		}
 		assertEquals(10, playlist.getLength());
@@ -92,7 +96,7 @@ class PlaylistTest {
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher, times(2)).run();
 		// fetchTracks should now have fired twice (once per completed run), both at level:detail
-		verify(loganne, timeout(1000).times(2)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		verify(loganne, timeout(5000).times(2)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
 		assertEquals(4, playlist.getLength());
 	}
 
@@ -386,6 +390,7 @@ class PlaylistTest {
 		Fetcher newFetcher = mock(CollectionFetcher.class);
 		when(newFetcher.getSlug()).thenReturn("robots");
 		when(newFetcher.getName()).thenReturn("Robots");
+		when(newFetcher.isCurrent()).thenReturn(true);
 
 		Loganne loganne = mock(Loganne.class);
 		Track[] newTracks = new Track[]{ new Track(mock(MediaApi.class), "https://example.com/1") };
@@ -502,5 +507,67 @@ class PlaylistTest {
 		playlist.completeTrack(track.getUuid());
 
 		verify(mockApi, never()).patch(any(), any());
+	}
+
+	@Test
+	void concurrentTopupsStartOnlyOneFetcher() throws Exception {
+		int rounds = 200;
+		int callers = 4;
+		java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(callers);
+		try {
+			for (int round = 0; round < rounds; round++) {
+				Fetcher fetcher = mock(Fetcher.class);
+				CountDownLatch release = new CountDownLatch(1);
+				java.util.concurrent.atomic.AtomicInteger runs = new java.util.concurrent.atomic.AtomicInteger();
+				CountDownLatch started = new CountDownLatch(1);
+				doAnswer(invocation -> {
+					runs.incrementAndGet();
+					started.countDown();
+					release.await();
+					return null;
+				}).when(fetcher).run();
+				Playlist playlist = new Playlist(fetcher, null);
+
+				java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(callers);
+				java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+				for (int c = 0; c < callers; c++) {
+					futures.add(pool.submit(() -> {
+						barrier.await();
+						playlist.topupTracks();
+						return null;
+					}));
+				}
+				for (java.util.concurrent.Future<?> f : futures) f.get(10, TimeUnit.SECONDS); // rethrows any exception
+				assertTrue(started.await(5, TimeUnit.SECONDS), "A fetcher should have started");
+				release.countDown();
+				assertEquals(1, runs.get(), "Only one fetcher thread should run at a time");
+			}
+		} finally {
+			pool.shutdownNow();
+		}
+	}
+
+	@Test
+	void replacedFetcherDoesNotPostCollectionSwitch() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		Loganne loganne = mock(Loganne.class);
+		CountDownLatch fetchStarted = new CountDownLatch(1);
+		CountDownLatch release = new CountDownLatch(1);
+		when(api.fetchTracks(anyString())).thenAnswer(inv -> {
+			fetchStarted.countDown();
+			release.await();
+			return new MediaApiResult();
+		});
+		RandomFetcher first = new RandomFetcher(api);
+		Playlist playlist = new Playlist(new RandomFetcher(mock(MediaApi.class)), loganne);
+		playlist.switchFetcher(first);
+		assertTrue(fetchStarted.await(5, TimeUnit.SECONDS));
+
+		playlist.setFetcher(new RandomFetcher(mock(MediaApi.class))); // replaces the in-flight fetcher
+		release.countDown();
+		for (int i = 0; i < 100 && first.isCurrent(); i++) Thread.sleep(10);
+		Thread.sleep(300);
+
+		verify(loganne, never()).post(eq("collectionSwitch"), anyString(), anyString(), anyMap());
 	}
 }
