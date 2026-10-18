@@ -32,6 +32,7 @@ class PlaylistTest {
 	@Test
 	void topups() throws InterruptedException {
 		Fetcher fetcher = mock(RandomFetcher.class);
+		when(fetcher.isCurrent()).thenReturn(true);
 		Loganne loganne = mock(Loganne.class);
 		Track[] tracks = new Track[15];
 
@@ -63,7 +64,7 @@ class PlaylistTest {
 		// These shouldn't trigger a fetch
 		for (int ii = 0; ii < 5; ii++) {
 			playlist.skipTrack();
-			verifyNoMoreInteractions(fetcher);
+			verify(fetcher, times(1)).run();
 			verifyNoMoreInteractions(loganne);
 		}
 		assertEquals(10, playlist.getLength());
@@ -386,6 +387,7 @@ class PlaylistTest {
 		Fetcher newFetcher = mock(CollectionFetcher.class);
 		when(newFetcher.getSlug()).thenReturn("robots");
 		when(newFetcher.getName()).thenReturn("Robots");
+		when(newFetcher.isCurrent()).thenReturn(true);
 
 		Loganne loganne = mock(Loganne.class);
 		Track[] newTracks = new Track[]{ new Track(mock(MediaApi.class), "https://example.com/1") };
@@ -540,5 +542,29 @@ class PlaylistTest {
 		} finally {
 			pool.shutdownNow();
 		}
+	}
+
+	@Test
+	void replacedFetcherDoesNotPostCollectionSwitch() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		Loganne loganne = mock(Loganne.class);
+		CountDownLatch fetchStarted = new CountDownLatch(1);
+		CountDownLatch release = new CountDownLatch(1);
+		when(api.fetchTracks(anyString())).thenAnswer(inv -> {
+			fetchStarted.countDown();
+			release.await();
+			return new MediaApiResult();
+		});
+		RandomFetcher first = new RandomFetcher(api);
+		Playlist playlist = new Playlist(new RandomFetcher(mock(MediaApi.class)), loganne);
+		playlist.switchFetcher(first);
+		assertTrue(fetchStarted.await(5, TimeUnit.SECONDS));
+
+		playlist.setFetcher(new RandomFetcher(mock(MediaApi.class))); // replaces the in-flight fetcher
+		release.countDown();
+		for (int i = 0; i < 100 && first.isCurrent(); i++) Thread.sleep(10);
+		Thread.sleep(300);
+
+		verify(loganne, never()).post(eq("collectionSwitch"), anyString(), anyString(), anyMap());
 	}
 }
