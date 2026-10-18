@@ -47,7 +47,8 @@ public abstract class Fetcher implements Runnable {
 			try {
 				Track[] tracks = fetchList();
 				if (!current) return;
-				if (tracks == null || tracks.length == 0) {
+				if (tracks == null) throw new Exception("Response from media API had no tracks list");
+				if (tracks.length == 0) {
 					System.err.println("WARNING: No tracks fetched from " + getSlug());
 				}
 				playlist.queue(tracks);

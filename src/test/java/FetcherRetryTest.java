@@ -103,6 +103,22 @@ class FetcherRetryTest {
 	}
 
 	@Test
+	void missingTracksListCountsAsFailedAttempt() throws Exception {
+		MediaApi api = mock(MediaApi.class);
+		MediaApiResult noTracksKey = new MediaApiResult();
+		when(api.fetchTracks(anyString())).thenReturn(noTracksKey).thenReturn(result(track()));
+		RandomFetcher fetcher = new RandomFetcher(api);
+		Playlist playlist = new Playlist(fetcher, null);
+		List<Long> waits = new ArrayList<>();
+		fetcher.setSleeper(waits::add);
+
+		fetcher.run();
+
+		assertEquals(List.of(5000L), waits);
+		assertEquals(1, playlist.getLength());
+	}
+
+	@Test
 	void switchingFetcherMarksOldOneNotCurrent() throws Exception {
 		MediaApi api = mock(MediaApi.class);
 		RandomFetcher oldFetcher = new RandomFetcher(api);
