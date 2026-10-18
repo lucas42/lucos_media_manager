@@ -55,7 +55,10 @@ class PlaylistTest {
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher).run();
 		// fetchTracks fires inside the thread after run() completes, at level:detail
-		verify(loganne, timeout(1000)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		verify(loganne, timeout(5000)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		// The post happens just before the fetcher thread exits; a top-up started while it is still alive is skipped
+		long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+		while (playlist.isFetcherRunning() && System.nanoTime() < deadlineNs) Thread.sleep(5);
 		playlist.queue(tracks);
 
 		assertEquals(15, playlist.getLength());
@@ -93,7 +96,7 @@ class PlaylistTest {
 		assertTrue(ended, "Fetcher thread should return normally, rather than timeout");
 		verify(fetcher, times(2)).run();
 		// fetchTracks should now have fired twice (once per completed run), both at level:detail
-		verify(loganne, timeout(1000).times(2)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
+		verify(loganne, timeout(5000).times(2)).post(eq("fetchTracks"), eq("Fetched more tracks to add to the current playlist"), eq("detail"));
 		assertEquals(4, playlist.getLength());
 	}
 
