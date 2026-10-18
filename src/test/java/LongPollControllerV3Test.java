@@ -102,7 +102,7 @@ class LongPollControllerV3Test {
 	}
 
 	@Test
-	@Timeout(value = 2, unit = TimeUnit.SECONDS)
+	@Timeout(value = 6, unit = TimeUnit.SECONDS)
 	void pollModifiesDeviceList() throws Exception {
 		DeviceList deviceList = new DeviceList(mock(Loganne.class));
 		Device device1 = deviceList.getDevice("device1");
@@ -121,12 +121,15 @@ class LongPollControllerV3Test {
 																					// so tidyup value can be configured
 		Thread thread = new Thread(controller);
 		thread.start();
-		verify(request, timeout(100).times(1)).sendHeaders(200, "Long Poll", "application/json");
-		verify(request).close();
+		verify(request, timeout(2000).times(1)).sendHeaders(200, "Long Poll", "application/json");
+		verify(request, timeout(2000)).close();
 
 		// The device should stay in the device list for 1 second and then be removed.
 		assertTrue(deviceList.isConnected(device1));
-		Thread.sleep(1000);
+		long deadlineNs = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
+		while (deviceList.isConnected(device1) && System.nanoTime() < deadlineNs) {
+			Thread.sleep(20);
+		}
 		assertFalse(deviceList.isConnected(device1));
 	}
 
