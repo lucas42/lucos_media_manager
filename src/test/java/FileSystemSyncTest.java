@@ -76,6 +76,7 @@ class FileSystemSyncTest {
 		while (outputStatus.getPlaylist().getLength() < 3 && System.nanoTime() < deadlineNs) {
 			Thread.sleep(20);
 		}
+		fsSync.refreshRestoredTracksAsync().join();
 
 		assertEquals(0.7, outputStatus.getVolume(), 0.02);
 		assertEquals(false, outputStatus.getPlaying());
@@ -126,5 +127,72 @@ class FileSystemSyncTest {
 			assertEquals(0, tmpFiles.size(),
 					"writeStatus() must not leave .tmp files behind: " + tmpFiles);
 		}
+	}
+
+	@Test
+	void readStatusDoesNotWaitForSlowMediaApi() throws Exception {
+		FileSystemSync fsSync = new FileSystemSync(".");
+		Playlist playlist = mock(Playlist.class);
+		when(playlist.getCurrentFetcherSlug()).thenReturn("all");
+		List<Track> inputTracks = new ArrayList<Track>();
+		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-1.mp3",
+				new HashMap<>(Map.of("title", "Stored Title"))));
+		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-2.mp3"));
+		when(playlist.getTracks()).thenReturn(inputTracks);
+		new Status(playlist, new DeviceList(mock(Loganne.class)), mock(CollectionList.class), mock(MediaApi.class),
+				fsSync).syncToFileSystem();
+
+		java.util.concurrent.CountDownLatch release = new java.util.concurrent.CountDownLatch(1);
+		MediaApi api = mock(MediaApi.class);
+		when(api.fetchCollections(anyString())).thenAnswer(inv -> { release.await(); return new MediaCollection[0]; });
+		when(api.fetchTrack(anyString())).thenAnswer(inv -> { release.await(); return null; });
+		MediaApiResult topup = new MediaApiResult();
+		topup.tracks = new Track[0];
+		when(api.fetchTracks(anyString())).thenReturn(topup);
+
+		try {
+			long start = System.nanoTime();
+			Status status = fsSync.readStatus(mock(Loganne.class), api);
+			long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+
+			assertTrue(elapsedMs < 2_000, "readStatus should not wait on the media API, took " + elapsedMs + "ms");
+			List<Track> tracks = status.getPlaylist().getTracks();
+			assertEquals(2, tracks.size());
+			assertEquals("Stored Title", tracks.get(0).getMetadata("title"));
+		} finally {
+			release.countDown();
+		}
+	}
+
+	@Test
+	void failedRefreshOfRestoredTrackLeavesStatusIntact() throws Exception {
+		FileSystemSync fsSync = new FileSystemSync(".");
+		Playlist playlist = mock(Playlist.class);
+		when(playlist.getCurrentFetcherSlug()).thenReturn("all");
+		List<Track> inputTracks = new ArrayList<Track>();
+		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-1.mp3"));
+		inputTracks.add(new Track(mock(MediaApi.class), "https://example.com/track-2.mp3"));
+		when(playlist.getTracks()).thenReturn(inputTracks);
+		Status input = new Status(playlist, new DeviceList(mock(Loganne.class)), mock(CollectionList.class),
+				mock(MediaApi.class), fsSync);
+		input.setVolume(0.4f);
+		input.syncToFileSystem();
+
+		MediaApi api = mock(MediaApi.class);
+		when(api.fetchCollections(anyString())).thenReturn(new MediaCollection[0]);
+		MediaApiResult topup = new MediaApiResult();
+		topup.tracks = new Track[0];
+		when(api.fetchTracks(anyString())).thenReturn(topup);
+		when(api.fetchTrack(contains("track-1"))).thenThrow(new java.io.IOException("timeout"));
+		when(api.fetchTrack(contains("track-2"))).thenReturn(
+				new Track(api, "https://example.com/track-2.mp3", new HashMap<>(Map.of("title", "Refreshed"))));
+
+		Status status = fsSync.readStatus(mock(Loganne.class), api);
+		fsSync.refreshRestoredTracksAsync().join();
+
+		assertEquals(0.4, status.getVolume(), 0.02);
+		List<Track> tracks = status.getPlaylist().getTracks();
+		assertEquals(2, tracks.size());
+		assertEquals("Refreshed", tracks.get(1).getMetadata("title"));
 	}
 }

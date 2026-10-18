@@ -5,10 +5,12 @@ import com.google.gson.Gson;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
 
 public final class FileSystemSync {
 	public static final String FILE_NAME = "manager-status.json";
 	private String filePath;
+	private final List<Track> restoredTracks = new ArrayList<>();
 
 	public FileSystemSync(String directoryPath) {
 		filePath = directoryPath + "/" + FILE_NAME;
@@ -49,10 +51,9 @@ public final class FileSystemSync {
 			ArrayList<Map<String, Object>> tracks = (ArrayList<Map<String, Object>>) map.get("tracks");
 			for (Map<String, Object> trackData : tracks) {
 
-				// Only copy the url from the stored data, then refresh it to ensure latest
-				// metadata for track is used
-				Track track = new Track(mediaApi, (String) trackData.get("url"));
-				track.refreshMetadata();
+				// Queue from the stored data; refreshRestoredTracksAsync() fetches the latest metadata later
+				Track track = new Track(mediaApi, (String) trackData.get("url"), storedMetadata(trackData.get("metadata")));
+				restoredTracks.add(track);
 				playlist.queueEnd(track);
 			}
 		} catch (Exception e) {
@@ -62,6 +63,40 @@ public final class FileSystemSync {
 
 		playlist.topupTracks();
 		return status;
+	}
+
+	private static Map<String, String> storedMetadata(Object stored) {
+		Map<String, String> metadata = new HashMap<>();
+		if (stored instanceof Map) {
+			for (Map.Entry<?, ?> entry : ((Map<?, ?>) stored).entrySet()) {
+				if (entry.getKey() != null && entry.getValue() != null) {
+					metadata.put(entry.getKey().toString(), entry.getValue().toString());
+				}
+			}
+		}
+		return metadata;
+	}
+
+	/**
+	 * Refreshes the metadata of the tracks restored by readStatus() on a background thread,
+	 * so a slow media API never delays startup. Failures are logged and skipped.
+	 */
+	public Thread refreshRestoredTracksAsync() {
+		final List<Track> toRefresh = new ArrayList<>(restoredTracks);
+		restoredTracks.clear();
+		Thread thread = new Thread(() -> {
+			for (Track track : toRefresh) {
+				try {
+					track.refreshMetadata();
+				} catch (Exception e) {
+					System.err.println("WARNING: Can't refresh metadata for restored track " + track.getUrl());
+					e.printStackTrace(System.err);
+				}
+			}
+		});
+		thread.setDaemon(true);
+		thread.start();
+		return thread;
 	}
 
 	public void writeStatus(Status status) {
