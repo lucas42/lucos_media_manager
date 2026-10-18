@@ -6,7 +6,6 @@ public abstract class Fetcher implements Runnable {
 
 	protected Playlist playlist;
 	protected Runnable postFetch;
-	private volatile boolean hasFailedAttempt = false;
 	private volatile boolean current = true;
 	private LongConsumer sleeper = Fetcher::sleepMs;
 
@@ -39,13 +38,6 @@ public abstract class Fetcher implements Runnable {
 	}
 
 	/**
-	 * True once an attempt has failed and the fetcher is still retrying
-	 */
-	public boolean hasFailedAttempt() {
-		return hasFailedAttempt;
-	}
-
-	/**
 	 * Fetches a list of tracks from the media API, retrying failed attempts until one
 	 * succeeds or the playlist switches to a different fetcher.
 	 */
@@ -57,15 +49,12 @@ public abstract class Fetcher implements Runnable {
 				if (!current) return;
 				if (tracks == null || tracks.length == 0) {
 					System.err.println("WARNING: No tracks fetched from " + getSlug());
-					tracks = new Track[0];
 				}
 				playlist.queue(tracks);
-				hasFailedAttempt = false;
 				System.err.println("DEBUG: " + tracks.length + " tracks added to playlist from " + getSlug());
 				this.fetchComplete();
 				return;
 			} catch (Exception e) {
-				hasFailedAttempt = true;
 				long waitSeconds = BACKOFF_SECONDS[Math.min(attempt, BACKOFF_SECONDS.length) - 1];
 				System.err.println("ERROR: Can't fetch new tracks (attempt " + attempt + ", retrying in " + waitSeconds + "s)");
 				e.printStackTrace(System.err);

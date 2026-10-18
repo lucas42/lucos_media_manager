@@ -3,8 +3,6 @@ import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 class FetcherRetryTest {
@@ -36,7 +34,6 @@ class FetcherRetryTest {
 
 		assertEquals(List.of(5000L, 10000L), waits);
 		assertEquals(1, playlist.getLength());
-		assertFalse(fetcher.hasFailedAttempt());
 		verify(post, times(1)).run();
 	}
 
@@ -55,23 +52,6 @@ class FetcherRetryTest {
 
 		assertEquals(List.of(5000L, 10000L, 20000L, 40000L, 60000L, 60000L, 60000L), waits);
 		assertEquals(1, playlist.getLength());
-	}
-
-	@Test
-	void failedAttemptIsFlaggedWhileRetrying() throws Exception {
-		MediaApi api = mock(MediaApi.class);
-		when(api.fetchTracks(anyString())).thenThrow(new RuntimeException("timeout"));
-		RandomFetcher fetcher = new RandomFetcher(api);
-		Playlist playlist = new Playlist(fetcher, null);
-		boolean[] flaggedDuringWait = { false };
-		fetcher.setSleeper(ms -> {
-			flaggedDuringWait[0] = fetcher.hasFailedAttempt();
-			playlist.setFetcher(new RandomFetcher(api)); // abandon, so the loop ends
-		});
-
-		fetcher.run();
-
-		assertTrue(flaggedDuringWait[0]);
 	}
 
 	@Test
@@ -118,7 +98,6 @@ class FetcherRetryTest {
 
 		assertEquals(List.of(), waits);
 		verify(api, times(1)).fetchTracks(anyString());
-		assertFalse(fetcher.hasFailedAttempt());
 		assertEquals(0, playlist.getLength());
 		verify(post, times(1)).run();
 	}
@@ -137,27 +116,4 @@ class FetcherRetryTest {
 		assertTrue(newFetcher.isCurrent());
 	}
 
-	@Test
-	void fetcherRetryingAfterFailureIsFlaggedWhileThreadRuns() throws Exception {
-		MediaApi api = mock(MediaApi.class);
-		CountDownLatch release = new CountDownLatch(1);
-		CountDownLatch waiting = new CountDownLatch(1);
-		when(api.fetchTracks(anyString())).thenThrow(new RuntimeException("timeout")).thenReturn(result(track()));
-		RandomFetcher fetcher = new RandomFetcher(api);
-		Playlist playlist = new Playlist(fetcher, null);
-		fetcher.setSleeper(ms -> {
-			waiting.countDown();
-			try { release.await(); } catch (InterruptedException e) { throw new RuntimeException(e); }
-		});
-
-		playlist.topupTracks();
-		assertTrue(waiting.await(5, TimeUnit.SECONDS));
-		assertTrue(playlist.isFetcherRunning());
-		assertTrue(playlist.getFetcher().hasFailedAttempt());
-
-		release.countDown();
-		for (int i = 0; i < 100 && playlist.isFetcherRunning(); i++) Thread.sleep(50);
-		assertEquals(1, playlist.getLength());
-		assertFalse(fetcher.hasFailedAttempt());
-	}
 }

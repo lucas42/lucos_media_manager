@@ -140,10 +140,6 @@ class Playlist {
 		return currentFetcherThread != null && currentFetcherThread.isAlive();
 	}
 
-	public Fetcher getFetcher() {
-		return fetcher;
-	}
-
 	public List<Track> getTracks() {
 		return tracks;
 	}
